@@ -19,7 +19,7 @@ import pathlib
 import numpy as np
 from osgeo import gdal, osr
 
-# Geotransform for a 10-pixel x 10-pixel global grid (10-degree cells)
+# Geotransform for a 10-pixel x 10-pixel global grid (36°×18° cells)
 GT = (-180.0, 36.0, 0.0, 90.0, 0.0, -18.0)
 
 VARS = {

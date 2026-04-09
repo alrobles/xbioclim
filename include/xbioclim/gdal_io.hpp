@@ -46,7 +46,8 @@ public:
     ~GdalWriter();
 
     /// Write a BioBlock tile to the output GeoTIFFs.
-    void write_block(int x_off, int y_off, const BioBlock& bio);
+    void write_block(int x_off, int y_off, int block_w, int block_h,
+                     const BioBlock& bio);
 
     /// Flush and close all open datasets.
     void finalize();

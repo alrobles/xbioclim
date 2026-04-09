@@ -202,7 +202,8 @@ GdalWriter::~GdalWriter() {
     }
 }
 
-void GdalWriter::write_block(int x_off, int y_off, const BioBlock& bio) {
+void GdalWriter::write_block(int x_off, int y_off, int block_w, int block_h,
+                             const BioBlock& bio) {
     const Array1D* arrays[NUM_BIO] = {
         &bio.bio01, &bio.bio02, &bio.bio03, &bio.bio04, &bio.bio05,
         &bio.bio06, &bio.bio07, &bio.bio08, &bio.bio09, &bio.bio10,
@@ -210,15 +211,14 @@ void GdalWriter::write_block(int x_off, int y_off, const BioBlock& bio) {
         &bio.bio16, &bio.bio17, &bio.bio18, &bio.bio19
     };
 
-    // Determine block dimensions from the first BIO array size
-    const std::size_t n_pixels = arrays[0]->size();
-    // Infer block_w × block_h: we assume the caller knows the geometry, but
-    // we need block_w and block_h. We derive them from the dataset dimensions
-    // and the offsets (callers must supply consistent geometry).
-    const int ds_x = impl_->ds[0]->GetRasterXSize();
-    const int block_w = std::min(ds_x - x_off,
-                                 static_cast<int>(n_pixels));
-    const int block_h = static_cast<int>(n_pixels) / block_w;
+    const std::size_t expected = static_cast<std::size_t>(block_w) * block_h;
+    if (arrays[0]->size() != expected) {
+        throw std::runtime_error(
+            "write_block: BioBlock size (" +
+            std::to_string(arrays[0]->size()) +
+            ") does not match block_w * block_h (" +
+            std::to_string(expected) + ")");
+    }
 
     for (int b = 0; b < NUM_BIO; ++b) {
         const Array1D& arr = *arrays[b];
