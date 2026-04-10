@@ -1,0 +1,46 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install System Dependencies
+      run: sudo apt update && sudo apt install -y libgdal-dev libomp-dev python3-gdal
+
+    - name: Install xtl (header-only)
+      run: |
+        git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+        cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+        sudo cmake --build /tmp/xtl/build --target install
+
+    - name: Install xtensor (header-only)
+      run: |
+        git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+        cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+        sudo cmake --build /tmp/xtensor/build --target install
+
+    - name: Build
+      run: |
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DXBIOCLIM_BUILD_TESTS=ON
+        cmake --build build --parallel $(nproc)
+
+    - name: Generate test data
+      run: python3 tools/generate_test_data.py --outdir tests/data
+
+    - name: Test
+      run: XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data ctest --test-dir build --output-on-failure
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        generate_release_notes: true

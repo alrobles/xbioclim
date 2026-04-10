@@ -206,9 +206,17 @@ TEST_CASE("NaN inputs propagate through BIO variables", "[bioclim]") {
     CHECK(std::isnan(bio.bio05(0)));
     CHECK(std::isnan(bio.bio06(0)));
     CHECK(std::isnan(bio.bio07(0)));
+    CHECK(std::isnan(bio.bio08(0)));
+    CHECK(std::isnan(bio.bio09(0)));
+    CHECK(std::isnan(bio.bio10(0)));
+    CHECK(std::isnan(bio.bio11(0)));
     CHECK(std::isnan(bio.bio12(0)));
     CHECK(std::isnan(bio.bio13(0)));
     CHECK(std::isnan(bio.bio14(0)));
+    CHECK(std::isnan(bio.bio16(0)));
+    CHECK(std::isnan(bio.bio17(0)));
+    CHECK(std::isnan(bio.bio18(0)));
+    CHECK(std::isnan(bio.bio19(0)));
 }
 
 TEST_CASE("ClimateBlock rejects mismatched n_pixels", "[bioclim]") {

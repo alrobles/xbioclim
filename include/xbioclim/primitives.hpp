@@ -28,6 +28,13 @@ struct ClimateBlock {
     std::size_t n_pixels() const { return tas.shape(0); }
 };
 
+/// Scale/offset parameters for CHELSA-style raw data decoding.
+/// Decoded value = raw * scale + offset.
+struct ScaleOffset {
+    float scale  = 1.0f;
+    float offset = 0.0f;
+};
+
 /// Bundle of 19 output BIO variable arrays
 struct BioBlock {
     Array1D bio01, bio02, bio03, bio04, bio05,

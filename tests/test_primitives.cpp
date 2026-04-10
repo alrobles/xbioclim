@@ -100,3 +100,51 @@ TEST_CASE("quarter_mean handles circular wrap-around", "[primitives]") {
     Array1D result = quarter_mean(A, starts);
     CHECK_THAT(result(0), WithinAbs(5.0f, 1e-3f));
 }
+
+TEST_CASE("rolling_quarter_argmax with all-equal values returns index 0",
+          "[primitives]") {
+    // All 12 months = 5.0; first tie should win → index 0
+    Array2D A = xt::ones<float>({std::size_t(1), std::size_t(12)}) * 5.0f;
+    IndexArray idx = rolling_quarter_argmax(A);
+    REQUIRE(idx(0) == 0u);
+}
+
+TEST_CASE("rolling_quarter_argmin with all-equal values returns index 0",
+          "[primitives]") {
+    Array2D A = xt::ones<float>({std::size_t(1), std::size_t(12)}) * 5.0f;
+    IndexArray idx = rolling_quarter_argmin(A);
+    REQUIRE(idx(0) == 0u);
+}
+
+TEST_CASE("row_std with all-zero input returns 0.0", "[primitives]") {
+    Array2D A = xt::zeros<float>({std::size_t(1), std::size_t(12)});
+    Array1D result = row_std(A);
+    CHECK_THAT(result(0), WithinAbs(0.0f, 1e-6f));
+}
+
+TEST_CASE("rolling_quarter_argmax with NaN returns sentinel",
+          "[primitives]") {
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    Array2D A = xt::ones<float>({std::size_t(1), std::size_t(12)});
+    A(0, 5) = nan;
+    IndexArray idx = rolling_quarter_argmax(A);
+    REQUIRE(idx(0) == std::numeric_limits<std::size_t>::max());
+}
+
+TEST_CASE("rolling_quarter_argmin with NaN returns sentinel",
+          "[primitives]") {
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    Array2D A = xt::ones<float>({std::size_t(1), std::size_t(12)});
+    A(0, 5) = nan;
+    IndexArray idx = rolling_quarter_argmin(A);
+    REQUIRE(idx(0) == std::numeric_limits<std::size_t>::max());
+}
+
+TEST_CASE("quarter_mean returns NaN for sentinel start index",
+          "[primitives]") {
+    Array2D A = xt::ones<float>({std::size_t(1), std::size_t(12)});
+    IndexArray starts = xt::zeros<std::size_t>({std::size_t(1)});
+    starts(0) = std::numeric_limits<std::size_t>::max();
+    Array1D result = quarter_mean(A, starts);
+    CHECK(std::isnan(result(0)));
+}

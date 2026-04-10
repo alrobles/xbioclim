@@ -31,6 +31,7 @@ struct GdalReader::Impl {
     int y_size = 0;
     std::string proj_wkt;
     std::array<double, 6> gt{};
+    ScaleOffset so[NUM_VARS];
 
     void open(int var_idx, const std::vector<std::string>& files) {
         if (static_cast<int>(files.size()) != NUM_MONTHS) {
@@ -75,10 +76,18 @@ struct GdalReader::Impl {
 GdalReader::GdalReader(const std::vector<std::string>& tas_files,
                        const std::vector<std::string>& tasmax_files,
                        const std::vector<std::string>& tasmin_files,
-                       const std::vector<std::string>& pr_files)
+                       const std::vector<std::string>& pr_files,
+                       ScaleOffset tas_so,
+                       ScaleOffset tasmax_so,
+                       ScaleOffset tasmin_so,
+                       ScaleOffset pr_so)
     : impl_(new Impl())
 {
     GDALAllRegister();
+    impl_->so[0] = tas_so;
+    impl_->so[1] = tasmax_so;
+    impl_->so[2] = tasmin_so;
+    impl_->so[3] = pr_so;
     impl_->open(0, tas_files);
     impl_->open(1, tasmax_files);
     impl_->open(2, tasmin_files);
@@ -126,9 +135,19 @@ ClimateBlock GdalReader::read_block(int x_off, int y_off,
             if (err != CE_None) {
                 throw std::runtime_error("RasterIO read failed");
             }
-            // Copy buffer column (month m) into the array
+            // Copy buffer column (month m) into the array, applying
+            // scale/offset and masking raw NoData (−9999) to NaN.
+            const float raw_nodata = -9999.0f;
+            const float sc = impl_->so[v].scale;
+            const float of = impl_->so[v].offset;
             for (std::size_t p = 0; p < n_pixels; ++p) {
-                (*arrays[v])(p, static_cast<std::size_t>(m)) = buf[p];
+                float val = buf[p];
+                if (val == raw_nodata) {
+                    val = std::numeric_limits<float>::quiet_NaN();
+                } else {
+                    val = val * sc + of;
+                }
+                (*arrays[v])(p, static_cast<std::size_t>(m)) = val;
             }
         }
     }
