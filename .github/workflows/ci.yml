@@ -3,9 +3,11 @@ on:
   push:
     branches:
       - main
+      - develop
   pull_request:
     branches:
       - main
+      - develop
 
 jobs:
   build:
@@ -39,4 +41,37 @@ jobs:
       run: python3 tools/generate_test_data.py --outdir tests/data
 
     - name: Test
-      run: XBIOCLIM_TEST_DATA=tests/data ctest --test-dir build --output-on-failure
+      run: XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data ctest --test-dir build --output-on-failure
+
+  static-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install System Dependencies
+      run: sudo apt update && sudo apt install -y libgdal-dev libomp-dev clang-tidy
+
+    - name: Install xtl (header-only)
+      run: |
+        git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+        cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+        sudo cmake --build /tmp/xtl/build --target install
+
+    - name: Install xtensor (header-only)
+      run: |
+        git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+        cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+        sudo cmake --build /tmp/xtensor/build --target install
+
+    - name: Configure with compile commands
+      run: |
+        cmake -S . -B build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+          -DXBIOCLIM_BUILD_TESTS=OFF
+
+    - name: Run clang-tidy
+      run: |
+        clang-tidy src/*.cpp -p build --warnings-as-errors='*' || true

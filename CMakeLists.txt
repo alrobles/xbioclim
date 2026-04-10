@@ -59,6 +59,10 @@ endif()
 # --- Export target ---
 add_library(xbioclim::xbioclim ALIAS xbioclim)
 
+# --- CLI executable ---
+add_executable(xbioclim_cli src/main.cpp)
+target_link_libraries(xbioclim_cli PRIVATE xbioclim)
+
 # --- Tests ---
 option(XBIOCLIM_BUILD_TESTS "Build the test suite" ON)
 if(XBIOCLIM_BUILD_TESTS)
