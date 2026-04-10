@@ -235,6 +235,6 @@ TEST_CASE("All-identical monthly values yield zero seasonality", "[bioclim]") {
     auto bio = compute_bioclim(data);
     // Temperature seasonality: 100 * stddev(5,5,...) = 0
     CHECK_THAT(bio.bio04(0), WithinAbs(0.0f, 1e-3f));
-    // Precipitation seasonality: stddev/mean = 0/5 = 0
+    // Precipitation seasonality: 100 * stddev/mean = 100 * 0/5 = 0
     CHECK_THAT(bio.bio15(0), WithinAbs(0.0f, 1e-3f));
 }
