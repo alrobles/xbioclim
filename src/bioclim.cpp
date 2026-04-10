@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <limits>
+#include <stdexcept>
 
 namespace xbioclim {
 
@@ -11,6 +12,22 @@ static constexpr float NODATA_FLOAT = std::numeric_limits<float>::quiet_NaN();
 
 BioBlock compute_bioclim(const ClimateBlock& data) {
     BioBlock bio;
+
+    // --- Validate ClimateBlock invariants ---
+    const std::size_t N = data.tas.shape(0);
+    if (data.tasmax.shape(0) != N ||
+        data.tasmin.shape(0) != N ||
+        data.pr.shape(0)     != N) {
+        throw std::invalid_argument(
+            "ClimateBlock: all fields must have the same n_pixels (shape(0))");
+    }
+    if (data.tas.shape(1)    != 12 ||
+        data.tasmax.shape(1) != 12 ||
+        data.tasmin.shape(1) != 12 ||
+        data.pr.shape(1)     != 12) {
+        throw std::invalid_argument(
+            "ClimateBlock: all fields must have exactly 12 months (shape(1))");
+    }
 
     // --- Diurnal range: [N_pixels, 12] ---
     Array2D diurnal = data.tasmax - data.tasmin;

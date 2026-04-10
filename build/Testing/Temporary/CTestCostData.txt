@@ -1,0 +1,79 @@
+row_mean 0 0
+row_sum 0 0
+row_max 0 0
+row_min 0 0
+row_std 0 0
+elementwise_diff 0 0
+rolling_quarter_argmax 0 0
+rolling_quarter_argmin 0 0
+quarter_mean 0 0
+quarter_mean 0 0
+BIO01 0 0
+BIO02 0 0
+BIO03 0 0
+BIO04 0 0
+BIO05 0 0
+BIO06 0 0
+BIO07 0 0
+BIO08 0 0
+BIO09 0 0
+BIO10 0 0
+BIO11 0 0
+BIO12 0 0
+BIO13 0 0
+BIO14 0 0
+BIO15 0 0
+BIO16 0 0
+BIO17 0 0
+BIO18 0 0
+BIO19 0 0
+BIO03 0 0
+BIO15 0 0
+compute_bioclim 0 0
+NaN 0 0
+ClimateBlock 0 0
+All-identical 0 0
+GdalReader 0 0
+GdalReader 0 0
+GdalReader 0 0
+GdalReader 0 0
+row_mean returns correct mean for ramp data 1 0.0209577
+row_sum returns correct sum for ramp data 1 0.019148
+row_max returns correct maximum 1 0.0186088
+row_min returns correct minimum 1 0.0184991
+row_std returns population SD for ramp data 1 0.0190534
+elementwise_diff produces A-B 1 0.018467
+rolling_quarter_argmax returns correct index for ramp pr 1 0.0188797
+rolling_quarter_argmin returns correct index for ramp pr 1 0.0187064
+quarter_mean gives correct mean for wettest quarter 1 0.0191679
+quarter_mean handles circular wrap-around 1 0.0188684
+BIO01 - Mean Annual Temperature 1 0.0188142
+BIO02 - Mean Diurnal Range 1 0.0187871
+BIO03 - Isothermality 1 0.0192038
+BIO04 - Temperature Seasonality 1 0.018547
+BIO05 - Max Temperature of Warmest Month 1 0.0186549
+BIO06 - Min Temperature of Coldest Month 1 0.0186021
+BIO07 - Annual Temperature Range 1 0.0188147
+BIO08 - Mean Temp of Wettest Quarter 1 0.0187809
+BIO09 - Mean Temp of Driest Quarter 1 0.0186425
+BIO10 - Mean Temp of Warmest Quarter 1 0.0197781
+BIO11 - Mean Temp of Coldest Quarter 1 0.0189164
+BIO12 - Annual Precipitation 1 0.0195768
+BIO13 - Precipitation of Wettest Month 1 0.0196438
+BIO14 - Precipitation of Driest Month 1 0.0200059
+BIO15 - Precipitation Seasonality 1 0.0194581
+BIO16 - Precipitation of Wettest Quarter 1 0.0198213
+BIO17 - Precipitation of Driest Quarter 1 0.0186476
+BIO18 - Precipitation of Warmest Quarter 1 0.0186117
+BIO19 - Precipitation of Coldest Quarter 1 0.0185086
+BIO03 is NoData when BIO07 is zero 1 0.0195875
+BIO15 is NoData when mean precipitation is zero 1 0.0195022
+compute_bioclim handles multiple pixels 1 0.0198545
+NaN inputs propagate through BIO variables 1 0.0195992
+ClimateBlock rejects mismatched n_pixels 1 0.019185
+All-identical monthly values yield zero seasonality 1 0.020014
+GdalReader opens valid datasets 1 0.0318158
+GdalReader reports correct raster dimensions 1 0.0305942
+GdalReader read_block returns correct shape 1 0.0319022
+GdalReader read_block returns expected pixel values 1 0.0312981
+---

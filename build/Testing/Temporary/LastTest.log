@@ -1,0 +1,783 @@
+Start testing: Apr 10 04:28 UTC
+----------------------------------------------------------
+1/39 Testing: row_mean returns correct mean for ramp data
+1/39 Test: row_mean returns correct mean for ramp data
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "row_mean returns correct mean for ramp data"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"row_mean returns correct mean for ramp data" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "row_mean returns correct mean for ramp data"
+Randomness seeded to: 4104425030
+===============================================================================
+All tests passed (4 assertions in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"row_mean returns correct mean for ramp data" end time: Apr 10 04:28 UTC
+"row_mean returns correct mean for ramp data" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/39 Testing: row_sum returns correct sum for ramp data
+2/39 Test: row_sum returns correct sum for ramp data
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "row_sum returns correct sum for ramp data"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"row_sum returns correct sum for ramp data" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "row_sum returns correct sum for ramp data"
+Randomness seeded to: 1059465361
+===============================================================================
+All tests passed (3 assertions in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"row_sum returns correct sum for ramp data" end time: Apr 10 04:28 UTC
+"row_sum returns correct sum for ramp data" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/39 Testing: row_max returns correct maximum
+3/39 Test: row_max returns correct maximum
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "row_max returns correct maximum"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"row_max returns correct maximum" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "row_max returns correct maximum"
+Randomness seeded to: 3250469795
+===============================================================================
+All tests passed (3 assertions in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"row_max returns correct maximum" end time: Apr 10 04:28 UTC
+"row_max returns correct maximum" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/39 Testing: row_min returns correct minimum
+4/39 Test: row_min returns correct minimum
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "row_min returns correct minimum"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"row_min returns correct minimum" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "row_min returns correct minimum"
+Randomness seeded to: 3167331893
+===============================================================================
+All tests passed (3 assertions in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"row_min returns correct minimum" end time: Apr 10 04:28 UTC
+"row_min returns correct minimum" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/39 Testing: row_std returns population SD for ramp data
+5/39 Test: row_std returns population SD for ramp data
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "row_std returns population SD for ramp data"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"row_std returns population SD for ramp data" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "row_std returns population SD for ramp data"
+Randomness seeded to: 3439844536
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"row_std returns population SD for ramp data" end time: Apr 10 04:28 UTC
+"row_std returns population SD for ramp data" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/39 Testing: elementwise_diff produces A-B
+6/39 Test: elementwise_diff produces A-B
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "elementwise_diff produces A-B"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"elementwise_diff produces A-B" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "elementwise_diff produces A-B"
+Randomness seeded to: 1088495410
+===============================================================================
+All tests passed (12 assertions in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"elementwise_diff produces A-B" end time: Apr 10 04:28 UTC
+"elementwise_diff produces A-B" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/39 Testing: rolling_quarter_argmax returns correct index for ramp pr
+7/39 Test: rolling_quarter_argmax returns correct index for ramp pr
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "rolling_quarter_argmax returns correct index for ramp pr"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"rolling_quarter_argmax returns correct index for ramp pr" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "rolling_quarter_argmax returns correct index for ramp pr"
+Randomness seeded to: 4257964664
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"rolling_quarter_argmax returns correct index for ramp pr" end time: Apr 10 04:28 UTC
+"rolling_quarter_argmax returns correct index for ramp pr" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/39 Testing: rolling_quarter_argmin returns correct index for ramp pr
+8/39 Test: rolling_quarter_argmin returns correct index for ramp pr
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "rolling_quarter_argmin returns correct index for ramp pr"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"rolling_quarter_argmin returns correct index for ramp pr" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "rolling_quarter_argmin returns correct index for ramp pr"
+Randomness seeded to: 1136855060
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"rolling_quarter_argmin returns correct index for ramp pr" end time: Apr 10 04:28 UTC
+"rolling_quarter_argmin returns correct index for ramp pr" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/39 Testing: quarter_mean gives correct mean for wettest quarter
+9/39 Test: quarter_mean gives correct mean for wettest quarter
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "quarter_mean gives correct mean for wettest quarter"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"quarter_mean gives correct mean for wettest quarter" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "quarter_mean gives correct mean for wettest quarter"
+Randomness seeded to: 4245832637
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"quarter_mean gives correct mean for wettest quarter" end time: Apr 10 04:28 UTC
+"quarter_mean gives correct mean for wettest quarter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/39 Testing: quarter_mean handles circular wrap-around
+10/39 Test: quarter_mean handles circular wrap-around
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "quarter_mean handles circular wrap-around"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"quarter_mean handles circular wrap-around" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "quarter_mean handles circular wrap-around"
+Randomness seeded to: 301615350
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"quarter_mean handles circular wrap-around" end time: Apr 10 04:28 UTC
+"quarter_mean handles circular wrap-around" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/39 Testing: BIO01 - Mean Annual Temperature
+11/39 Test: BIO01 - Mean Annual Temperature
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO01 - Mean Annual Temperature"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO01 - Mean Annual Temperature" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO01 - Mean Annual Temperature"
+Randomness seeded to: 4211378760
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO01 - Mean Annual Temperature" end time: Apr 10 04:28 UTC
+"BIO01 - Mean Annual Temperature" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/39 Testing: BIO02 - Mean Diurnal Range
+12/39 Test: BIO02 - Mean Diurnal Range
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO02 - Mean Diurnal Range"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO02 - Mean Diurnal Range" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO02 - Mean Diurnal Range"
+Randomness seeded to: 679831848
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO02 - Mean Diurnal Range" end time: Apr 10 04:28 UTC
+"BIO02 - Mean Diurnal Range" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/39 Testing: BIO03 - Isothermality
+13/39 Test: BIO03 - Isothermality
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO03 - Isothermality"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO03 - Isothermality" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO03 - Isothermality"
+Randomness seeded to: 3750336047
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO03 - Isothermality" end time: Apr 10 04:28 UTC
+"BIO03 - Isothermality" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/39 Testing: BIO04 - Temperature Seasonality
+14/39 Test: BIO04 - Temperature Seasonality
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO04 - Temperature Seasonality"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO04 - Temperature Seasonality" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO04 - Temperature Seasonality"
+Randomness seeded to: 119238109
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO04 - Temperature Seasonality" end time: Apr 10 04:28 UTC
+"BIO04 - Temperature Seasonality" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/39 Testing: BIO05 - Max Temperature of Warmest Month
+15/39 Test: BIO05 - Max Temperature of Warmest Month
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO05 - Max Temperature of Warmest Month"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO05 - Max Temperature of Warmest Month" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO05 - Max Temperature of Warmest Month"
+Randomness seeded to: 3881284662
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO05 - Max Temperature of Warmest Month" end time: Apr 10 04:28 UTC
+"BIO05 - Max Temperature of Warmest Month" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/39 Testing: BIO06 - Min Temperature of Coldest Month
+16/39 Test: BIO06 - Min Temperature of Coldest Month
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO06 - Min Temperature of Coldest Month"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO06 - Min Temperature of Coldest Month" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO06 - Min Temperature of Coldest Month"
+Randomness seeded to: 1045111118
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO06 - Min Temperature of Coldest Month" end time: Apr 10 04:28 UTC
+"BIO06 - Min Temperature of Coldest Month" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/39 Testing: BIO07 - Annual Temperature Range
+17/39 Test: BIO07 - Annual Temperature Range
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO07 - Annual Temperature Range"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO07 - Annual Temperature Range" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO07 - Annual Temperature Range"
+Randomness seeded to: 3387635141
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO07 - Annual Temperature Range" end time: Apr 10 04:28 UTC
+"BIO07 - Annual Temperature Range" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/39 Testing: BIO08 - Mean Temp of Wettest Quarter
+18/39 Test: BIO08 - Mean Temp of Wettest Quarter
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO08 - Mean Temp of Wettest Quarter"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO08 - Mean Temp of Wettest Quarter" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO08 - Mean Temp of Wettest Quarter"
+Randomness seeded to: 3273779411
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO08 - Mean Temp of Wettest Quarter" end time: Apr 10 04:28 UTC
+"BIO08 - Mean Temp of Wettest Quarter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/39 Testing: BIO09 - Mean Temp of Driest Quarter
+19/39 Test: BIO09 - Mean Temp of Driest Quarter
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO09 - Mean Temp of Driest Quarter"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO09 - Mean Temp of Driest Quarter" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO09 - Mean Temp of Driest Quarter"
+Randomness seeded to: 1080187682
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO09 - Mean Temp of Driest Quarter" end time: Apr 10 04:28 UTC
+"BIO09 - Mean Temp of Driest Quarter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+20/39 Testing: BIO10 - Mean Temp of Warmest Quarter
+20/39 Test: BIO10 - Mean Temp of Warmest Quarter
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO10 - Mean Temp of Warmest Quarter"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO10 - Mean Temp of Warmest Quarter" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO10 - Mean Temp of Warmest Quarter"
+Randomness seeded to: 120493130
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO10 - Mean Temp of Warmest Quarter" end time: Apr 10 04:28 UTC
+"BIO10 - Mean Temp of Warmest Quarter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+21/39 Testing: BIO11 - Mean Temp of Coldest Quarter
+21/39 Test: BIO11 - Mean Temp of Coldest Quarter
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO11 - Mean Temp of Coldest Quarter"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO11 - Mean Temp of Coldest Quarter" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO11 - Mean Temp of Coldest Quarter"
+Randomness seeded to: 2455842150
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO11 - Mean Temp of Coldest Quarter" end time: Apr 10 04:28 UTC
+"BIO11 - Mean Temp of Coldest Quarter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+22/39 Testing: BIO12 - Annual Precipitation
+22/39 Test: BIO12 - Annual Precipitation
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO12 - Annual Precipitation"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO12 - Annual Precipitation" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO12 - Annual Precipitation"
+Randomness seeded to: 3017185289
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO12 - Annual Precipitation" end time: Apr 10 04:28 UTC
+"BIO12 - Annual Precipitation" time elapsed: 00:00:00
+----------------------------------------------------------
+
+23/39 Testing: BIO13 - Precipitation of Wettest Month
+23/39 Test: BIO13 - Precipitation of Wettest Month
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO13 - Precipitation of Wettest Month"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO13 - Precipitation of Wettest Month" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO13 - Precipitation of Wettest Month"
+Randomness seeded to: 1585278045
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO13 - Precipitation of Wettest Month" end time: Apr 10 04:28 UTC
+"BIO13 - Precipitation of Wettest Month" time elapsed: 00:00:00
+----------------------------------------------------------
+
+24/39 Testing: BIO14 - Precipitation of Driest Month
+24/39 Test: BIO14 - Precipitation of Driest Month
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO14 - Precipitation of Driest Month"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO14 - Precipitation of Driest Month" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO14 - Precipitation of Driest Month"
+Randomness seeded to: 3866177367
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO14 - Precipitation of Driest Month" end time: Apr 10 04:28 UTC
+"BIO14 - Precipitation of Driest Month" time elapsed: 00:00:00
+----------------------------------------------------------
+
+25/39 Testing: BIO15 - Precipitation Seasonality
+25/39 Test: BIO15 - Precipitation Seasonality
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO15 - Precipitation Seasonality"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO15 - Precipitation Seasonality" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO15 - Precipitation Seasonality"
+Randomness seeded to: 996834276
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO15 - Precipitation Seasonality" end time: Apr 10 04:28 UTC
+"BIO15 - Precipitation Seasonality" time elapsed: 00:00:00
+----------------------------------------------------------
+
+26/39 Testing: BIO16 - Precipitation of Wettest Quarter
+26/39 Test: BIO16 - Precipitation of Wettest Quarter
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO16 - Precipitation of Wettest Quarter"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO16 - Precipitation of Wettest Quarter" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO16 - Precipitation of Wettest Quarter"
+Randomness seeded to: 1114290107
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO16 - Precipitation of Wettest Quarter" end time: Apr 10 04:28 UTC
+"BIO16 - Precipitation of Wettest Quarter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+27/39 Testing: BIO17 - Precipitation of Driest Quarter
+27/39 Test: BIO17 - Precipitation of Driest Quarter
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO17 - Precipitation of Driest Quarter"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO17 - Precipitation of Driest Quarter" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO17 - Precipitation of Driest Quarter"
+Randomness seeded to: 2441700648
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO17 - Precipitation of Driest Quarter" end time: Apr 10 04:28 UTC
+"BIO17 - Precipitation of Driest Quarter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+28/39 Testing: BIO18 - Precipitation of Warmest Quarter
+28/39 Test: BIO18 - Precipitation of Warmest Quarter
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO18 - Precipitation of Warmest Quarter"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO18 - Precipitation of Warmest Quarter" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO18 - Precipitation of Warmest Quarter"
+Randomness seeded to: 748218026
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO18 - Precipitation of Warmest Quarter" end time: Apr 10 04:28 UTC
+"BIO18 - Precipitation of Warmest Quarter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+29/39 Testing: BIO19 - Precipitation of Coldest Quarter
+29/39 Test: BIO19 - Precipitation of Coldest Quarter
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO19 - Precipitation of Coldest Quarter"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO19 - Precipitation of Coldest Quarter" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO19 - Precipitation of Coldest Quarter"
+Randomness seeded to: 4119998389
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO19 - Precipitation of Coldest Quarter" end time: Apr 10 04:28 UTC
+"BIO19 - Precipitation of Coldest Quarter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+30/39 Testing: BIO03 is NoData when BIO07 is zero
+30/39 Test: BIO03 is NoData when BIO07 is zero
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO03 is NoData when BIO07 is zero"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO03 is NoData when BIO07 is zero" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO03 is NoData when BIO07 is zero"
+Randomness seeded to: 3417387055
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO03 is NoData when BIO07 is zero" end time: Apr 10 04:28 UTC
+"BIO03 is NoData when BIO07 is zero" time elapsed: 00:00:00
+----------------------------------------------------------
+
+31/39 Testing: BIO15 is NoData when mean precipitation is zero
+31/39 Test: BIO15 is NoData when mean precipitation is zero
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "BIO15 is NoData when mean precipitation is zero"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"BIO15 is NoData when mean precipitation is zero" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "BIO15 is NoData when mean precipitation is zero"
+Randomness seeded to: 2764821134
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"BIO15 is NoData when mean precipitation is zero" end time: Apr 10 04:28 UTC
+"BIO15 is NoData when mean precipitation is zero" time elapsed: 00:00:00
+----------------------------------------------------------
+
+32/39 Testing: compute_bioclim handles multiple pixels
+32/39 Test: compute_bioclim handles multiple pixels
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "compute_bioclim handles multiple pixels"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"compute_bioclim handles multiple pixels" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "compute_bioclim handles multiple pixels"
+Randomness seeded to: 2008652859
+===============================================================================
+All tests passed (200 assertions in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"compute_bioclim handles multiple pixels" end time: Apr 10 04:28 UTC
+"compute_bioclim handles multiple pixels" time elapsed: 00:00:00
+----------------------------------------------------------
+
+33/39 Testing: NaN inputs propagate through BIO variables
+33/39 Test: NaN inputs propagate through BIO variables
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "NaN inputs propagate through BIO variables"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"NaN inputs propagate through BIO variables" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "NaN inputs propagate through BIO variables"
+Randomness seeded to: 1223959432
+===============================================================================
+All tests passed (9 assertions in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"NaN inputs propagate through BIO variables" end time: Apr 10 04:28 UTC
+"NaN inputs propagate through BIO variables" time elapsed: 00:00:00
+----------------------------------------------------------
+
+34/39 Testing: ClimateBlock rejects mismatched n_pixels
+34/39 Test: ClimateBlock rejects mismatched n_pixels
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "ClimateBlock rejects mismatched n_pixels"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"ClimateBlock rejects mismatched n_pixels" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "ClimateBlock rejects mismatched n_pixels"
+Randomness seeded to: 535075433
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"ClimateBlock rejects mismatched n_pixels" end time: Apr 10 04:28 UTC
+"ClimateBlock rejects mismatched n_pixels" time elapsed: 00:00:00
+----------------------------------------------------------
+
+35/39 Testing: All-identical monthly values yield zero seasonality
+35/39 Test: All-identical monthly values yield zero seasonality
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "All-identical monthly values yield zero seasonality"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"All-identical monthly values yield zero seasonality" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "All-identical monthly values yield zero seasonality"
+Randomness seeded to: 3941613199
+===============================================================================
+All tests passed (2 assertions in 1 test case)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"All-identical monthly values yield zero seasonality" end time: Apr 10 04:28 UTC
+"All-identical monthly values yield zero seasonality" time elapsed: 00:00:00
+----------------------------------------------------------
+
+36/39 Testing: GdalReader opens valid datasets
+36/39 Test: GdalReader opens valid datasets
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "GdalReader opens valid datasets"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"GdalReader opens valid datasets" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "GdalReader opens valid datasets"
+Randomness seeded to: 491442816
+===============================================================================
+All tests passed (1 assertion in 1 test case)
+
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"GdalReader opens valid datasets" end time: Apr 10 04:28 UTC
+"GdalReader opens valid datasets" time elapsed: 00:00:00
+----------------------------------------------------------
+
+37/39 Testing: GdalReader reports correct raster dimensions
+37/39 Test: GdalReader reports correct raster dimensions
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "GdalReader reports correct raster dimensions"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"GdalReader reports correct raster dimensions" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "GdalReader reports correct raster dimensions"
+Randomness seeded to: 1463783878
+===============================================================================
+All tests passed (2 assertions in 1 test case)
+
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"GdalReader reports correct raster dimensions" end time: Apr 10 04:28 UTC
+"GdalReader reports correct raster dimensions" time elapsed: 00:00:00
+----------------------------------------------------------
+
+38/39 Testing: GdalReader read_block returns correct shape
+38/39 Test: GdalReader read_block returns correct shape
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "GdalReader read_block returns correct shape"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"GdalReader read_block returns correct shape" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "GdalReader read_block returns correct shape"
+Randomness seeded to: 2844837874
+===============================================================================
+All tests passed (5 assertions in 1 test case)
+
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"GdalReader read_block returns correct shape" end time: Apr 10 04:28 UTC
+"GdalReader read_block returns correct shape" time elapsed: 00:00:00
+----------------------------------------------------------
+
+39/39 Testing: GdalReader read_block returns expected pixel values
+39/39 Test: GdalReader read_block returns expected pixel values
+Command: "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim" "GdalReader read_block returns expected pixel values"
+Directory: /home/runner/work/xbioclim/xbioclim/build/tests
+"GdalReader read_block returns expected pixel values" start time: Apr 10 04:28 UTC
+Output:
+----------------------------------------------------------
+Filters: "GdalReader read_block returns expected pixel values"
+Randomness seeded to: 90311279
+===============================================================================
+All tests passed (5 assertions in 1 test case)
+
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"GdalReader read_block returns expected pixel values" end time: Apr 10 04:28 UTC
+"GdalReader read_block returns expected pixel values" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Apr 10 04:28 UTC

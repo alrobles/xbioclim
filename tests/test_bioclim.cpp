@@ -4,6 +4,8 @@
 #include "xbioclim/bioclim.hpp"
 
 #include <cmath>
+#include <limits>
+#include <stdexcept>
 
 using Catch::Matchers::WithinAbs;
 using namespace xbioclim;
@@ -182,4 +184,57 @@ TEST_CASE("compute_bioclim handles multiple pixels", "[bioclim]") {
         CHECK_THAT(bio.bio01(p), WithinAbs(6.5f, 1e-3f));
         CHECK_THAT(bio.bio12(p), WithinAbs(78.0f, 1e-3f));
     }
+}
+
+TEST_CASE("NaN inputs propagate through BIO variables", "[bioclim]") {
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    ClimateBlock data;
+    data.tas    = Array2D::from_shape({std::size_t(1), std::size_t(12)});
+    data.tasmax = Array2D::from_shape({std::size_t(1), std::size_t(12)});
+    data.tasmin = Array2D::from_shape({std::size_t(1), std::size_t(12)});
+    data.pr     = Array2D::from_shape({std::size_t(1), std::size_t(12)});
+    data.tas.fill(nan);
+    data.tasmax.fill(nan);
+    data.tasmin.fill(nan);
+    data.pr.fill(nan);
+
+    auto bio = compute_bioclim(data);
+    // NaN inputs should produce NaN outputs for all BIO variables
+    CHECK(std::isnan(bio.bio01(0)));
+    CHECK(std::isnan(bio.bio02(0)));
+    CHECK(std::isnan(bio.bio04(0)));
+    CHECK(std::isnan(bio.bio05(0)));
+    CHECK(std::isnan(bio.bio06(0)));
+    CHECK(std::isnan(bio.bio07(0)));
+    CHECK(std::isnan(bio.bio12(0)));
+    CHECK(std::isnan(bio.bio13(0)));
+    CHECK(std::isnan(bio.bio14(0)));
+}
+
+TEST_CASE("ClimateBlock rejects mismatched n_pixels", "[bioclim]") {
+    ClimateBlock data;
+    data.tas    = Array2D::from_shape({std::size_t(2), std::size_t(12)});
+    data.tasmax = Array2D::from_shape({std::size_t(3), std::size_t(12)});  // mismatch
+    data.tasmin = Array2D::from_shape({std::size_t(2), std::size_t(12)});
+    data.pr     = Array2D::from_shape({std::size_t(2), std::size_t(12)});
+    CHECK_THROWS_AS(compute_bioclim(data), std::invalid_argument);
+}
+
+TEST_CASE("All-identical monthly values yield zero seasonality", "[bioclim]") {
+    // tas = tasmax = tasmin = pr = 5.0 everywhere → BIO04=0, BIO15=0
+    ClimateBlock data;
+    data.tas    = Array2D::from_shape({std::size_t(1), std::size_t(12)});
+    data.tasmax = Array2D::from_shape({std::size_t(1), std::size_t(12)});
+    data.tasmin = Array2D::from_shape({std::size_t(1), std::size_t(12)});
+    data.pr     = Array2D::from_shape({std::size_t(1), std::size_t(12)});
+    data.tas.fill(5.0f);
+    data.tasmax.fill(5.0f);
+    data.tasmin.fill(5.0f);
+    data.pr.fill(5.0f);
+
+    auto bio = compute_bioclim(data);
+    // Temperature seasonality: 100 * stddev(5,5,...) = 0
+    CHECK_THAT(bio.bio04(0), WithinAbs(0.0f, 1e-3f));
+    // Precipitation seasonality: stddev/mean = 0/5 = 0
+    CHECK_THAT(bio.bio15(0), WithinAbs(0.0f, 1e-3f));
 }

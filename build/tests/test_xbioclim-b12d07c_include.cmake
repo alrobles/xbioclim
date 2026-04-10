@@ -1,0 +1,5 @@
+if(EXISTS "/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim-b12d07c_tests.cmake")
+  include("/home/runner/work/xbioclim/xbioclim/build/tests/test_xbioclim-b12d07c_tests.cmake")
+else()
+  add_test(test_xbioclim_NOT_BUILT-b12d07c test_xbioclim_NOT_BUILT-b12d07c)
+endif()

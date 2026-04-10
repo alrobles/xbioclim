@@ -1,0 +1,2 @@
+/usr/bin/ar qc libxbioclim.a CMakeFiles/xbioclim.dir/src/primitives.cpp.o CMakeFiles/xbioclim.dir/src/bioclim.cpp.o CMakeFiles/xbioclim.dir/src/gdal_io.cpp.o
+/usr/bin/ranlib libxbioclim.a
