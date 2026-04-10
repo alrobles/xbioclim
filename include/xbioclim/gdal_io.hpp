@@ -13,10 +13,17 @@ namespace xbioclim {
 /// Reads monthly climate rasters from 48 GeoTIFFs (4 variables × 12 months).
 class GdalReader {
 public:
+    /// Construct a reader.  Optional ScaleOffset parameters apply a linear
+    /// transform (val = raw * scale + offset) during read_block and mask
+    /// raw NoData values (−9999) to NaN.
     explicit GdalReader(const std::vector<std::string>& tas_files,
                         const std::vector<std::string>& tasmax_files,
                         const std::vector<std::string>& tasmin_files,
-                        const std::vector<std::string>& pr_files);
+                        const std::vector<std::string>& pr_files,
+                        ScaleOffset tas_so    = {1.0f, 0.0f},
+                        ScaleOffset tasmax_so = {1.0f, 0.0f},
+                        ScaleOffset tasmin_so = {1.0f, 0.0f},
+                        ScaleOffset pr_so     = {1.0f, 0.0f});
 
     ~GdalReader();
 
