@@ -3,7 +3,6 @@
 #include "xbioclim/version.hpp"
 
 #include <algorithm>
-#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -77,16 +76,39 @@ int main(int argc, char* argv[]) {
 
         if (arg == "--outdir"  && i + 1 < argc) { outdir  = argv[++i]; continue; }
         if (arg == "--prefix"  && i + 1 < argc) { prefix  = argv[++i]; continue; }
-        if (arg == "--tile-size" && i + 1 < argc) { tile_h = std::atoi(argv[++i]); continue; }
+        if (arg == "--tile-size" && i + 1 < argc) {
+            try {
+                tile_h = std::stoi(argv[++i]);
+                if (tile_h <= 0) {
+                    std::cerr << "Error: --tile-size must be a positive integer\n";
+                    return 1;
+                }
+            } catch (const std::exception&) {
+                std::cerr << "Error: invalid value for --tile-size\n";
+                return 1;
+            }
+            continue;
+        }
 
-        if (arg == "--tas-scale"     && i + 1 < argc) { tas_so.scale     = std::stof(argv[++i]); continue; }
-        if (arg == "--tas-offset"    && i + 1 < argc) { tas_so.offset    = std::stof(argv[++i]); continue; }
-        if (arg == "--tasmax-scale"  && i + 1 < argc) { tasmax_so.scale  = std::stof(argv[++i]); continue; }
-        if (arg == "--tasmax-offset" && i + 1 < argc) { tasmax_so.offset = std::stof(argv[++i]); continue; }
-        if (arg == "--tasmin-scale"  && i + 1 < argc) { tasmin_so.scale  = std::stof(argv[++i]); continue; }
-        if (arg == "--tasmin-offset" && i + 1 < argc) { tasmin_so.offset = std::stof(argv[++i]); continue; }
-        if (arg == "--pr-scale"      && i + 1 < argc) { pr_so.scale     = std::stof(argv[++i]); continue; }
-        if (arg == "--pr-offset"     && i + 1 < argc) { pr_so.offset    = std::stof(argv[++i]); continue; }
+        // Helper lambda for parsing float options
+        auto parse_float = [&](const char* name, float& dest) -> bool {
+            try {
+                dest = std::stof(argv[++i]);
+                return true;
+            } catch (const std::exception&) {
+                std::cerr << "Error: invalid value for " << name << "\n";
+                return false;
+            }
+        };
+
+        if (arg == "--tas-scale"     && i + 1 < argc) { if (!parse_float("--tas-scale",     tas_so.scale))     return 1; continue; }
+        if (arg == "--tas-offset"    && i + 1 < argc) { if (!parse_float("--tas-offset",    tas_so.offset))    return 1; continue; }
+        if (arg == "--tasmax-scale"  && i + 1 < argc) { if (!parse_float("--tasmax-scale",  tasmax_so.scale))  return 1; continue; }
+        if (arg == "--tasmax-offset" && i + 1 < argc) { if (!parse_float("--tasmax-offset", tasmax_so.offset)) return 1; continue; }
+        if (arg == "--tasmin-scale"  && i + 1 < argc) { if (!parse_float("--tasmin-scale",  tasmin_so.scale))  return 1; continue; }
+        if (arg == "--tasmin-offset" && i + 1 < argc) { if (!parse_float("--tasmin-offset", tasmin_so.offset)) return 1; continue; }
+        if (arg == "--pr-scale"      && i + 1 < argc) { if (!parse_float("--pr-scale",      pr_so.scale))     return 1; continue; }
+        if (arg == "--pr-offset"     && i + 1 < argc) { if (!parse_float("--pr-offset",     pr_so.offset))    return 1; continue; }
 
         std::cerr << "Unknown option: " << arg << "\n";
         print_usage(argv[0]);
