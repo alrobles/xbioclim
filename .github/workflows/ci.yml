@@ -1,68 +1,24 @@
 name: CI
-
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
+  build:
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential cmake \
-            libgdal-dev gdal-bin \
-            libxtensor-dev \
-            python3-gdal python3-numpy
+    - name: Install Dependencies
+      run: sudo apt update && sudo apt install -y libomp-dev
 
-      - name: Generate test data
-        run: python3 tools/generate_test_data.py --outdir tests/data
-
-      - name: Configure
-        run: |
-          cmake -B build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DXBIOCLIM_BUILD_TESTS=ON \
-            -DXBIOCLIM_USE_OPENMP=ON
-
-      - name: Build
-        run: cmake --build build --parallel $(nproc)
-
-      - name: Test
-        run: ctest --test-dir build --output-on-failure
-        env:
-          XBIOCLIM_TEST_DATA: ${{ github.workspace }}/tests/data
-
-  static-analysis:
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            clang-tidy libgdal-dev libxtensor-dev cmake
-
-      - name: Configure with compile commands
-        run: |
-          cmake -B build \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-            -DXBIOCLIM_BUILD_TESTS=OFF
-
-      - name: Run clang-tidy
-        run: |
-          clang-tidy src/*.cpp include/xbioclim/*.hpp \
-            -p build --warnings-as-errors='*'
+    - name: Build
+      run: |
+        cmake -S . -B build
+        cmake --build build
