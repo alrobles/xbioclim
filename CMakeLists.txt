@@ -4,13 +4,25 @@ project(xbioclim VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# --- Custom CMake module path ---
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 # --- Dependencies ---
 find_package(GDAL 3.0 REQUIRED)
+include(XbioclimCheckGDAL)
 find_package(xtensor REQUIRED)
+include(XbioclimCheckXtensor)
 
 option(XBIOCLIM_USE_OPENMP "Enable OpenMP CPU parallelism" ON)
 if(XBIOCLIM_USE_OPENMP)
     find_package(OpenMP)
+endif()
+
+option(XBIOCLIM_USE_OPENMP_OFFLOAD "Enable OpenMP 4.5 GPU offload" OFF)
+if(XBIOCLIM_USE_OPENMP_OFFLOAD)
+    if(NOT OpenMP_CXX_FOUND)
+        find_package(OpenMP REQUIRED)
+    endif()
 endif()
 
 option(XBIOCLIM_USE_CUDA "Enable CUDA GPU kernels" OFF)
@@ -38,6 +50,10 @@ target_link_libraries(xbioclim PUBLIC
 
 if(XBIOCLIM_USE_OPENMP AND OpenMP_CXX_FOUND)
     target_compile_definitions(xbioclim PUBLIC XBIOCLIM_USE_OPENMP)
+endif()
+
+if(XBIOCLIM_USE_OPENMP_OFFLOAD AND OpenMP_CXX_FOUND)
+    target_compile_definitions(xbioclim PUBLIC XBIOCLIM_USE_OPENMP_OFFLOAD)
 endif()
 
 # --- Export target ---
