@@ -41,6 +41,7 @@ def write_tif(path: pathlib.Path, value: int, nodata: int = -9999) -> None:
     )
     srs = osr.SpatialReference()
     srs.ImportFromEPSG(4326)
+    srs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
     ds.SetProjection(srs.ExportToWkt())
     ds.SetGeoTransform(GT)
     band = ds.GetRasterBand(1)

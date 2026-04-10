@@ -1,71 +1,73 @@
-# `bioclim-gpu`
+# xbioclim
 
-[GitHub Repository](https://github.com/yourusername/bioclim-gpu)  
-MIT License  
+[![CI](https://github.com/alrobles/xbioclim/actions/workflows/ci.yml/badge.svg)](https://github.com/alrobles/xbioclim/actions/workflows/ci.yml)
+MIT License
 
-## High‑Performance Bioclimatic Variables
+## Overview
 
-Fast, parallel computation of WorldClim-style bioclimatic variables (BIO1--BIO19) from monthly temperature and precipitation rasters. Designed for HPC clusters and GPU acceleration -- processes billions of pixels per second on an NVIDIA A100.
+**xbioclim** is a high-performance C++17 library for computing WorldClim-style
+bioclimatic variables (BIO1–BIO19) from monthly temperature and precipitation
+rasters. It uses [xtensor](https://github.com/xtensor-stack/xtensor) for
+vectorised array operations, [GDAL](https://gdal.org/) for geospatial I/O,
+and optionally OpenMP for CPU parallelism.
 
-### Problem & Approach
+The computation is embarrassingly parallel — each pixel is processed
+independently — making it well suited for HPC clusters and GPU offload.
 
-Bioclimatic variables are derived per pixel from 12 monthly inputs. The computation is:
+## Dependencies
 
-- **Embarrassingly parallel** – each pixel independent.
-- **Memory‑bound** – ~170 bytes/pixel I/O, ~150 FLOPs/pixel.
-- **Ideal for GPUs** – custom CUDA kernels or OpenMP offload achieve 5–6 billion pixels/s on A100.
+| Dependency | Minimum version | Notes |
+|------------|-----------------|-------|
+| C++17 compiler | GCC 9+, Clang 10+ | Required |
+| CMake | ≥ 3.15 | Build system |
+| GDAL | ≥ 3.0 | Raster I/O (C++ bindings) |
+| xtensor | 0.25 | Array primitives (header-only) |
+| xtl | 0.7 | Required by xtensor |
+| OpenMP | any | Optional — CPU parallelism |
 
-Two implementation strategies are provided:
-
-1. **Custom CUDA kernels** – maximum performance (near peak memory bandwidth).
-2. **`xtensor` + OpenMP target offload** – portable, maintainable, still 2–4 billion pixels/s.
-
-Both use GDAL for tile‑based I/O and support Cloud Optimized GeoTIFFs (COGs).
-
-### Performance Expectations (NVIDIA A100)
-
-| Metric                     | Value             |
-|----------------------------|-------------------|
-| Peak memory bandwidth      | 1.6 TB/s         |
-| Theoretical pixels/s       | 9.4 billion      |
-| Realistic (CUDA)           | 5–6 billion pixels/s |
-| Realistic (OpenMP offload) | 2–4 billion pixels/s |
-| Global 1 km land grid      | ~0.03 seconds (CUDA) |
-
-**Note:** I/O becomes the bottleneck – COGs and fast parallel file systems are essential.
-
-### Dependencies
-
-- C++17 compiler (GCC 9+, Clang 10+, or NVIDIA HPC SDK)
-- GDAL (≥3.0) with C++ bindings
-- OpenMP (≥4.5) for offload strategy
-- CUDA Toolkit (≥11.0) for custom kernels
-- `xtensor` (optional, for strategy 2)
-- CMake (≥3.15)
-
-### Build Instructions
+## Build Instructions
 
 ```bash
-git clone https://github.com/yourusername/bioclim-gpu.git
-cd bioclim-gpu
-mkdir build && cd build
-cmake .. -DUSE_CUDA=ON      # for custom CUDA kernels
-# or
-cmake .. -DUSE_OPENMP_OFFLOAD=ON   # for xtensor+OpenMP
-make -j
+# Clone the repository
+git clone https://github.com/alrobles/xbioclim.git
+cd xbioclim
+
+# Configure and build
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DXBIOCLIM_BUILD_TESTS=ON
+cmake --build build --parallel $(nproc)
 ```
 
-### Usage Example
+### CMake Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `XBIOCLIM_BUILD_TESTS` | `ON` | Build the Catch2 test suite |
+| `XBIOCLIM_USE_OPENMP` | `ON` | Enable OpenMP CPU parallelism |
+| `XBIOCLIM_USE_OPENMP_OFFLOAD` | `OFF` | Enable OpenMP 4.5 GPU offload |
+| `XBIOCLIM_USE_CUDA` | `OFF` | Enable CUDA GPU kernels |
+
+## Running Tests
 
 ```bash
-# Input: 24 files (tmean_01.tif ... tmean_12.tif, prec_01.tif ... prec_12.tif)
-# Output: 19 files (bio1.tif ... bio19.tif)
+# Generate synthetic test fixtures (requires Python 3 + GDAL)
+python3 tools/generate_test_data.py --outdir tests/data
 
-./bioclim_gpu \
-  --tmean monthly_tmean_{01..12}.tif \
-  --prec monthly_prec_{01..12}.tif \
-  --out_prefix bioclim_ \
-  --tile_size 512
+# Run all tests
+XBIOCLIM_TEST_DATA=tests/data ctest --test-dir build --output-on-failure
+```
+
+## Usage Example
+
+```bash
+# CLI tool (when built)
+./build/xbioclim_cli \
+  --tas tas_{01..12}.tif \
+  --tasmax tasmax_{01..12}.tif \
+  --tasmin tasmin_{01..12}.tif \
+  --pr pr_{01..12}.tif \
+  --outdir output/ \
+  --prefix bio_ \
+  --tile-size 512
 ```
 
 For Slurm clusters:
@@ -74,14 +76,24 @@ For Slurm clusters:
 sbatch scripts/run_slurm_array.sh
 ```
 
-### Full Protocol
+## Documentation
 
-The detailed theoretical and implementation protocol is available in `docs/protocol.md`.
+- [Protocol](docs/PROTOCOL.md) — Theoretical background and implementation details
+- [Roadmap](docs/ROADMAP.md) — Development phases and release checklist
 
-### Contributing
+## Project Structure
 
-Issues and pull requests welcome. See `CONTRIBUTING.md`.
+```
+xbioclim/
+├── include/xbioclim/   # Public headers (primitives, bioclim, gdal_io, version)
+├── src/                # Library implementation
+├── tests/              # Catch2 test suite
+├── tools/              # Helper scripts (test data generation)
+├── docs/               # Protocol and roadmap documentation
+├── cmake/              # CMake helper modules
+└── scripts/            # HPC / Slurm job scripts
+```
 
-### License
+## License
 
-MIT © Angel Luis Robles Fernández
+MIT © Angel Luis Robles Fernández — see [LICENSE](LICENSE) for details.
