@@ -46,7 +46,7 @@ IndexArray rolling_quarter_argmax(const Array2D& A) {
         std::size_t* __restrict__ res_ptr = result.data();
         const std::size_t total = N * 12;
         static constexpr std::size_t SENTINEL = std::numeric_limits<std::size_t>::max();
-        static constexpr float FLOAT_LOWEST = -3.402823466e+38f;
+        static constexpr float FLOAT_LOWEST = std::numeric_limits<float>::lowest();
 #pragma omp target teams distribute parallel for \
         map(to: A_ptr[0:total]) map(from: res_ptr[0:N])
         for (std::size_t p = 0; p < N; ++p) {
@@ -127,7 +127,7 @@ IndexArray rolling_quarter_argmin(const Array2D& A) {
         std::size_t* __restrict__ res_ptr = result.data();
         const std::size_t total = N * 12;
         static constexpr std::size_t SENTINEL = std::numeric_limits<std::size_t>::max();
-        static constexpr float FLOAT_MAX = 3.402823466e+38f;
+        static constexpr float FLOAT_MAX = std::numeric_limits<float>::max();
 #pragma omp target teams distribute parallel for \
         map(to: A_ptr[0:total]) map(from: res_ptr[0:N])
         for (std::size_t p = 0; p < N; ++p) {
@@ -209,7 +209,7 @@ Array1D quarter_mean(const Array2D& A, const IndexArray& starts) {
         const std::size_t* __restrict__ starts_ptr = starts.data();
         float* __restrict__ res_ptr = result.data();
         const std::size_t total = N * 12;
-        static constexpr float NAN_VAL = __builtin_nanf("");
+        static constexpr float NAN_VAL = std::numeric_limits<float>::quiet_NaN();
 #pragma omp target teams distribute parallel for \
         map(to: A_ptr[0:total], starts_ptr[0:N]) map(from: res_ptr[0:N])
         for (std::size_t p = 0; p < N; ++p) {

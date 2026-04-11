@@ -62,8 +62,8 @@ if(XBIOCLIM_USE_OPENMP_OFFLOAD AND OpenMP_CXX_FOUND)
     #   Clang (AMD):    -fopenmp-targets=amdgcn-amd-amdhsa
     # When empty (default), OpenMP target regions fall back to host CPU execution.
     if(XBIOCLIM_OPENMP_OFFLOAD_FLAGS)
-        target_compile_options(xbioclim PUBLIC ${XBIOCLIM_OPENMP_OFFLOAD_FLAGS})
-        target_link_options(xbioclim PUBLIC ${XBIOCLIM_OPENMP_OFFLOAD_FLAGS})
+        target_compile_options(xbioclim PRIVATE ${XBIOCLIM_OPENMP_OFFLOAD_FLAGS})
+        target_link_options(xbioclim PRIVATE ${XBIOCLIM_OPENMP_OFFLOAD_FLAGS})
     endif()
 endif()
 
