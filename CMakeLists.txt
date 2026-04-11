@@ -28,6 +28,8 @@ endif()
 option(XBIOCLIM_USE_CUDA "Enable CUDA GPU kernels" OFF)
 if(XBIOCLIM_USE_CUDA)
     enable_language(CUDA)
+    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 endif()
 
 # --- Library target ---
@@ -36,6 +38,12 @@ add_library(xbioclim
     src/bioclim.cpp
     src/gdal_io.cpp
 )
+
+if(XBIOCLIM_USE_CUDA)
+    target_sources(xbioclim PRIVATE src/bioclim_cuda.cu)
+    set_target_properties(xbioclim PROPERTIES CUDA_ARCHITECTURES "80;86;90")
+    target_compile_definitions(xbioclim PUBLIC XBIOCLIM_USE_CUDA)
+endif()
 
 target_include_directories(xbioclim PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

@@ -12,11 +12,17 @@ if(NOT Catch2_FOUND)
     list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/extras")
 endif()
 
-add_executable(test_xbioclim
+set(TEST_SOURCES
     test_primitives.cpp
     test_bioclim.cpp
     test_gdal_io.cpp
 )
+
+if(XBIOCLIM_USE_CUDA)
+    list(APPEND TEST_SOURCES test_cuda_bioclim.cpp)
+endif()
+
+add_executable(test_xbioclim ${TEST_SOURCES})
 
 target_link_libraries(test_xbioclim PRIVATE
     xbioclim

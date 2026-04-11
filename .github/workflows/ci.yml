@@ -1,4 +1,46 @@
-# ... keep everything else the same ...
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install System Dependencies
+      run: sudo apt update && sudo apt install -y libgdal-dev libomp-dev
+
+    - name: Install xtl
+      run: |
+        git clone --depth=1 --branch 0.7.5 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+        cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+        sudo cmake --build /tmp/xtl/build --target install
+
+    - name: Install xtensor
+      run: |
+        git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+        cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+        sudo cmake --build /tmp/xtensor/build --target install
+
+    - name: Configure
+      run: |
+        cmake -B build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DXBIOCLIM_BUILD_TESTS=ON
+
+    - name: Build
+      run: cmake --build build --parallel $(nproc)
+
+    - name: Run Tests
+      run: |
+        XBIOCLIM_TEST_DATA=$PWD/tests/data ctest --test-dir build --output-on-failure
 
   static-analysis:
     runs-on: ubuntu-latest
@@ -10,7 +52,17 @@
     - name: Install System Dependencies
       run: sudo apt update && sudo apt install -y libgdal-dev libomp-dev clang-tidy
 
-    # (keep xtl/xtensor install steps)
+    - name: Install xtl
+      run: |
+        git clone --depth=1 --branch 0.7.5 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+        cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+        sudo cmake --build /tmp/xtl/build --target install
+
+    - name: Install xtensor
+      run: |
+        git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+        cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+        sudo cmake --build /tmp/xtensor/build --target install
 
     - name: Configure with compile commands
       run: |
@@ -22,3 +74,52 @@
     - name: Run clang-tidy (enforced)
       run: |
         clang-tidy src/*.cpp -p build --warnings-as-errors='*'
+
+  # ---------------------------------------------------------------------------
+  # CUDA build job — compiles the CUDA backend to verify it is correct.
+  # Runtime GPU tests are skipped automatically when no CUDA device is found.
+  # To run with an actual GPU, switch to a self-hosted runner that has one.
+  # ---------------------------------------------------------------------------
+  cuda-build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install CUDA Toolkit
+      uses: Jimver/cuda-toolkit@v0.2.16
+      with:
+        cuda: '12.4.0'
+        method: 'network'
+        sub-packages: '["nvcc", "cudart-dev"]'
+
+    - name: Install System Dependencies
+      run: sudo apt update && sudo apt install -y libgdal-dev libomp-dev
+
+    - name: Install xtl
+      run: |
+        git clone --depth=1 --branch 0.7.5 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+        cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+        sudo cmake --build /tmp/xtl/build --target install
+
+    - name: Install xtensor
+      run: |
+        git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+        cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+        sudo cmake --build /tmp/xtensor/build --target install
+
+    - name: Configure with CUDA enabled
+      run: |
+        cmake -B build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DXBIOCLIM_USE_CUDA=ON \
+          -DXBIOCLIM_BUILD_TESTS=ON
+
+    - name: Build (CUDA)
+      run: cmake --build build --parallel $(nproc)
+
+    - name: Run Tests (GPU tests skipped when no device present)
+      run: |
+        XBIOCLIM_TEST_DATA=$PWD/tests/data ctest --test-dir build --output-on-failure
+
