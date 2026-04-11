@@ -4,6 +4,7 @@
 #include <cpl_conv.h>
 
 #include <array>
+#include <cstdio>
 #include <limits>
 #include <stdexcept>
 #include <string>
