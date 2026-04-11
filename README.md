@@ -76,10 +76,27 @@ For Slurm clusters:
 sbatch scripts/run_slurm_array.sh
 ```
 
+## Dependency Management
+
+### vcpkg
+
+```bash
+vcpkg install  # reads vcpkg.json manifest automatically
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+```
+
+### Conan
+
+```bash
+conan install . --output-folder=build --build=missing
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
+```
+
 ## Documentation
 
 - [Protocol](docs/PROTOCOL.md) — Theoretical background and implementation details
 - [Roadmap](docs/ROADMAP.md) — Development phases and release checklist
+- [Benchmarks](docs/BENCHMARKS.md) — CPU performance benchmarks for v0.1.0
 
 ## Project Structure
 
