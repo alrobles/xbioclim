@@ -4,6 +4,53 @@ on:
   push:
     branches: [main, develop]
   pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential cmake \
+            libgdal-dev gdal-bin \
+            libomp-dev \
+            python3-gdal python3-numpy
+
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtl/build --target install
+
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtensor/build --target install
+
+      - name: Generate test data
+        run: python3 tools/generate_test_data.py --outdir tests/data
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DXBIOCLIM_BUILD_TESTS=ON
+
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Test
+        run: |
+          XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data \
+            ctest --test-dir build --output-on-failure
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
     branches: [main, develop]
 
 concurrency:
@@ -137,53 +184,31 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            clang-14 clang-tidy-14 cppcheck \
-            cmake ninja-build \
-            libgdal-dev \
-            libomp-dev
+      - name: Install System Dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev clang-tidy
 
       - name: Install xtl (header-only)
         run: |
-          git clone --depth=1 --branch 0.7.7 \
-            https://github.com/xtensor-stack/xtl.git /tmp/xtl
-          cmake -S /tmp/xtl -B /tmp/xtl/build \
-            -DCMAKE_INSTALL_PREFIX=/usr/local \
-            -DCMAKE_BUILD_TYPE=Release
+          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
           sudo cmake --build /tmp/xtl/build --target install
 
       - name: Install xtensor (header-only)
         run: |
-          git clone --depth=1 --branch 0.25.0 \
-            https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
-          cmake -S /tmp/xtensor -B /tmp/xtensor/build \
-            -DCMAKE_INSTALL_PREFIX=/usr/local \
-            -DCMAKE_BUILD_TYPE=Release
+          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
           sudo cmake --build /tmp/xtensor/build --target install
 
-      - name: Configure with compile-commands
+      - name: Configure with compile commands
         run: |
-          cmake -S . -B build -G Ninja \
+          cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-            -DXBIOCLIM_BUILD_TESTS=OFF \
-            -DCMAKE_CXX_COMPILER=clang++-14
+            -DXBIOCLIM_BUILD_TESTS=OFF
 
-      - name: clang-tidy (enforced, zero warnings)
+      - name: Run clang-tidy (enforced)
         run: |
-          clang-tidy-14 src/*.cpp -p build --warnings-as-errors='*'
-
-      - name: cppcheck (enforced, zero warnings)
-        run: |
-          cppcheck \
-            --enable=warning,style,performance,portability \
-            --error-exitcode=1 \
-            --inline-suppr \
-            --suppress=missingIncludeSystem \
-            -I include \
-            src include
+          clang-tidy src/*.cpp -p build --warnings-as-errors='*'

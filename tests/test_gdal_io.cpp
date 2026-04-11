@@ -139,7 +139,7 @@ TEST_CASE("GdalWriter roundtrip writes and reads back correct values",
     // Read back BIO01 and BIO12 with GDAL directly
     GDALAllRegister();
     {
-        auto path1 = (tmpdir / "bio1.tif").string();
+        auto path1 = (tmpdir / "bio01.tif").string();
         GDALDataset* ds = static_cast<GDALDataset*>(
             GDALOpen(path1.c_str(), GA_ReadOnly));
         REQUIRE(ds != nullptr);
