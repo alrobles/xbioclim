@@ -46,6 +46,7 @@ target_link_libraries(xbioclim PUBLIC
     GDAL::GDAL
     xtensor
     $<$<AND:$<BOOL:${XBIOCLIM_USE_OPENMP}>,$<TARGET_EXISTS:OpenMP::OpenMP_CXX>>:OpenMP::OpenMP_CXX>
+    $<$<AND:$<BOOL:${XBIOCLIM_USE_OPENMP_OFFLOAD}>,$<NOT:$<BOOL:${XBIOCLIM_USE_OPENMP}>>,$<TARGET_EXISTS:OpenMP::OpenMP_CXX>>:OpenMP::OpenMP_CXX>
 )
 
 if(XBIOCLIM_USE_OPENMP AND OpenMP_CXX_FOUND)
@@ -54,6 +55,16 @@ endif()
 
 if(XBIOCLIM_USE_OPENMP_OFFLOAD AND OpenMP_CXX_FOUND)
     target_compile_definitions(xbioclim PUBLIC XBIOCLIM_USE_OPENMP_OFFLOAD)
+    # Allow users to specify GPU offload targets via -DXBIOCLIM_OPENMP_OFFLOAD_FLAGS=...
+    # Examples:
+    #   GCC  (NVIDIA): -foffload=nvptx-none -foffload-options=nvptx-none=-misa=sm_80
+    #   Clang (NVIDIA): -fopenmp-targets=nvptx64-nvidia-cuda
+    #   Clang (AMD):    -fopenmp-targets=amdgcn-amd-amdhsa
+    # When empty (default), OpenMP target regions fall back to host CPU execution.
+    if(XBIOCLIM_OPENMP_OFFLOAD_FLAGS)
+        target_compile_options(xbioclim PRIVATE ${XBIOCLIM_OPENMP_OFFLOAD_FLAGS})
+        target_link_options(xbioclim PRIVATE ${XBIOCLIM_OPENMP_OFFLOAD_FLAGS})
+    endif()
 endif()
 
 # --- Export target ---

@@ -6,6 +6,7 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <vector>
 
 using Catch::Matchers::WithinAbs;
 using namespace xbioclim;
@@ -246,3 +247,87 @@ TEST_CASE("All-identical monthly values yield zero seasonality", "[bioclim]") {
     // Precipitation seasonality: 100 * stddev/mean = 100 * 0/5 = 0
     CHECK_THAT(bio.bio15(0), WithinAbs(0.0f, 1e-3f));
 }
+
+// ---------------------------------------------------------------------------
+// OpenMP offload correctness: results from the offload code path (activated
+// when XBIOCLIM_USE_OPENMP_OFFLOAD is defined) must match the expected
+// analytical values and handle NaN/edge cases identically to the CPU path.
+// ---------------------------------------------------------------------------
+
+#ifdef XBIOCLIM_USE_OPENMP_OFFLOAD
+
+TEST_CASE("Offload: BIO01/BIO12 match expected values", "[bioclim][offload]") {
+    auto bio = compute_bioclim(make_test_block());
+    CHECK_THAT(bio.bio01(0), WithinAbs(6.5f, 1e-3f));
+    CHECK_THAT(bio.bio12(0), WithinAbs(78.0f, 1e-3f));
+}
+
+TEST_CASE("Offload: quarter-based variables match expected values", "[bioclim][offload]") {
+    auto bio = compute_bioclim(make_test_block());
+    // Wettest/warmest quarter starts at month 9 → mean tas = 11, mean pr = 11
+    CHECK_THAT(bio.bio08(0), WithinAbs(11.0f, 1e-3f));
+    CHECK_THAT(bio.bio10(0), WithinAbs(11.0f, 1e-3f));
+    CHECK_THAT(bio.bio16(0), WithinAbs(11.0f, 1e-3f));
+    CHECK_THAT(bio.bio18(0), WithinAbs(11.0f, 1e-3f));
+    // Driest/coldest quarter starts at month 0 → mean tas = 2, mean pr = 2
+    CHECK_THAT(bio.bio09(0), WithinAbs(2.0f, 1e-3f));
+    CHECK_THAT(bio.bio11(0), WithinAbs(2.0f, 1e-3f));
+    CHECK_THAT(bio.bio17(0), WithinAbs(2.0f, 1e-3f));
+    CHECK_THAT(bio.bio19(0), WithinAbs(2.0f, 1e-3f));
+}
+
+TEST_CASE("Offload: NaN inputs produce NaN outputs", "[bioclim][offload]") {
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    ClimateBlock data;
+    data.tas    = Array2D::from_shape({std::size_t(1), std::size_t(12)});
+    data.tasmax = Array2D::from_shape({std::size_t(1), std::size_t(12)});
+    data.tasmin = Array2D::from_shape({std::size_t(1), std::size_t(12)});
+    data.pr     = Array2D::from_shape({std::size_t(1), std::size_t(12)});
+    data.tas.fill(nan);
+    data.tasmax.fill(nan);
+    data.tasmin.fill(nan);
+    data.pr.fill(nan);
+
+    auto bio = compute_bioclim(data);
+    // Quarter-based variables must be NaN when all inputs are NaN
+    CHECK(std::isnan(bio.bio08(0)));
+    CHECK(std::isnan(bio.bio09(0)));
+    CHECK(std::isnan(bio.bio10(0)));
+    CHECK(std::isnan(bio.bio11(0)));
+    CHECK(std::isnan(bio.bio16(0)));
+    CHECK(std::isnan(bio.bio17(0)));
+    CHECK(std::isnan(bio.bio18(0)));
+    CHECK(std::isnan(bio.bio19(0)));
+}
+
+TEST_CASE("Offload: multiple pixels yield consistent results", "[bioclim][offload]") {
+    const std::size_t N = 1000;
+    auto bio = compute_bioclim(make_test_block(N));
+    for (std::size_t p = 0; p < N; ++p) {
+        CHECK_THAT(bio.bio01(p), WithinAbs(6.5f, 1e-3f));
+        CHECK_THAT(bio.bio08(p), WithinAbs(11.0f, 1e-3f));
+        CHECK_THAT(bio.bio12(p), WithinAbs(78.0f, 1e-3f));
+    }
+}
+
+TEST_CASE("Offload: BIO03 is NoData when BIO07 is zero", "[bioclim][offload]") {
+    ClimateBlock data;
+    data.tas    = xt::ones<float>({std::size_t(1), std::size_t(12)});
+    data.tasmax = xt::ones<float>({std::size_t(1), std::size_t(12)});
+    data.tasmin = xt::ones<float>({std::size_t(1), std::size_t(12)});
+    data.pr     = xt::ones<float>({std::size_t(1), std::size_t(12)});
+    auto bio = compute_bioclim(data);
+    CHECK(std::isnan(bio.bio03(0)));
+}
+
+TEST_CASE("Offload: BIO15 is NoData when mean precipitation is zero", "[bioclim][offload]") {
+    ClimateBlock data;
+    data.tas    = xt::ones<float>({std::size_t(1), std::size_t(12)});
+    data.tasmax = xt::ones<float>({std::size_t(1), std::size_t(12)});
+    data.tasmin = xt::zeros<float>({std::size_t(1), std::size_t(12)});
+    data.pr     = xt::zeros<float>({std::size_t(1), std::size_t(12)});
+    auto bio = compute_bioclim(data);
+    CHECK(std::isnan(bio.bio15(0)));
+}
+
+#endif // XBIOCLIM_USE_OPENMP_OFFLOAD

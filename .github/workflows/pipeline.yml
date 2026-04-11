@@ -226,6 +226,20 @@ jobs:
           XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data
           ctest --test-dir build --output-on-failure
 
+      - name: Build with OpenMP target offload (host fallback)
+        run: |
+          cmake -S . -B build_offload \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DXBIOCLIM_BUILD_TESTS=ON \
+            -DXBIOCLIM_USE_OPENMP_OFFLOAD=ON
+          cmake --build build_offload --parallel $(nproc)
+
+      - name: Run OpenMP-offload Tests (host fallback, no GPU required)
+        run: >
+          OMP_TARGET_OFFLOAD=DISABLED
+          XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data
+          ctest --test-dir build_offload --output-on-failure
+
       - name: Benchmark Compute Pipeline
         run: |
           mkdir -p benchmarks

@@ -45,6 +45,61 @@ cmake --build build --parallel $(nproc)
 | `XBIOCLIM_USE_OPENMP` | `ON` | Enable OpenMP CPU parallelism |
 | `XBIOCLIM_USE_OPENMP_OFFLOAD` | `OFF` | Enable OpenMP 4.5 GPU offload |
 | `XBIOCLIM_USE_CUDA` | `OFF` | Enable CUDA GPU kernels |
+| `XBIOCLIM_OPENMP_OFFLOAD_FLAGS` | _(empty)_ | Extra compiler/linker flags for GPU offload target |
+
+### GPU Build (OpenMP 4.5 Target Offload)
+
+xbioclim supports GPU-accelerated computation via OpenMP 4.5 `target` offload.
+When `XBIOCLIM_USE_OPENMP_OFFLOAD=ON`, the rolling-quarter and quarter-mean
+primitives use `#pragma omp target teams distribute parallel for` to offload
+work to an available device (GPU or host fallback).
+
+**NVIDIA GPU (GCC + nvptx):**
+
+```bash
+cmake -B build \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DXBIOCLIM_USE_OPENMP_OFFLOAD=ON \
+  -DXBIOCLIM_OPENMP_OFFLOAD_FLAGS="-foffload=nvptx-none;-foffload-options=nvptx-none=-misa=sm_80"
+cmake --build build --parallel $(nproc)
+```
+
+**NVIDIA GPU (Clang/LLVM + nvptx64):**
+
+```bash
+cmake -B build \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_CXX_COMPILER=clang++ \
+  -DXBIOCLIM_USE_OPENMP_OFFLOAD=ON \
+  -DXBIOCLIM_OPENMP_OFFLOAD_FLAGS="-fopenmp-targets=nvptx64-nvidia-cuda"
+cmake --build build --parallel $(nproc)
+```
+
+**AMD GPU (Clang/LLVM + ROCm):**
+
+```bash
+cmake -B build \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_CXX_COMPILER=clang++ \
+  -DXBIOCLIM_USE_OPENMP_OFFLOAD=ON \
+  -DXBIOCLIM_OPENMP_OFFLOAD_FLAGS="-fopenmp-targets=amdgcn-amd-amdhsa;-Xopenmp-target=amdgcn-amd-amdhsa;-march=gfx90a"
+cmake --build build --parallel $(nproc)
+```
+
+**Host-only testing (no GPU required):**
+
+```bash
+cmake -B build \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DXBIOCLIM_BUILD_TESTS=ON \
+  -DXBIOCLIM_USE_OPENMP_OFFLOAD=ON
+cmake --build build --parallel $(nproc)
+OMP_TARGET_OFFLOAD=DISABLED ctest --test-dir build --output-on-failure
+```
+
+When no GPU is available, set `OMP_TARGET_OFFLOAD=DISABLED` to run target
+regions on the host CPU. The `XBIOCLIM_USE_OPENMP_OFFLOAD` tests in the
+Catch2 suite use this path in CI.
 
 ## Running Tests
 
