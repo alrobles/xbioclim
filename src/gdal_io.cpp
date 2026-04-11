@@ -168,6 +168,7 @@ static constexpr int NUM_BIO = 19;
 
 struct GdalWriter::Impl {
     GDALDataset* ds[NUM_BIO] = {};
+    std::string paths[NUM_BIO];
 };
 
 // ---------------------------------------------------------------------------
@@ -195,9 +196,9 @@ GdalWriter::GdalWriter(const std::string& output_dir,
     opts = CSLSetNameValue(opts, "BIGTIFF", "IF_SAFER");
 
     for (int b = 0; b < NUM_BIO; ++b) {
-        char bio_num[8];
-        std::snprintf(bio_num, sizeof(bio_num), "%02d", b + 1);
-        std::string path = output_dir + "/" + prefix + bio_num + ".tif";
+        std::string path = output_dir + "/" + prefix +
+                           std::to_string(b + 1) + ".tif";
+        impl_->paths[b] = path;
         GDALDataset* out_ds = drv->Create(
             path.c_str(), x_size, y_size, 1, GDT_Float32, opts);
         if (!out_ds) {
@@ -261,8 +262,49 @@ void GdalWriter::write_block(int x_off, int y_off, int block_w, int block_h,
 }
 
 void GdalWriter::finalize() {
+    GDALDriver* cog_drv = GetGDALDriverManager()->GetDriverByName("COG");
+
     for (int b = 0; b < NUM_BIO; ++b) {
-        if (impl_->ds[b]) {
+        if (!impl_->ds[b]) continue;
+
+        if (cog_drv && !impl_->paths[b].empty()) {
+            const std::string& final_path = impl_->paths[b];
+            std::string tmp_path = final_path + ".gtiff_tmp";
+
+            // Flush and close the draft GTiff before renaming.
+            GDALClose(impl_->ds[b]);
+            impl_->ds[b] = nullptr;
+
+            if (VSIRename(final_path.c_str(), tmp_path.c_str()) == 0) {
+                GDALDataset* src = static_cast<GDALDataset*>(
+                    GDALOpen(tmp_path.c_str(), GA_ReadOnly));
+                if (src) {
+                    char** cog_opts = nullptr;
+                    cog_opts = CSLSetNameValue(cog_opts, "COMPRESS", "LZW");
+                    // 512 matches the tile size used when writing the draft
+                    // GTiff, so no re-tiling is needed during COG conversion.
+                    cog_opts = CSLSetNameValue(cog_opts, "BLOCKSIZE", "512");
+                    cog_opts = CSLSetNameValue(cog_opts, "BIGTIFF", "IF_SAFER");
+                    GDALDataset* out = cog_drv->CreateCopy(
+                        final_path.c_str(), src, FALSE, cog_opts,
+                        nullptr, nullptr);
+                    CSLDestroy(cog_opts);
+                    GDALClose(src);
+                    if (out) {
+                        GDALClose(out);
+                        VSIUnlink(tmp_path.c_str());
+                    } else {
+                        // COG conversion failed — restore the original GTiff.
+                        VSIUnlink(final_path.c_str());
+                        VSIRename(tmp_path.c_str(), final_path.c_str());
+                    }
+                } else {
+                    // Cannot reopen draft — restore it.
+                    VSIRename(tmp_path.c_str(), final_path.c_str());
+                }
+            }
+            // If rename failed, the original draft GTiff remains in place.
+        } else {
             GDALClose(impl_->ds[b]);
             impl_->ds[b] = nullptr;
         }
