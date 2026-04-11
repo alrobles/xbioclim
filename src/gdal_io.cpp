@@ -196,8 +196,10 @@ GdalWriter::GdalWriter(const std::string& output_dir,
     opts = CSLSetNameValue(opts, "BIGTIFF", "IF_SAFER");
 
     for (int b = 0; b < NUM_BIO; ++b) {
+        char num_buf[8];
+        std::snprintf(num_buf, sizeof(num_buf), "%02d", b + 1);
         std::string path = output_dir + "/" + prefix +
-                           std::to_string(b + 1) + ".tif";
+                           num_buf + ".tif";
         impl_->paths[b] = path;
         GDALDataset* out_ds = drv->Create(
             path.c_str(), x_size, y_size, 1, GDT_Float32, opts);
