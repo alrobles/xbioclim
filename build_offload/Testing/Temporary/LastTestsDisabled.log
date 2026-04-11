@@ -1,0 +1,4 @@
+48:GdalReader opens valid datasets
+49:GdalReader reports correct raster dimensions
+50:GdalReader read_block returns correct shape
+52:GdalReader read_block returns expected pixel values
