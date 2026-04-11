@@ -1,0 +1,89 @@
+name: Benchmarks
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Nightly at 03:15 UTC
+    - cron: "15 3 * * *"
+
+jobs:
+  benchmarks:
+    runs-on: ubuntu-latest
+
+    env:
+      CMAKE_GENERATOR: Ninja
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            build-essential cmake ninja-build \
+            libgdal-dev gdal-bin python3-gdal python3-numpy \
+            libomp-dev
+
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtl/build --target install
+
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtensor/build --target install
+
+      - name: Configure (Release, benchmarks)
+        run: |
+          cmake -S . -B build \
+            -G "${CMAKE_GENERATOR}" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DXBIOCLIM_BUILD_TESTS=OFF \
+            -DXBIOCLIM_USE_OPENMP=ON
+
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Generate test data (if needed by any perf tests)
+        run: python3 tools/generate_test_data.py --outdir tests/data
+
+      - name: Run benchmarks (best-effort autodetect)
+        run: |
+          mkdir -p benchmark-out
+
+          # Option A: If a benchmark executable exists, run it.
+          # (Adjust the executable name if you later add a dedicated target.)
+          if [ -x build/bench_xbioclim ]; then
+            echo "Running build/bench_xbioclim"
+            ./build/bench_xbioclim | tee benchmark-out/bench_xbioclim.txt
+            exit 0
+          fi
+
+          # Option B: If Catch2 benchmarks exist inside test binary, run it in benchmark mode.
+          if [ -x build/tests/test_xbioclim ]; then
+            echo "Running Catch2 benchmarks (if any)"
+            ./build/tests/test_xbioclim "[benchmark]" \
+              --benchmark-samples 20 \
+              --reporter console \
+              | tee benchmark-out/catch2-benchmarks.txt || true
+          fi
+
+          # Option C: If there are CTest benchmarks (custom labels), run them.
+          if [ -f build/CTestTestfile.cmake ]; then
+            echo "Running any ctest-labeled benchmark tests (if defined)"
+            XBIOCLIM_TEST_DATA="${{ github.workspace }}/tests/data" \
+              ctest --test-dir build -L benchmark --output-on-failure || true
+          fi
+
+          echo "Benchmark run finished."
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmarks-${{ github.run_number }}
+          path: benchmark-out
+          if-no-files-found: warn
