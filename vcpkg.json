@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "xbioclim",
   "version": "0.1.0",
-  "description": "C++17 library for computing BIO01–BIO19 bioclimatic variables from monthly climate rasters",
+  "description": "C++17 library for computing BIO01-BIO19 bioclimatic variables from monthly climate rasters",
   "homepage": "https://github.com/alrobles/xbioclim",
   "license": "MIT",
   "dependencies": [
@@ -12,7 +12,13 @@
     },
     {
       "name": "xtensor",
-      "version>=": "0.24.0"
+      "version>=": "0.25.0"
     }
-  ]
+  ],
+  "features": {
+    "openmp": {
+      "description": "Enable OpenMP CPU parallelism",
+      "dependencies": []
+    }
+  }
 }
