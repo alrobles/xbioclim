@@ -22,7 +22,7 @@ jobs:
           sudo apt update
           sudo apt install -y \
             build-essential cmake ninja-build \
-            libgdal-dev gdal-bin python3-gdal python3-numpy \
+            libgdal-dev gdal-bin \
             libomp-dev
 
       - name: Install xtl (header-only)
@@ -42,14 +42,14 @@ jobs:
           cmake -S . -B build \
             -G "${CMAKE_GENERATOR}" \
             -DCMAKE_BUILD_TYPE=Release \
-            -DXBIOCLIM_BUILD_TESTS=OFF \
+            -DXBIOCLIM_BUILD_TESTS=ON \
             -DXBIOCLIM_USE_OPENMP=ON
 
       - name: Build
         run: cmake --build build --parallel $(nproc)
 
-      - name: Generate test data (if needed by any perf tests)
-        run: python3 tools/generate_test_data.py --outdir tests/data
+      - name: Generate test data
+        run: ./build/xbioclim_generate_test_data --outdir tests/data
 
       - name: Run benchmarks (best-effort autodetect)
         run: |

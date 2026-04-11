@@ -49,8 +49,8 @@ cmake --build build --parallel $(nproc)
 ## Running Tests
 
 ```bash
-# Generate synthetic test fixtures (requires Python 3 + GDAL)
-python3 tools/generate_test_data.py --outdir tests/data
+# Generate synthetic test fixtures (built with XBIOCLIM_BUILD_TESTS=ON)
+./build/xbioclim_generate_test_data --outdir tests/data
 
 # Run all tests
 XBIOCLIM_TEST_DATA=tests/data ctest --test-dir build --output-on-failure
