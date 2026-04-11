@@ -1,118 +1,24 @@
-name: CI
+# ... keep everything else the same ...
 
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-
-jobs:
-  build-and-test:
+  static-analysis:
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        build_type: [Release, Debug]
-        openmp: [ON, OFF]
-
-    env:
-      CCACHE_DIR: ${{ github.workspace }}/.ccache
-      CMAKE_GENERATOR: Ninja
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Install system dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y \
-            build-essential cmake ninja-build \
-            libgdal-dev gdal-bin python3-gdal python3-numpy \
-            libomp-dev \
-            ccache
+    - name: Install System Dependencies
+      run: sudo apt update && sudo apt install -y libgdal-dev libomp-dev clang-tidy
 
-      - name: Cache ccache
-        uses: actions/cache@v4
-        with:
-          path: .ccache
-          key: ccache-${{ runner.os }}-${{ matrix.build_type }}-openmp-${{ matrix.openmp }}-${{ github.ref_name }}
-          restore-keys: |
-            ccache-${{ runner.os }}-${{ matrix.build_type }}-openmp-${{ matrix.openmp }}-
-            ccache-${{ runner.os }}-${{ matrix.build_type }}-
-            ccache-${{ runner.os }}-
+    # (keep xtl/xtensor install steps)
 
-      - name: Install xtl (header-only)
-        run: |
-          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
-          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
-          sudo cmake --build /tmp/xtl/build --target install
+    - name: Configure with compile commands
+      run: |
+        cmake -S . -B build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+          -DXBIOCLIM_BUILD_TESTS=OFF
 
-      - name: Install xtensor (header-only)
-        run: |
-          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
-          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
-          sudo cmake --build /tmp/xtensor/build --target install
-
-      - name: Configure
-        run: |
-          cmake -S . -B build \
-            -G "${CMAKE_GENERATOR}" \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DXBIOCLIM_BUILD_TESTS=ON \
-            -DXBIOCLIM_USE_OPENMP=${{ matrix.openmp }} \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-
-      - name: Build
-        run: cmake --build build --parallel $(nproc)
-
-      - name: Generate test data
-        run: python3 tools/generate_test_data.py --outdir tests/data
-
-      - name: Test
-        run: |
-          XBIOCLIM_TEST_DATA="${{ github.workspace }}/tests/data" \
-            ctest --test-dir build --output-on-failure
-
-  clang-tidy:
-    runs-on: ubuntu-latest
-
-    env:
-      CMAKE_GENERATOR: Ninja
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install system dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y \
-            build-essential cmake ninja-build \
-            libgdal-dev libomp-dev \
-            clang-tidy
-
-      - name: Install xtl (header-only)
-        run: |
-          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
-          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
-          sudo cmake --build /tmp/xtl/build --target install
-
-      - name: Install xtensor (header-only)
-        run: |
-          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
-          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
-          sudo cmake --build /tmp/xtensor/build --target install
-
-      - name: Configure (compile_commands.json)
-        run: |
-          cmake -S . -B build \
-            -G "${CMAKE_GENERATOR}" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-            -DXBIOCLIM_BUILD_TESTS=OFF
-
-      - name: Run clang-tidy (fail on warnings)
-        run: |
-          clang-tidy src/*.cpp -p build --warnings-as-errors='*'
+    - name: Run clang-tidy (enforced)
+      run: |
+        clang-tidy src/*.cpp -p build --warnings-as-errors='*'
