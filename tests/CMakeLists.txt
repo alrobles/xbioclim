@@ -15,6 +15,7 @@ endif()
 add_executable(test_xbioclim
     test_primitives.cpp
     test_bioclim.cpp
+    test_correctness.cpp
     test_gdal_io.cpp
 )
 
