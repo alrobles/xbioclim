@@ -100,6 +100,7 @@ TEST_CASE("GdalWriter roundtrip writes and reads back correct values",
     // Create a temporary directory for output
     auto tmpdir = std::filesystem::temp_directory_path() / "xbioclim_test_write";
     std::filesystem::create_directories(tmpdir);
+    REQUIRE(std::filesystem::exists(tmpdir));
 
     // Build a known BioBlock with 4 pixels (2x2 tile)
     const std::size_t N = 4;
@@ -140,6 +141,8 @@ TEST_CASE("GdalWriter roundtrip writes and reads back correct values",
     GDALAllRegister();
     {
         auto path1 = (tmpdir / "bio01.tif").string();
+        INFO("Checking BIO01 file: " << path1);
+        REQUIRE(std::filesystem::exists(path1));
         GDALDataset* ds = static_cast<GDALDataset*>(
             GDALOpen(path1.c_str(), GA_ReadOnly));
         REQUIRE(ds != nullptr);
@@ -155,6 +158,8 @@ TEST_CASE("GdalWriter roundtrip writes and reads back correct values",
     }
     {
         auto path12 = (tmpdir / "bio12.tif").string();
+        INFO("Checking BIO12 file: " << path12);
+        REQUIRE(std::filesystem::exists(path12));
         GDALDataset* ds = static_cast<GDALDataset*>(
             GDALOpen(path12.c_str(), GA_ReadOnly));
         REQUIRE(ds != nullptr);
