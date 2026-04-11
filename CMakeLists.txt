@@ -63,13 +63,13 @@ add_library(xbioclim::xbioclim ALIAS xbioclim)
 add_executable(xbioclim_cli src/main.cpp)
 target_link_libraries(xbioclim_cli PRIVATE xbioclim)
 
-# --- Mock TIFF generator utility ---
-add_executable(generate_mock_tiff tools/generate_mock_tiff.cpp)
-target_link_libraries(generate_mock_tiff PRIVATE GDAL::GDAL)
-
 # --- Tests ---
 option(XBIOCLIM_BUILD_TESTS "Build the test suite" ON)
 if(XBIOCLIM_BUILD_TESTS)
+    # --- Test data generator (test-only) ---
+    add_executable(xbioclim_generate_test_data tools/generate_mock_tiff.cpp)
+    target_link_libraries(xbioclim_generate_test_data PRIVATE GDAL::GDAL)
+
     enable_testing()
     add_subdirectory(tests)
 endif()

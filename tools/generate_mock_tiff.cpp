@@ -1,5 +1,5 @@
 /**
- * generate_mock_tiff.cpp — Create synthetic 10×10 GeoTIFF test fixtures.
+ * xbioclim_generate_test_data.cpp — Create synthetic 10×10 GeoTIFF test fixtures.
  *
  * Produces 48 compressed Int16 GeoTIFFs (4 variables × 12 months) that
  * match the data layout described in docs/ROADMAP.md §1.1:
@@ -12,7 +12,7 @@
  * Output filename convention: <var>_<MM>.tif  (e.g. tas_01.tif, pr_12.tif)
  *
  * Usage:
- *   generate_mock_tiff [outdir]   (default: tests/data)
+ *   xbioclim_generate_test_data --outdir <dir>   (default: tests/data)
  */
 
 #include <gdal_priv.h>
@@ -78,8 +78,11 @@ static void write_tif(const std::string& path, int16_t value) {
 
 int main(int argc, char* argv[]) {
     std::string outdir = "tests/data";
-    if (argc > 1) {
-        outdir = argv[1];
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--outdir" && i + 1 < argc) {
+            outdir = argv[++i];
+        }
     }
 
     std::filesystem::create_directories(outdir);
