@@ -81,6 +81,13 @@ jobs:
 
           echo "Benchmark run finished."
 
+      - name: Parse benchmark output and generate reports
+        run: |
+          python3 tools/parse_benchmark.py \
+            --input  benchmark-out \
+            --output benchmark-out \
+            --tag    "${{ github.ref_name }}"
+
       - name: Upload benchmark artifacts
         uses: actions/upload-artifact@v4
         with:

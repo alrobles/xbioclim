@@ -353,6 +353,18 @@ jobs:
           name: performance-benchmark-results
           path: performance
 
+      - name: Merge benchmark logs and generate reports
+        run: |
+          mkdir -p release-reports
+          # Collect all logs from both benchmark artifact directories
+          cp -r benchmarks/. release-reports/ 2>/dev/null || true
+          cp -r performance/. release-reports/ 2>/dev/null || true
+
+          python3 tools/parse_benchmark.py \
+            --input  release-reports \
+            --output release-reports \
+            --tag    "${{ github.ref_name }}"
+
       - name: Upload Release Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -360,13 +372,24 @@ jobs:
           path: |
             build/xbioclim_cli
             build/generate_mock_tiff
-            benchmarks/
-            performance/
+            release-reports/benchmark-report.json
+            release-reports/benchmark-report.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          body: |
+            ## Benchmark Results
+
+            Performance reports for all build variants are attached to this release:
+
+            - 📊 [`benchmark-report.json`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/benchmark-report.json) — structured JSON with hardware info and timings
+            - 📝 [`benchmark-report.md`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/benchmark-report.md) — human-readable Markdown report
+
+            See the attached files below for full benchmark details and hardware notes.
           files: |
             build/xbioclim_cli
             build/generate_mock_tiff
+            release-reports/benchmark-report.json
+            release-reports/benchmark-report.md
