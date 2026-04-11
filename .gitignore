@@ -1,2 +1,4 @@
 build/
+build_offload/
 tests/data/
+docs/doxygen/

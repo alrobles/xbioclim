@@ -1,0 +1,26 @@
+PROJECT_NAME           = "xbioclim"
+PROJECT_NUMBER         = 0.1.0
+PROJECT_BRIEF          = "C++17 library for computing BIO01-BIO19 from monthly climate rasters"
+
+OUTPUT_DIRECTORY       = docs/doxygen
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+
+INPUT                  = include src
+FILE_PATTERNS          = *.hpp *.h *.cpp
+RECURSIVE              = YES
+
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+
+QUIET                  = YES
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+
+HAVE_DOT               = YES
+DOT_NUM_THREADS        = 2
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
+
+USE_MDFILE_AS_MAINPAGE = README.md

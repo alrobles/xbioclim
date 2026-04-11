@@ -15,6 +15,7 @@ endif()
 set(TEST_SOURCES
     test_primitives.cpp
     test_bioclim.cpp
+    test_correctness.cpp
     test_gdal_io.cpp
 )
 

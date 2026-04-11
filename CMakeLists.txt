@@ -54,6 +54,7 @@ target_link_libraries(xbioclim PUBLIC
     GDAL::GDAL
     xtensor
     $<$<AND:$<BOOL:${XBIOCLIM_USE_OPENMP}>,$<TARGET_EXISTS:OpenMP::OpenMP_CXX>>:OpenMP::OpenMP_CXX>
+    $<$<AND:$<BOOL:${XBIOCLIM_USE_OPENMP_OFFLOAD}>,$<NOT:$<BOOL:${XBIOCLIM_USE_OPENMP}>>,$<TARGET_EXISTS:OpenMP::OpenMP_CXX>>:OpenMP::OpenMP_CXX>
 )
 
 if(XBIOCLIM_USE_OPENMP AND OpenMP_CXX_FOUND)
@@ -62,6 +63,16 @@ endif()
 
 if(XBIOCLIM_USE_OPENMP_OFFLOAD AND OpenMP_CXX_FOUND)
     target_compile_definitions(xbioclim PUBLIC XBIOCLIM_USE_OPENMP_OFFLOAD)
+    # Allow users to specify GPU offload targets via -DXBIOCLIM_OPENMP_OFFLOAD_FLAGS=...
+    # Examples:
+    #   GCC  (NVIDIA): -foffload=nvptx-none -foffload-options=nvptx-none=-misa=sm_80
+    #   Clang (NVIDIA): -fopenmp-targets=nvptx64-nvidia-cuda
+    #   Clang (AMD):    -fopenmp-targets=amdgcn-amd-amdhsa
+    # When empty (default), OpenMP target regions fall back to host CPU execution.
+    if(XBIOCLIM_OPENMP_OFFLOAD_FLAGS)
+        target_compile_options(xbioclim PRIVATE ${XBIOCLIM_OPENMP_OFFLOAD_FLAGS})
+        target_link_options(xbioclim PRIVATE ${XBIOCLIM_OPENMP_OFFLOAD_FLAGS})
+    endif()
 endif()
 
 # --- Export target ---
@@ -71,13 +82,34 @@ add_library(xbioclim::xbioclim ALIAS xbioclim)
 add_executable(xbioclim_cli src/main.cpp)
 target_link_libraries(xbioclim_cli PRIVATE xbioclim)
 
-# --- Mock TIFF generator utility ---
-add_executable(generate_mock_tiff tools/generate_mock_tiff.cpp)
-target_link_libraries(generate_mock_tiff PRIVATE GDAL::GDAL)
-
 # --- Tests ---
 option(XBIOCLIM_BUILD_TESTS "Build the test suite" ON)
 if(XBIOCLIM_BUILD_TESTS)
+    # --- Test data generator (test-only) ---
+    add_executable(xbioclim_generate_test_data tools/generate_mock_tiff.cpp)
+    target_link_libraries(xbioclim_generate_test_data PRIVATE GDAL::GDAL)
+
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+# --- Install targets ---
+include(GNUInstallDirs)
+
+install(TARGETS xbioclim
+    EXPORT xbioclimTargets
+    LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(DIRECTORY include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(EXPORT xbioclimTargets
+    FILE xbioclimTargets.cmake
+    NAMESPACE xbioclim::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/xbioclim
+)
