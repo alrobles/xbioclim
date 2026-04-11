@@ -101,6 +101,45 @@ When no GPU is available, set `OMP_TARGET_OFFLOAD=DISABLED` to run target
 regions on the host CPU. The `XBIOCLIM_USE_OPENMP_OFFLOAD` tests in the
 Catch2 suite use this path in CI.
 
+### Building with CUDA
+
+The CUDA backend computes all 19 BIO variables on the GPU, with each CUDA
+thread handling one pixel. The implementation targets SM_80+ architectures
+(NVIDIA Ampere, Ada Lovelace) but also builds for SM_86 and SM_90.
+
+**Requirements:**
+- CUDA Toolkit ≥ 11.0 (NVCC with C++17 support)
+- NVIDIA GPU with Compute Capability ≥ 8.0 (A100, A10, RTX 3090, H100, …)
+
+```bash
+# Configure with CUDA support
+cmake -B build \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DXBIOCLIM_USE_CUDA=ON \
+  -DXBIOCLIM_BUILD_TESTS=ON
+
+cmake --build build --parallel $(nproc)
+```
+
+When no GPU is present at runtime, the CUDA test cases are skipped
+automatically. The CPU `compute_bioclim` and GPU `compute_bioclim_cuda`
+functions produce identical results to within single-precision rounding error.
+
+**API usage:**
+
+```cpp
+#include "xbioclim/bioclim.hpp"
+#include "xbioclim/bioclim_cuda.hpp"
+
+xbioclim::ClimateBlock data = ...;
+
+// CPU path (always available)
+xbioclim::BioBlock cpu_result = xbioclim::compute_bioclim(data);
+
+// CUDA GPU path (requires XBIOCLIM_USE_CUDA at build time)
+xbioclim::BioBlock gpu_result = xbioclim::compute_bioclim_cuda(data);
+```
+
 ## Running Tests
 
 ```bash
