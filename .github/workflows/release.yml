@@ -1,4 +1,5 @@
 name: Release
+
 on:
   push:
     tags:
@@ -6,41 +7,106 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Install System Dependencies
-      run: sudo apt update && sudo apt install -y libgdal-dev libomp-dev python3-gdal
+      - name: Install System Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            build-essential cmake ninja-build \
+            libgdal-dev gdal-bin python3-gdal python3-numpy \
+            libomp-dev \
+            clang-tidy cppcheck \
+            doxygen graphviz
 
-    - name: Install xtl (header-only)
-      run: |
-        git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
-        cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
-        sudo cmake --build /tmp/xtl/build --target install
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtl/build --target install
 
-    - name: Install xtensor (header-only)
-      run: |
-        git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
-        cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
-        sudo cmake --build /tmp/xtensor/build --target install
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtensor/build --target install
 
-    - name: Build
-      run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DXBIOCLIM_BUILD_TESTS=ON
-        cmake --build build --parallel $(nproc)
+      - name: Configure (Release)
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DXBIOCLIM_BUILD_TESTS=ON
 
-    - name: Generate test data
-      run: python3 tools/generate_test_data.py --outdir tests/data
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
 
-    - name: Test
-      run: XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data ctest --test-dir build --output-on-failure
+      - name: Generate test data
+        run: python3 tools/generate_test_data.py --outdir tests/data
 
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        generate_release_notes: true
+      - name: Test
+        run: |
+          XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data \
+            ctest --test-dir build --output-on-failure
+
+      - name: clang-tidy (enforced)
+        run: |
+          cmake -S . -B build-tidy -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DXBIOCLIM_BUILD_TESTS=OFF
+          clang-tidy src/*.cpp -p build-tidy --warnings-as-errors='*'
+
+      - name: cppcheck (enforced)
+        run: |
+          cppcheck \
+            --enable=warning,style,performance,portability \
+            --error-exitcode=1 \
+            --inline-suppr \
+            --suppress=missingIncludeSystem \
+            -I include \
+            src include
+
+      - name: Doxygen docs (enforced)
+        run: doxygen Doxyfile
+
+      - name: End-to-end CLI smoke test + checksum validation
+        run: |
+          mkdir -p e2e_out
+
+          ./build/xbioclim_cli \
+            --tas    tests/data/tas_??.tif \
+            --tasmax tests/data/tasmax_??.tif \
+            --tasmin tests/data/tasmin_??.tif \
+            --pr     tests/data/pr_??.tif \
+            --outdir e2e_out \
+            --prefix bio \
+            --tile-size 10
+
+          for f in e2e_out/*.tif; do
+            echo "Validating $f"
+            gdalinfo --checksum "$f" > /dev/null
+          done
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: xbioclim-${{ github.ref_name }}
+          path: |
+            build/xbioclim_cli
+            e2e_out
+            docs/doxygen/html
+          if-no-files-found: error
+
+      - name: Create GitHub Release (attach artifacts)
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            build/xbioclim_cli
+            e2e_out/*.tif
