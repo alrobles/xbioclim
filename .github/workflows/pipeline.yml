@@ -294,12 +294,8 @@ jobs:
             --pr     $(printf "tests/data/pr_%02d.tif " $(seq 1 12)) \
             --outdir output --raw
 
-      - name: Validate Output with gdalinfo
-        run: |
-          for f in output/bio*.tif; do
-            echo "=== $(basename "$f") ==="
-            gdalinfo -checksum "$f"
-          done
+      - name: Validate COG outputs (checksum + structure)
+        run: bash scripts/validate_cog_outputs.sh output
 
       - name: Upload Benchmark Artifacts
         uses: actions/upload-artifact@v4
@@ -322,7 +318,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install System Dependencies
-        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev gdal-bin python3-gdal libomp-dev
 
       - name: Install xtl (header-only)
         run: |
@@ -352,6 +348,9 @@ jobs:
         with:
           name: performance-benchmark-results
           path: performance
+
+      - name: Validate release artifacts (COG + checksum)
+        run: bash scripts/validate_cog_outputs.sh performance
 
       - name: Upload Release Artifacts
         uses: actions/upload-artifact@v4

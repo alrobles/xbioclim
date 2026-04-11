@@ -75,7 +75,7 @@ jobs:
       - name: Doxygen docs (enforced)
         run: doxygen Doxyfile
 
-      - name: End-to-end CLI smoke test + checksum validation
+      - name: End-to-end CLI smoke test + COG validation
         run: |
           mkdir -p e2e_out
 
@@ -88,10 +88,7 @@ jobs:
             --prefix bio \
             --tile-size 10
 
-          for f in e2e_out/*.tif; do
-            echo "Validating $f"
-            gdalinfo --checksum "$f" > /dev/null
-          done
+          bash scripts/validate_cog_outputs.sh e2e_out
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
