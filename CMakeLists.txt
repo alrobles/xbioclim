@@ -73,3 +73,24 @@ if(XBIOCLIM_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+# --- Install targets ---
+include(GNUInstallDirs)
+
+install(TARGETS xbioclim
+    EXPORT xbioclimTargets
+    LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(DIRECTORY include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(EXPORT xbioclimTargets
+    FILE xbioclimTargets.cmake
+    NAMESPACE xbioclim::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/xbioclim
+)
