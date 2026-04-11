@@ -41,7 +41,8 @@ static void write_tif(const std::string& path, int16_t value) {
         std::exit(1);
     }
 
-    char* opts[] = {const_cast<char*>("COMPRESS=LZW"), nullptr};
+    char opt_compress[] = "COMPRESS=LZW";
+    char* opts[] = {opt_compress, nullptr};
     GDALDataset* ds = drv->Create(path.c_str(), XSIZE, YSIZE, 1,
                                   GDT_Int16, opts);
     if (!ds) {
@@ -64,8 +65,13 @@ static void write_tif(const std::string& path, int16_t value) {
     std::vector<int16_t> buf(static_cast<std::size_t>(XSIZE) * YSIZE, value);
     GDALRasterBand* band = ds->GetRasterBand(1);
     band->SetNoDataValue(NODATA);
-    band->RasterIO(GF_Write, 0, 0, XSIZE, YSIZE,
-                   buf.data(), XSIZE, YSIZE, GDT_Int16, 0, 0);
+    CPLErr err = band->RasterIO(GF_Write, 0, 0, XSIZE, YSIZE,
+                                buf.data(), XSIZE, YSIZE, GDT_Int16, 0, 0);
+    if (err != CE_None) {
+        std::cerr << "Error: RasterIO write failed for " << path << "\n";
+        GDALClose(ds);
+        std::exit(1);
+    }
 
     GDALClose(ds);
 }
