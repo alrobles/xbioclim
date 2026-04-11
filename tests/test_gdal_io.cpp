@@ -140,11 +140,12 @@ TEST_CASE("GdalWriter roundtrip writes and reads back correct values",
     // Read back BIO01 and BIO12 with GDAL directly
     GDALAllRegister();
     {
-        auto path1 = (tmpdir / "bio01.tif").string();
-        INFO("Checking BIO01 file: " << path1);
-        REQUIRE(std::filesystem::exists(path1));
+        auto path1 = (tmpdir / "bio01.tif");
+        if (!std::filesystem::exists(path1)) {
+            FAIL("Expected file 'bio01.tif' was not created in " << tmpdir.string());
+        }
         GDALDataset* ds = static_cast<GDALDataset*>(
-            GDALOpen(path1.c_str(), GA_ReadOnly));
+            GDALOpen(path1.string().c_str(), GA_ReadOnly));
         REQUIRE(ds != nullptr);
         CHECK(ds->GetRasterXSize() == 2);
         CHECK(ds->GetRasterYSize() == 2);
@@ -157,11 +158,12 @@ TEST_CASE("GdalWriter roundtrip writes and reads back correct values",
         GDALClose(ds);
     }
     {
-        auto path12 = (tmpdir / "bio12.tif").string();
-        INFO("Checking BIO12 file: " << path12);
-        REQUIRE(std::filesystem::exists(path12));
+        auto path12 = (tmpdir / "bio12.tif");
+        if (!std::filesystem::exists(path12)) {
+            FAIL("Expected file 'bio12.tif' was not created in " << tmpdir.string());
+        }
         GDALDataset* ds = static_cast<GDALDataset*>(
-            GDALOpen(path12.c_str(), GA_ReadOnly));
+            GDALOpen(path12.string().c_str(), GA_ReadOnly));
         REQUIRE(ds != nullptr);
         float buf[4];
         CPLErr err2 = ds->GetRasterBand(1)->RasterIO(
