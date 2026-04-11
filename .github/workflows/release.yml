@@ -20,7 +20,7 @@ jobs:
           sudo apt update
           sudo apt install -y \
             build-essential cmake ninja-build \
-            libgdal-dev gdal-bin python3-gdal python3-numpy \
+            libgdal-dev gdal-bin \
             libomp-dev \
             clang-tidy cppcheck \
             doxygen graphviz
@@ -47,7 +47,7 @@ jobs:
         run: cmake --build build --parallel $(nproc)
 
       - name: Generate test data
-        run: python3 tools/generate_test_data.py --outdir tests/data
+        run: ./build/xbioclim_generate_test_data --outdir tests/data
 
       - name: Test
         run: |
@@ -75,7 +75,7 @@ jobs:
       - name: Doxygen docs (enforced)
         run: doxygen Doxyfile
 
-      - name: End-to-end CLI smoke test + checksum validation
+      - name: End-to-end CLI smoke test + COG validation
         run: |
           mkdir -p e2e_out
 
@@ -88,10 +88,7 @@ jobs:
             --prefix bio \
             --tile-size 10
 
-          for f in e2e_out/*.tif; do
-            echo "Validating $f"
-            gdalinfo --checksum "$f" > /dev/null
-          done
+          bash scripts/validate_cog_outputs.sh e2e_out
 
       - name: Run benchmark and collect timing
         run: |

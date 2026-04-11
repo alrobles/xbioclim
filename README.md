@@ -49,8 +49,8 @@ cmake --build build --parallel $(nproc)
 ## Running Tests
 
 ```bash
-# Generate synthetic test fixtures (requires Python 3 + GDAL)
-python3 tools/generate_test_data.py --outdir tests/data
+# Generate synthetic test fixtures (built with XBIOCLIM_BUILD_TESTS=ON)
+./build/xbioclim_generate_test_data --outdir tests/data
 
 # Run all tests
 XBIOCLIM_TEST_DATA=tests/data ctest --test-dir build --output-on-failure
@@ -76,10 +76,27 @@ For Slurm clusters:
 sbatch scripts/run_slurm_array.sh
 ```
 
+## Dependency Management
+
+### vcpkg
+
+```bash
+vcpkg install  # reads vcpkg.json manifest automatically
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+```
+
+### Conan
+
+```bash
+conan install . --output-folder=build --build=missing
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
+```
+
 ## Documentation
 
 - [Protocol](docs/PROTOCOL.md) — Theoretical background and implementation details
 - [Roadmap](docs/ROADMAP.md) — Development phases and release checklist
+- [Benchmarks](docs/BENCHMARKS.md) — CPU performance benchmarks for v0.1.0
 
 ## Project Structure
 

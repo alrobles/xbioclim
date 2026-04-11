@@ -15,7 +15,7 @@ using namespace xbioclim;
 
 // ---------------------------------------------------------------------------
 // Helper: return the path to the tests/data directory relative to the build.
-// CI generates test fixtures using tools/generate_test_data.py before running
+// CI generates test fixtures using xbioclim_generate_test_data before running
 // ctest, so the directory is expected to exist if the CI workflow is followed.
 // ---------------------------------------------------------------------------
 static std::filesystem::path data_dir() {
@@ -49,7 +49,7 @@ static std::vector<std::string> make_file_list(const std::string& var) {
 
 TEST_CASE("GdalReader opens valid datasets", "[gdal_io]") {
     if (!test_data_available()) {
-        SKIP("Test data not found; run tools/generate_test_data.py first");
+        SKIP("Test data not found; run xbioclim_generate_test_data --outdir tests/data first");
     }
 
     REQUIRE_NOTHROW(GdalReader(
@@ -61,7 +61,7 @@ TEST_CASE("GdalReader opens valid datasets", "[gdal_io]") {
 
 TEST_CASE("GdalReader reports correct raster dimensions", "[gdal_io]") {
     if (!test_data_available()) {
-        SKIP("Test data not found; run tools/generate_test_data.py first");
+        SKIP("Test data not found; run xbioclim_generate_test_data --outdir tests/data first");
     }
 
     GdalReader reader(
@@ -77,7 +77,7 @@ TEST_CASE("GdalReader reports correct raster dimensions", "[gdal_io]") {
 
 TEST_CASE("GdalReader read_block returns correct shape", "[gdal_io]") {
     if (!test_data_available()) {
-        SKIP("Test data not found; run tools/generate_test_data.py first");
+        SKIP("Test data not found; run xbioclim_generate_test_data --outdir tests/data first");
     }
 
     GdalReader reader(
@@ -139,7 +139,7 @@ TEST_CASE("GdalWriter roundtrip writes and reads back correct values",
     // Read back BIO01 and BIO12 with GDAL directly
     GDALAllRegister();
     {
-        auto path1 = (tmpdir / "bio1.tif").string();
+        auto path1 = (tmpdir / "bio01.tif").string();
         GDALDataset* ds = static_cast<GDALDataset*>(
             GDALOpen(path1.c_str(), GA_ReadOnly));
         REQUIRE(ds != nullptr);
@@ -173,7 +173,7 @@ TEST_CASE("GdalWriter roundtrip writes and reads back correct values",
 
 TEST_CASE("GdalReader read_block returns expected pixel values", "[gdal_io]") {
     if (!test_data_available()) {
-        SKIP("Test data not found; run tools/generate_test_data.py first");
+        SKIP("Test data not found; run xbioclim_generate_test_data --outdir tests/data first");
     }
 
     GdalReader reader(

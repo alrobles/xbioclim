@@ -1,24 +1,214 @@
-# ... keep everything else the same ...
+name: CI
 
-  static-analysis:
-    runs-on: ubuntu-latest
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential cmake \
+            libgdal-dev gdal-bin \
+            libomp-dev \
+            python3-gdal python3-numpy
+
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtl/build --target install
+
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtensor/build --target install
+
+      - name: Generate test data
+        run: python3 tools/generate_test_data.py --outdir tests/data
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DXBIOCLIM_BUILD_TESTS=ON
+
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Test
+        run: |
+          XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data \
+            ctest --test-dir build --output-on-failure
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1 — Build and test with GCC 11 (Ubuntu 22.04)
+  # ---------------------------------------------------------------------------
+  build-gcc:
+    runs-on: ubuntu-22.04
+    env:
+      CC: gcc-11
+      CXX: g++-11
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install System Dependencies
-      run: sudo apt update && sudo apt install -y libgdal-dev libomp-dev clang-tidy
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-11 g++-11 \
+            cmake ninja-build \
+            libgdal-dev gdal-bin \
+            python3-gdal python3-numpy \
+            libomp-dev
 
-    # (keep xtl/xtensor install steps)
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 \
+            https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtl/build --target install
 
-    - name: Configure with compile commands
-      run: |
-        cmake -S . -B build \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-          -DXBIOCLIM_BUILD_TESTS=OFF
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 \
+            https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtensor/build --target install
 
-    - name: Run clang-tidy (enforced)
-      run: |
-        clang-tidy src/*.cpp -p build --warnings-as-errors='*'
+      - name: Generate test data
+        run: python3 tools/generate_test_data.py --outdir tests/data
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DXBIOCLIM_BUILD_TESTS=ON \
+            -DXBIOCLIM_USE_OPENMP=ON
+
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Test
+        run: |
+          XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data \
+            ctest --test-dir build --output-on-failure
+
+  # ---------------------------------------------------------------------------
+  # Job 2 — Build and test with Clang 14 (Ubuntu 22.04)
+  # ---------------------------------------------------------------------------
+  build-clang:
+    runs-on: ubuntu-22.04
+    env:
+      CC: clang-14
+      CXX: clang++-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang-14 \
+            cmake ninja-build \
+            libgdal-dev gdal-bin \
+            python3-gdal python3-numpy \
+            libomp-dev
+
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 \
+            https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtl/build --target install
+
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 \
+            https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtensor/build --target install
+
+      - name: Generate test data
+        run: python3 tools/generate_test_data.py --outdir tests/data
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DXBIOCLIM_BUILD_TESTS=ON \
+            -DXBIOCLIM_USE_OPENMP=ON
+
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Test
+        run: |
+          XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data \
+            ctest --test-dir build --output-on-failure
+
+  # ---------------------------------------------------------------------------
+  # Job 3 — Static analysis: clang-tidy + cppcheck (Ubuntu 22.04)
+  # ---------------------------------------------------------------------------
+  static-analysis:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev clang-tidy
+
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtl/build --target install
+
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release
+          sudo cmake --build /tmp/xtensor/build --target install
+
+      - name: Configure with compile commands
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DXBIOCLIM_BUILD_TESTS=OFF
+
+      - name: Run clang-tidy (enforced)
+        run: |
+          clang-tidy src/*.cpp -p build --warnings-as-errors='*'

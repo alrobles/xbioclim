@@ -15,7 +15,7 @@ concurrency:
 jobs:
   # ===========================================================================
   # Job A — Mock TIFF Generator
-  # Build the C++ generate_mock_tiff utility and produce synthetic test data.
+  # Build the C++ xbioclim_generate_test_data utility and produce synthetic test data.
   # ===========================================================================
   mock-tiff-generator:
     runs-on: ubuntu-latest
@@ -37,13 +37,13 @@ jobs:
           cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
           sudo cmake --build /tmp/xtensor/build --target install
 
-      - name: Build generate_mock_tiff
+      - name: Build xbioclim_generate_test_data
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DXBIOCLIM_BUILD_TESTS=OFF
-          cmake --build build --target generate_mock_tiff --parallel $(nproc)
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DXBIOCLIM_BUILD_TESTS=ON
+          cmake --build build --target xbioclim_generate_test_data --parallel $(nproc)
 
       - name: Generate Mock TIFF Data
-        run: ./build/generate_mock_tiff tests/data
+        run: ./build/xbioclim_generate_test_data --outdir tests/data
 
       - name: Upload Mock Data Artifact
         uses: actions/upload-artifact@v4
@@ -144,7 +144,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install System Dependencies
-        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev python3-gdal python3-numpy
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev
 
       - name: Install xtl (header-only)
         run: |
@@ -164,7 +164,7 @@ jobs:
           cmake --build build --parallel $(nproc)
 
       - name: Generate Mock Data for CLI Test
-        run: python3 tools/generate_test_data.py --outdir tests/data
+        run: ./build/xbioclim_generate_test_data --outdir tests/data
 
       - name: Test CLI --help and --version
         run: |
@@ -193,7 +193,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install System Dependencies
-        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev python3-gdal python3-numpy
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev
 
       - name: Install xtl (header-only)
         run: |
@@ -254,7 +254,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install System Dependencies
-        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev python3-gdal python3-numpy gdal-bin
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev gdal-bin
 
       - name: Install xtl (header-only)
         run: |
@@ -294,12 +294,8 @@ jobs:
             --pr     $(printf "tests/data/pr_%02d.tif " $(seq 1 12)) \
             --outdir output --raw
 
-      - name: Validate Output with gdalinfo
-        run: |
-          for f in output/bio*.tif; do
-            echo "=== $(basename "$f") ==="
-            gdalinfo -checksum "$f"
-          done
+      - name: Validate COG outputs (checksum + structure)
+        run: bash scripts/validate_cog_outputs.sh output
 
       - name: Upload Benchmark Artifacts
         uses: actions/upload-artifact@v4
@@ -322,7 +318,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install System Dependencies
-        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev gdal-bin python3-gdal libomp-dev
 
       - name: Install xtl (header-only)
         run: |
