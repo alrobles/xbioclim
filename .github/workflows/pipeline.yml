@@ -1,0 +1,372 @@
+name: Roadmap Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [main, develop]
+
+# Cancel in-progress runs for the same ref so dependent jobs don't pile up.
+concurrency:
+  group: pipeline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ===========================================================================
+  # Job A — Mock TIFF Generator
+  # Build the C++ generate_mock_tiff utility and produce synthetic test data.
+  # ===========================================================================
+  mock-tiff-generator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev
+
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtl/build --target install
+
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtensor/build --target install
+
+      - name: Build generate_mock_tiff
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DXBIOCLIM_BUILD_TESTS=OFF
+          cmake --build build --target generate_mock_tiff --parallel $(nproc)
+
+      - name: Generate Mock TIFF Data
+        run: ./build/generate_mock_tiff tests/data
+
+      - name: Upload Mock Data Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mock-tiff-data
+          path: tests/data/
+          retention-days: 1
+
+  # ===========================================================================
+  # Job B — GDAL I/O Layer Development
+  # Build and test GdalReader / GdalWriter using mock TIFFs from Job A.
+  # ===========================================================================
+  gdal-io-layer:
+    needs: [mock-tiff-generator]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev
+
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtl/build --target install
+
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtensor/build --target install
+
+      - name: Download Mock Data
+        uses: actions/download-artifact@v4
+        with:
+          name: mock-tiff-data
+          path: tests/data
+
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DXBIOCLIM_BUILD_TESTS=ON
+          cmake --build build --parallel $(nproc)
+
+      - name: Test GDAL I/O
+        run: >
+          XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data
+          ctest --test-dir build -R gdal_io --output-on-failure
+
+  # ===========================================================================
+  # Job C — Bioclimatic Variables Implementation
+  # Build and test compute_bioclim using synthetic TIFFs from Job A.
+  # ===========================================================================
+  bioclim-variables:
+    needs: [mock-tiff-generator]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev
+
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtl/build --target install
+
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtensor/build --target install
+
+      - name: Download Mock Data
+        uses: actions/download-artifact@v4
+        with:
+          name: mock-tiff-data
+          path: tests/data
+
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DXBIOCLIM_BUILD_TESTS=ON
+          cmake --build build --parallel $(nproc)
+
+      - name: Test Bioclimatic Variables
+        run: >
+          XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data
+          ctest --test-dir build -R bioclim --output-on-failure
+
+  # ===========================================================================
+  # Job D — CLI Tool Development
+  # Build and test xbioclim_cli independently (mock inputs generated locally).
+  # ===========================================================================
+  cli-tool:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev python3-gdal python3-numpy
+
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtl/build --target install
+
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtensor/build --target install
+
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DXBIOCLIM_BUILD_TESTS=ON
+          cmake --build build --parallel $(nproc)
+
+      - name: Generate Mock Data for CLI Test
+        run: python3 tools/generate_test_data.py --outdir tests/data
+
+      - name: Test CLI --help and --version
+        run: |
+          ./build/xbioclim_cli --help
+          ./build/xbioclim_cli --version
+
+      - name: Test CLI End-to-End
+        run: |
+          mkdir -p output
+          ./build/xbioclim_cli \
+            --tas    $(printf "tests/data/tas_%02d.tif " $(seq 1 12)) \
+            --tasmax $(printf "tests/data/tasmax_%02d.tif " $(seq 1 12)) \
+            --tasmin $(printf "tests/data/tasmin_%02d.tif " $(seq 1 12)) \
+            --pr     $(printf "tests/data/pr_%02d.tif " $(seq 1 12)) \
+            --outdir output --raw
+
+  # ===========================================================================
+  # Job E — GPU Acceleration Benchmarks
+  # Build with OpenMP acceleration and benchmark compute_bioclim throughput.
+  # (CUDA requires a GPU runner; OpenMP validates the acceleration path on CPU.)
+  # ===========================================================================
+  gpu-acceleration:
+    needs: [bioclim-variables]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev python3-gdal python3-numpy
+
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtl/build --target install
+
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtensor/build --target install
+
+      - name: Download Mock Data
+        uses: actions/download-artifact@v4
+        with:
+          name: mock-tiff-data
+          path: tests/data
+
+      - name: Build with OpenMP
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DXBIOCLIM_BUILD_TESTS=ON \
+            -DXBIOCLIM_USE_OPENMP=ON
+          cmake --build build --parallel $(nproc)
+
+      - name: Run OpenMP-Accelerated Tests
+        run: >
+          XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data
+          ctest --test-dir build --output-on-failure
+
+      - name: Benchmark Compute Pipeline
+        run: |
+          mkdir -p benchmarks
+          time ./build/xbioclim_cli \
+            --tas    $(printf "tests/data/tas_%02d.tif " $(seq 1 12)) \
+            --tasmax $(printf "tests/data/tasmax_%02d.tif " $(seq 1 12)) \
+            --tasmin $(printf "tests/data/tasmin_%02d.tif " $(seq 1 12)) \
+            --pr     $(printf "tests/data/pr_%02d.tif " $(seq 1 12)) \
+            --outdir benchmarks --raw 2>&1 | tee benchmarks/openmp_benchmark.log
+
+      - name: Upload Benchmark Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpu-benchmark-results
+          path: benchmarks/
+          retention-days: 5
+
+  # ===========================================================================
+  # Job F — Performance Benchmarks and Validation
+  # Full pipeline: GDAL I/O → BIO computation → CLI execution → validation.
+  # ===========================================================================
+  performance-benchmarks:
+    needs: [gdal-io-layer, bioclim-variables, cli-tool]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev python3-gdal python3-numpy gdal-bin
+
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtl/build --target install
+
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtensor/build --target install
+
+      - name: Download Mock Data
+        uses: actions/download-artifact@v4
+        with:
+          name: mock-tiff-data
+          path: tests/data
+
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DXBIOCLIM_BUILD_TESTS=ON
+          cmake --build build --parallel $(nproc)
+
+      - name: Run Full Test Suite
+        run: >
+          XBIOCLIM_TEST_DATA=${{ github.workspace }}/tests/data
+          ctest --test-dir build --output-on-failure
+
+      - name: Full Pipeline Benchmark
+        run: |
+          mkdir -p output
+          time ./build/xbioclim_cli \
+            --tas    $(printf "tests/data/tas_%02d.tif " $(seq 1 12)) \
+            --tasmax $(printf "tests/data/tasmax_%02d.tif " $(seq 1 12)) \
+            --tasmin $(printf "tests/data/tasmin_%02d.tif " $(seq 1 12)) \
+            --pr     $(printf "tests/data/pr_%02d.tif " $(seq 1 12)) \
+            --outdir output --raw
+
+      - name: Validate Output with gdalinfo
+        run: |
+          for f in output/bio*.tif; do
+            echo "=== $(basename "$f") ==="
+            gdalinfo -checksum "$f"
+          done
+
+      - name: Upload Benchmark Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-benchmark-results
+          path: output/
+          retention-days: 5
+
+  # ===========================================================================
+  # Job G — Release Integration
+  # Publish release artifacts and benchmarks (only on version tags).
+  # ===========================================================================
+  release-integration:
+    needs: [gpu-acceleration, performance-benchmarks]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgdal-dev libomp-dev
+
+      - name: Install xtl (header-only)
+        run: |
+          git clone --depth=1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+          cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtl/build --target install
+
+      - name: Install xtensor (header-only)
+        run: |
+          git clone --depth=1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+          cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build /tmp/xtensor/build --target install
+
+      - name: Build Release Binary
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DXBIOCLIM_BUILD_TESTS=OFF
+          cmake --build build --parallel $(nproc)
+
+      - name: Download Benchmark Results
+        uses: actions/download-artifact@v4
+        with:
+          name: gpu-benchmark-results
+          path: benchmarks
+
+      - name: Download Performance Results
+        uses: actions/download-artifact@v4
+        with:
+          name: performance-benchmark-results
+          path: performance
+
+      - name: Upload Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: xbioclim-release-${{ github.ref_name }}
+          path: |
+            build/xbioclim_cli
+            build/generate_mock_tiff
+            benchmarks/
+            performance/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            build/xbioclim_cli
+            build/generate_mock_tiff
