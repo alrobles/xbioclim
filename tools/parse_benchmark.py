@@ -72,8 +72,10 @@ def collect_hardware_info() -> dict:
     info["uname"] = _run(["uname", "-r"])
 
     # Compiler versions (best-effort)
-    info["gcc_version"] = _run(["gcc", "--version"]).splitlines()[0] if _run(["which", "gcc"]) != "unknown" else "n/a"
-    info["clang_version"] = _run(["clang", "--version"]).splitlines()[0] if _run(["which", "clang"]) != "unknown" else "n/a"
+    gcc_path = _run(["which", "gcc"])
+    info["gcc_version"] = _run(["gcc", "--version"]).splitlines()[0] if gcc_path != "unknown" else "n/a"
+    clang_path = _run(["which", "clang"])
+    info["clang_version"] = _run(["clang", "--version"]).splitlines()[0] if clang_path != "unknown" else "n/a"
 
     return info
 
@@ -103,8 +105,10 @@ _CATCH2_BENCH_RE = re.compile(
 
 def parse_time_output(text: str) -> dict | None:
     """Return {real_s, user_s, sys_s} from ``time`` command output, or None."""
-    matches = {m.group("kind"): float(m.group("min")) * 60 + float(m.group("sec"))
-               for m in _TIME_RE.finditer(text)}
+    matches = {}
+    for m in _TIME_RE.finditer(text):
+        seconds = float(m.group("min")) * 60 + float(m.group("sec"))
+        matches[m.group("kind")] = seconds
     if "real" in matches:
         return {k + "_s": v for k, v in matches.items()}
     return None

@@ -356,9 +356,9 @@ jobs:
       - name: Merge benchmark logs and generate reports
         run: |
           mkdir -p release-reports
-          # Collect all logs from both benchmark artifact directories
-          cp -r benchmarks/. release-reports/ 2>/dev/null || true
-          cp -r performance/. release-reports/ 2>/dev/null || true
+          # Copy logs from both benchmark artifact directories (ignore if empty/missing)
+          [ -d benchmarks ] && cp -r benchmarks/. release-reports/
+          [ -d performance ] && cp -r performance/. release-reports/
 
           python3 tools/parse_benchmark.py \
             --input  release-reports \

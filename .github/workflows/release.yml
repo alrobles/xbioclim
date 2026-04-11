@@ -103,7 +103,9 @@ jobs:
             --pr     tests/data/pr_??.tif \
             --outdir benchmark-out \
             --prefix bio \
-            --tile-size 10 2>&1 | tee benchmark-out/release-benchmark.txt || true
+            --tile-size 10 2>&1 | tee benchmark-out/release-benchmark.txt
+          # Capture the exit code of xbioclim_cli (not tee) and propagate it
+          exit "${PIPESTATUS[0]}"
 
       - name: Parse benchmark output and generate reports
         run: |
