@@ -92,12 +92,12 @@ TEST_CASE("CUDA: output matches CPU for multiple pixels", "[cuda][bioclim]") {
         SKIP("No CUDA device available");
     }
 
-    const std::size_t N = 1024;
-    auto data    = make_test_block(N);
+    const std::size_t num_pixels = 1024;
+    auto data    = make_test_block(num_pixels);
     auto cpu_bio = compute_bioclim(data);
     auto gpu_bio = compute_bioclim_cuda(data);
 
-    for (std::size_t p = 0; p < N; ++p) {
+    for (std::size_t p = 0; p < num_pixels; ++p) {
         CHECK_THAT(gpu_bio.bio01(p), WithinAbs(cpu_bio.bio01(p), kTol));
         CHECK_THAT(gpu_bio.bio04(p), WithinAbs(cpu_bio.bio04(p), kTol));
         CHECK_THAT(gpu_bio.bio12(p), WithinAbs(cpu_bio.bio12(p), kTol));
