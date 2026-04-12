@@ -168,6 +168,9 @@ For Slurm clusters:
 
 ```bash
 sbatch scripts/run_slurm_array.sh
+
+# With Apptainer container (recommended for HPC portability):
+sbatch scripts/run_slurm_apptainer.sh
 ```
 
 ## Dependency Management
@@ -191,6 +194,7 @@ cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
 - [Protocol](docs/PROTOCOL.md) — Theoretical background and implementation details
 - [Roadmap](docs/ROADMAP.md) — Development phases and release checklist
 - [Benchmarks](docs/BENCHMARKS.md) — CPU performance benchmarks for v0.1.0
+- [HPC / Apptainer](docs/HPC_APPTAINER.md) — Running on Slurm HPC clusters with Apptainer containers
 
 ## Project Structure
 
@@ -202,6 +206,7 @@ xbioclim/
 ├── tools/              # Helper scripts (test data generation)
 ├── docs/               # Protocol and roadmap documentation
 ├── cmake/              # CMake helper modules
+├── apptainer/          # Apptainer/Singularity container definition
 └── scripts/            # HPC / Slurm job scripts
 ```
 
