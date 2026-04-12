@@ -1,0 +1,107 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%labels
+    Author Angel Luis Robles Fernández
+    Version 0.1.0
+    Description Apptainer image for xbioclim – bioclimatic variable computation (BIO1-BIO19)
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+
+    # ---- System packages ----
+    apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        git \
+        libgdal-dev \
+        gdal-bin \
+        libgomp1 \
+        python3-pip \
+        ca-certificates \
+        pkg-config \
+        wget \
+    && rm -rf /var/lib/apt/lists/*
+
+    # ---- xtl (header-only, required by xtensor) ----
+    git clone --depth 1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+    cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+    cmake --install /tmp/xtl/build
+    rm -rf /tmp/xtl
+
+    # ---- xtensor (header-only) ----
+    git clone --depth 1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+    cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+    cmake --install /tmp/xtensor/build
+    rm -rf /tmp/xtensor
+
+    # ---- xbioclim ----
+    git clone https://github.com/alrobles/xbioclim.git /opt/xbioclim
+    cd /opt/xbioclim
+
+    cmake -B build \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DXBIOCLIM_BUILD_TESTS=OFF \
+        -DXBIOCLIM_USE_OPENMP=ON
+
+    cmake --build build --parallel $(nproc)
+    cmake --install build --prefix /usr/local
+
+    # Clean up build artifacts to shrink the image
+    rm -rf /opt/xbioclim/build
+
+# ---- GPU / CUDA variant (uncomment to enable) ----
+# To build a CUDA-enabled image:
+#   1. Change the header to:
+#        Bootstrap: docker
+#        From: nvidia/cuda:12.3.2-devel-ubuntu22.04
+#   2. Uncomment the %post block below (and comment out the %post block above)
+#   3. Add --nv to apptainer exec when running on GPU nodes
+#
+# %post
+#     export DEBIAN_FRONTEND=noninteractive
+#
+#     apt-get update && apt-get install -y --no-install-recommends \
+#         build-essential \
+#         cmake \
+#         git \
+#         libgdal-dev \
+#         gdal-bin \
+#         libgomp1 \
+#         python3-pip \
+#         ca-certificates \
+#         pkg-config \
+#         wget \
+#     && rm -rf /var/lib/apt/lists/*
+#
+#     # xtl (header-only)
+#     git clone --depth 1 --branch 0.7.7 https://github.com/xtensor-stack/xtl.git /tmp/xtl
+#     cmake -S /tmp/xtl -B /tmp/xtl/build -DCMAKE_INSTALL_PREFIX=/usr/local
+#     cmake --install /tmp/xtl/build
+#     rm -rf /tmp/xtl
+#
+#     # xtensor (header-only)
+#     git clone --depth 1 --branch 0.25.0 https://github.com/xtensor-stack/xtensor.git /tmp/xtensor
+#     cmake -S /tmp/xtensor -B /tmp/xtensor/build -DCMAKE_INSTALL_PREFIX=/usr/local
+#     cmake --install /tmp/xtensor/build
+#     rm -rf /tmp/xtensor
+#
+#     # xbioclim with CUDA
+#     git clone https://github.com/alrobles/xbioclim.git /opt/xbioclim
+#     cd /opt/xbioclim
+#
+#     cmake -B build \
+#         -DCMAKE_BUILD_TYPE=Release \
+#         -DXBIOCLIM_BUILD_TESTS=OFF \
+#         -DXBIOCLIM_USE_OPENMP=ON \
+#         -DXBIOCLIM_USE_CUDA=ON
+#
+#     cmake --build build --parallel $(nproc)
+#     cmake --install build --prefix /usr/local
+#     rm -rf /opt/xbioclim/build
+
+%environment
+    export PATH=/usr/local/bin:$PATH
+
+%runscript
+    exec xbioclim_cli "$@"
