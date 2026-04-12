@@ -6,6 +6,9 @@
 
 namespace xbioclim {
 
+/// Returns true when at least one CUDA-capable device is available at runtime.
+bool cuda_device_available();
+
 /// Compute all 19 bioclimatic variables using a CUDA GPU kernel.
 ///
 /// Each GPU thread handles one pixel independently. Input data is transferred

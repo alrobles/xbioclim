@@ -13,7 +13,6 @@
 #include "xbioclim/bioclim_cuda.hpp"
 
 #include <cmath>
-#include <cuda_runtime.h>
 #include <limits>
 #include <stdexcept>
 
@@ -23,12 +22,6 @@ using namespace xbioclim;
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/// Returns true when at least one CUDA device is available.
-static bool cuda_device_available() {
-    int count = 0;
-    return cudaGetDeviceCount(&count) == cudaSuccess && count > 0;
-}
 
 /// Synthetic test block (same as test_bioclim.cpp).
 static ClimateBlock make_test_block(std::size_t N = 1) {
