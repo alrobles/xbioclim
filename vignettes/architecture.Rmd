@@ -1,0 +1,289 @@
+---
+title: "Architecture and Design"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Architecture and Design}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+This vignette explains the internal architecture of **rxbioclim** for
+advanced users who want to extend, embed, or contribute to the package.
+It covers:
+
+- The relationship between rxbioclim and the upstream **xbioclim** C++
+  library
+- The layered design of internal primitive helpers
+- The public function API (individual `bioXX()` functions and the unified
+  `bioclim()` wrapper)
+- Patterns for block-based processing of large climate datasets
+- Guidelines for adding new variables or adapting the formulas
+
+## Relationship with xbioclim (C++ library)
+
+rxbioclim is a faithful R port of
+[xbioclim](https://github.com/alrobles/xbioclim), a header-only C++17
+library that computes the same 19 WorldClim bioclimatic variables.  The
+design goals of both implementations are identical:
+
+- **Correctness first** – every formula matches the WorldClim specification
+  exactly, including the population standard deviation (denominator *N*, not
+  *N−1*) used in BIO04 and BIO15.
+- **Minimal dependencies** – xbioclim depends only on the C++ standard
+  library; rxbioclim depends only on base R.
+- **Stateless functions** – no global state, no side effects; all functions
+  are pure.
+
+The mapping between the two APIs is 1-to-1:
+
+| C++ (xbioclim) | R (rxbioclim) |
+|----------------|---------------|
+| `xbioclim::bio01(tas)` | `bio01(tas)` |
+| `xbioclim::bio02(tasmax, tasmin)` | `bio02(tasmax, tasmin)` |
+| … | … |
+| `xbioclim::bioclim(tas, tasmax, tasmin, pr)` | `bioclim(tas, tasmax, tasmin, pr)` |
+| `xbioclim::quarter_argmax(x)` | `quarter_argmax(x)` (internal) |
+| `xbioclim::rolling_quarter_sum(x)` | `rolling_quarter_sum(x)` (internal) |
+| `xbioclim::sd_pop(x)` | `sd_pop(x)` (internal) |
+
+## Layer diagram
+
+```
+┌─────────────────────────────────────────────────┐
+│                 User code                        │
+│   bioclim()  bio01()  bio04()  bio12()  …        │
+└─────────────────────────┬───────────────────────┘
+                          │ calls
+┌─────────────────────────▼───────────────────────┐
+│            Public API  (R/bioclim.R)             │
+│  Individual bioXX() functions + bioclim() wrapper│
+└──────────┬────────────────────┬─────────────────┘
+           │ calls              │ calls
+┌──────────▼──────┐   ┌────────▼──────────────────┐
+│  Primitives     │   │  Input validation          │
+│  (R/primitives.R)│  │  validate_monthly()        │
+│                 │   │  (R/primitives.R)          │
+│  sd_pop()       │   └───────────────────────────┘
+│  rolling_quarter│
+│    _sum/mean()  │
+│  quarter_argmax │
+│    /argmin()    │
+│  quarter_values │
+└─────────────────┘
+```
+
+## Internal primitives (`R/primitives.R`)
+
+All arithmetic ultimately flows through a small set of helper functions:
+
+### `sd_pop(x)`
+
+Population standard deviation (denominator *N*):
+
+```r
+sd_pop <- function(x) {
+  n <- length(x)
+  if (n == 0L) return(NaN)
+  sqrt(sum((x - mean(x))^2) / n)
+}
+```
+
+Used by `bio04()` (Temperature Seasonality) and `bio15()` (Precipitation
+Seasonality).  Note that R's built-in `sd()` divides by *N−1*; using it
+would give wrong results.
+
+### `rolling_quarter_sum(x)` and `rolling_quarter_mean(x)`
+
+For each starting month *i* (1–12), compute the sum/mean of months
+*i*, *i+1*, *i+2* with **circular wrapping** (month 13 = January):
+
+```r
+rolling_quarter_sum <- function(x) {
+  x_ext <- c(x, x[1:2])
+  vapply(seq_len(12), function(i) sum(x_ext[i:(i + 2L)]), numeric(1))
+}
+```
+
+The circular wrap is essential so that a quarter starting in November
+(month 11) correctly includes December and January.
+
+### `quarter_argmax(x)` / `quarter_argmin(x)`
+
+Return the 1-based index of the quarter with the highest/lowest 3-month
+sum:
+
+```r
+quarter_argmax <- function(x) which.max(rolling_quarter_sum(x))
+quarter_argmin <- function(x) which.min(rolling_quarter_sum(x))
+```
+
+`which.max()` / `which.min()` return the *first* maximum/minimum when
+there are ties, consistent with the xbioclim C++ behavior.
+
+### `quarter_values(x, start)`
+
+Extracts the 3-month window starting at `start` with circular wrapping:
+
+```r
+quarter_values <- function(x, start) {
+  idx <- ((start - 1L):(start + 1L)) %% 12L + 1L
+  x[idx]
+}
+```
+
+### `validate_monthly(x, name)`
+
+Every exported function calls this guard before any computation:
+
+```r
+validate_monthly <- function(x, name = "input") {
+  if (!is.numeric(x))
+    stop(sprintf("'%s' must be numeric", name), call. = FALSE)
+  if (length(x) != 12L)
+    stop(sprintf("'%s' must have length 12 (one value per month), got %d",
+                 name, length(x)), call. = FALSE)
+  invisible(NULL)
+}
+```
+
+## Public API (`R/bioclim.R`)
+
+### Individual variable functions
+
+Each of the 19 variables has its own exported function.  They are
+documented under the `bioclim-variables` topic (use `?bioclim-variables`
+in R) and share a common signature pattern:
+
+```r
+bioXX <- function(<required monthly inputs>) {
+  validate_monthly(<input>, "<name>")
+  # one or a few lines of arithmetic using primitives
+}
+```
+
+The individual functions are preferred when:
+
+- Only one or two variables are needed (avoids computing quarter indices
+  that `bioclim()` reuses internally).
+- The caller controls which inputs are available.
+
+### Unified wrapper: `bioclim()`
+
+`bioclim(tas, tasmax, tasmin, pr)` computes all 19 variables in a *single
+pass*, reusing shared intermediate values:
+
+```
+Quarter indices computed once:
+  wet_start  ← quarter_argmax(pr)
+  dry_start  ← quarter_argmin(pr)
+  warm_start ← quarter_argmax(tas)
+  cold_start ← quarter_argmin(tas)
+
+These are reused by up to 4 variables each, avoiding 12 extra calls to
+rolling_quarter_sum().
+```
+
+The function returns a **named numeric vector** of length 19 with names
+`"bio01"` … `"bio19"`.
+
+## Block-based processing pattern
+
+For large multi-pixel datasets the recommended pattern is:
+
+```r
+# 1. Prepare matrices: rows = pixels, cols = months
+TAS    <- ...  # n_pixels × 12
+TASMAX <- ...
+TASMIN <- ...
+PR     <- ...
+
+# 2. Pre-allocate output
+out <- matrix(NA_real_, nrow = nrow(TAS), ncol = 19)
+colnames(out) <- paste0("bio", sprintf("%02d", 1:19))
+
+# 3. Process in blocks
+block_size <- 200L
+n_blocks   <- ceiling(nrow(TAS) / block_size)
+
+for (b in seq_len(n_blocks)) {
+  idx <- ((b - 1L) * block_size + 1L) : min(b * block_size, nrow(TAS))
+  out[idx, ] <- t(vapply(idx, function(i) {
+    bioclim(TAS[i, ], TASMAX[i, ], TASMIN[i, ], PR[i, ])
+  }, numeric(19)))
+}
+```
+
+Key properties of this pattern:
+
+- **Memory bounded**: only `block_size × 12` values are in the working set
+  at any time.
+- **Composable**: replace the inner `vapply` with `mclapply` for
+  multi-core parallelism.
+- **Streamable**: replace matrix reads with streaming reads from disk
+  (e.g., `terra::readValues()` / `ncdf4::ncvar_get()`) without changing
+  the processing logic.
+
+See `vignette("benchmarking", package = "rxbioclim")` for timing
+comparisons of several block-processing strategies.
+
+## Adding new variables
+
+To add a custom variable (e.g., a modified BIO04 that uses sample SD):
+
+1. Add a helper to `R/primitives.R` if new low-level arithmetic is needed.
+2. Add an exported function to `R/bioclim.R`, following the pattern:
+
+```r
+#' @describeIn bioclim-variables BIO04alt - Temperature Seasonality (sample SD)
+#' @param tas Numeric vector of length 12: monthly mean temperature.
+#' @return A single numeric value.
+#' @export
+bio04_alt <- function(tas) {
+  validate_monthly(tas, "tas")
+  100 * sd(tas)   # sample SD (N-1 denominator)
+}
+```
+
+3. Run `devtools::document()` to regenerate `NAMESPACE` and `.Rd` files.
+4. Add tests in `tests/testthat/`.
+
+## Formula reference
+
+The formulas below are the authoritative definitions used in both xbioclim
+and rxbioclim.  Symbols: *T̄ₘ* = monthly mean temp, *T̂ₘ* = monthly max
+temp, *Ťₘ* = monthly min temp, *Pₘ* = monthly precipitation.
+
+| Variable | Formula |
+|----------|---------|
+| BIO01 | mean(*T̄*) |
+| BIO02 | mean(*T̂* − *Ť*) |
+| BIO03 | 100 × BIO02 / BIO07 |
+| BIO04 | 100 × sd_pop(*T̄*) |
+| BIO05 | max(*T̂*) |
+| BIO06 | min(*Ť*) |
+| BIO07 | BIO05 − BIO06 |
+| BIO08 | mean(*T̄* in wettest quarter) |
+| BIO09 | mean(*T̄* in driest quarter) |
+| BIO10 | mean(*T̄* in warmest quarter) |
+| BIO11 | mean(*T̄* in coldest quarter) |
+| BIO12 | sum(*P*) |
+| BIO13 | max(*P*) |
+| BIO14 | min(*P*) |
+| BIO15 | 100 × sd_pop(*P*) / mean(*P*) |
+| BIO16 | sum(*P* in wettest quarter) |
+| BIO17 | sum(*P* in driest quarter) |
+| BIO18 | sum(*P* in warmest quarter) |
+| BIO19 | sum(*P* in coldest quarter) |
+
+"Wettest/driest/warmest/coldest quarter" refers to the 3-consecutive-month
+window (with circular wrapping) whose total precipitation or mean
+temperature is highest/lowest.
