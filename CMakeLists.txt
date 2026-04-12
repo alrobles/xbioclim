@@ -30,6 +30,7 @@ if(XBIOCLIM_USE_CUDA)
     enable_language(CUDA)
     set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+    find_package(CUDAToolkit REQUIRED)
 endif()
 
 # --- Library target ---

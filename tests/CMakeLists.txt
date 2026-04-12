@@ -30,6 +30,10 @@ target_link_libraries(test_xbioclim PRIVATE
     Catch2::Catch2WithMain
 )
 
+if(XBIOCLIM_USE_CUDA)
+    target_link_libraries(test_xbioclim PRIVATE CUDA::cudart)
+endif()
+
 include(Catch)
 # Catch2 v3 uses exit code 4 to signal skipped tests; tell CTest to treat it
 # as a pass so that tests using SKIP() don't show as failures.
