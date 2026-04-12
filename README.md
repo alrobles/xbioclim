@@ -1,2 +1,67 @@
 # rxbioclim
-R package wrapper of xbioclim
+
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/alrobles/rxbioclim/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/alrobles/rxbioclim/actions/workflows/R-CMD-check.yaml)
+[![test-coverage](https://github.com/alrobles/rxbioclim/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/alrobles/rxbioclim/actions/workflows/test-coverage.yaml)
+<!-- badges: end -->
+
+An R package for computing the 19 standard bioclimatic variables (BIO01–BIO19) from monthly climate data, following the [WorldClim](https://www.worldclim.org/data/bioclim.html) specification. This is an R implementation of the [xbioclim](https://github.com/alrobles/xbioclim) C++ library.
+
+## Installation
+
+Install the development version from GitHub:
+
+```r
+# install.packages("remotes")
+remotes::install_github("alrobles/rxbioclim")
+```
+
+## Usage
+
+```r
+library(rxbioclim)
+
+# Monthly climate data (12 values, one per month)
+tas    <- c(5, 7, 10, 14, 18, 22, 25, 24, 20, 15, 10, 6)
+tasmax <- c(8, 10, 14, 18, 23, 28, 32, 31, 26, 19, 13, 9)
+tasmin <- c(1, 3, 6, 10, 13, 17, 20, 19, 15, 10, 6, 2)
+pr     <- c(60, 55, 50, 40, 30, 15, 5, 10, 25, 45, 55, 65)
+
+# Compute all 19 bioclimatic variables at once
+result <- bioclim(tas, tasmax, tasmin, pr)
+print(result)
+
+# Or compute individual variables
+bio01(tas)         # Mean Annual Temperature
+bio12(pr)          # Annual Precipitation
+bio04(tas)         # Temperature Seasonality
+bio15(pr)          # Precipitation Seasonality
+```
+
+## Bioclimatic Variables
+
+| Variable | Description |
+|----------|-------------|
+| BIO01 | Mean Annual Temperature |
+| BIO02 | Mean Diurnal Range |
+| BIO03 | Isothermality (100 × BIO02 / BIO07) |
+| BIO04 | Temperature Seasonality (100 × population SD) |
+| BIO05 | Max Temperature of Warmest Month |
+| BIO06 | Min Temperature of Coldest Month |
+| BIO07 | Temperature Annual Range (BIO05 − BIO06) |
+| BIO08 | Mean Temperature of Wettest Quarter |
+| BIO09 | Mean Temperature of Driest Quarter |
+| BIO10 | Mean Temperature of Warmest Quarter |
+| BIO11 | Mean Temperature of Coldest Quarter |
+| BIO12 | Annual Precipitation |
+| BIO13 | Precipitation of Wettest Month |
+| BIO14 | Precipitation of Driest Month |
+| BIO15 | Precipitation Seasonality (CV) |
+| BIO16 | Precipitation of Wettest Quarter |
+| BIO17 | Precipitation of Driest Quarter |
+| BIO18 | Precipitation of Warmest Quarter |
+| BIO19 | Precipitation of Coldest Quarter |
+
+## License
+
+MIT
