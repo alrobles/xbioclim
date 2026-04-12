@@ -176,7 +176,8 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
       ncores <- 1L
     } else {
       cl <- parallel::makeCluster(ncores)
-      # Export all package functions needed by workers
+      # Export all package functions needed by workers, sourcing explicitly
+      # from the package namespace so closures resolve correctly on workers.
       parallel::clusterExport(
         cl,
         varlist = c(
@@ -185,7 +186,7 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
           "quarter_argmax", "quarter_argmin",
           "quarter_values", "validate_monthly"
         ),
-        envir = environment()
+        envir = asNamespace("rxbioclim")
       )
     }
   }
@@ -217,10 +218,12 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
     n_cells <- nrow(v_tas)
 
     if (!is.null(cl)) {
-      # Parallel: split cells into chunks across workers
+      # Parallel: split cells into chunks across workers.
+      # `bioclim_block` is available on workers via clusterExport above.
       chunks       <- parallel::splitIndices(n_cells, ncores)
+      .fn          <- bioclim_block
       result_parts <- parallel::parLapply(cl, chunks, function(idx) {
-        bioclim_block(
+        .fn(
           v_tas[idx,    , drop = FALSE],
           v_tasmax[idx, , drop = FALSE],
           v_tasmin[idx, , drop = FALSE],

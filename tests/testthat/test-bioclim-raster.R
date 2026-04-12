@@ -96,11 +96,9 @@ test_that("validate_spatraster passes for valid 12-layer SpatRaster", {
 
 # ── bioclim_raster() ─────────────────────────────────────────────────────────
 
-test_that("bioclim_raster errors when terra is required but not available", {
-  skip_if_no_terra()  # actually needs terra to build the raster inputs
-  rasts <- make_test_rasters()
-  # This succeeds because terra IS available; just verify the function exists
+test_that("bioclim_raster is an exported function in the package namespace", {
   expect_true(is.function(bioclim_raster))
+  expect_true("bioclim_raster" %in% getNamespaceExports("rxbioclim"))
 })
 
 test_that("bioclim_raster returns SpatRaster with 19 layers", {
