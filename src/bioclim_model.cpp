@@ -63,11 +63,6 @@ static double quarter_mean_impl(const std::vector<double>& x, int start) {
 
 class BioclimModel {
  public:
-  std::vector<double> tas_;
-  std::vector<double> tasmax_;
-  std::vector<double> tasmin_;
-  std::vector<double> pr_;
-
   BioclimModel(const std::vector<double>& tas,
                const std::vector<double>& tasmax,
                const std::vector<double>& tasmin,
@@ -186,6 +181,12 @@ class BioclimModel {
         Rcpp::Named("bio17") = bio17(), Rcpp::Named("bio18") = bio18(),
         Rcpp::Named("bio19") = bio19());
   }
+
+ private:
+  std::vector<double> tas_;
+  std::vector<double> tasmax_;
+  std::vector<double> tasmin_;
+  std::vector<double> pr_;
 };
 
 // ── Rcpp-exported interface ──────────────────────────────────────────────────

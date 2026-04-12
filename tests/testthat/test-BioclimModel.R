@@ -15,7 +15,7 @@ tol <- 1e-4
 test_that("BioclimModel() creates a valid object", {
   m <- BioclimModel(mock_tas, mock_tasmax, mock_tasmin, mock_pr)
   expect_s4_class(m, "BioclimModel")
-  expect_true(isVirtualClass("BioclimModel") == FALSE)
+  expect_false(isVirtualClass("BioclimModel"))
 })
 
 test_that("BioclimModel pntr slot is an externalptr", {

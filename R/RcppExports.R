@@ -10,7 +10,7 @@
 #' @return An external pointer wrapping a \code{BioclimModel} C++ object.
 #' @keywords internal
 bioclim_model_new <- function(tas, tasmax, tasmin, pr) {
-    .Call('_rxbioclim_bioclim_model_new', PACKAGE = 'rxbioclim', tas, tasmax, tasmin, pr)
+    .Call(`_rxbioclim_bioclim_model_new`, tas, tasmax, tasmin, pr)
 }
 
 #' Test whether the C++ pointer is null
@@ -18,102 +18,102 @@ bioclim_model_new <- function(tas, tasmax, tasmin, pr) {
 #' @return Logical scalar.
 #' @keywords internal
 bioclim_model_is_null <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_is_null', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_is_null`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio01 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio01', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio01`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio02 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio02', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio02`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio03 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio03', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio03`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio04 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio04', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio04`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio05 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio05', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio05`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio06 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio06', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio06`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio07 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio07', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio07`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio08 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio08', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio08`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio09 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio09', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio09`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio10 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio10', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio10`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio11 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio11', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio11`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio12 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio12', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio12`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio13 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio13', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio13`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio14 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio14', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio14`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio15 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio15', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio15`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio16 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio16', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio16`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio17 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio17', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio17`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio18 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio18', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio18`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio19 <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_bio19', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_bio19`, ptr)
 }
 
 #' Compute all 19 bioclimatic variables from the C++ object
@@ -121,6 +121,6 @@ bioclim_model_bio19 <- function(ptr) {
 #' @return Named numeric vector of length 19.
 #' @keywords internal
 bioclim_model_compute <- function(ptr) {
-    .Call('_rxbioclim_bioclim_model_compute', PACKAGE = 'rxbioclim', ptr)
+    .Call(`_rxbioclim_bioclim_model_compute`, ptr)
 }
 
