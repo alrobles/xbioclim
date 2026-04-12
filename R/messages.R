@@ -8,7 +8,7 @@
 #' **How the cross-boundary workflow works:**
 #'
 #' 1. A C++ routine performs its computation and, instead of throwing directly,
-#'    records any error or warning strings into a thread-local message store.
+#'    records any error or warning strings into a session-level message store.
 #' 2. After every `.Call()` invocation, the R-side wrapper calls
 #'    [check_messages()] to inspect the store and re-raise any messages as
 #'    native R conditions (`stop()` for errors, `warning()` for warnings).

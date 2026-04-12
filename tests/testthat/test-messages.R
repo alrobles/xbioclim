@@ -5,7 +5,7 @@ reset <- function() clear_messages()
 
 # ── has_error / has_warning on empty store ──────────────────────────────────
 
-test_that("store is empty at initialisation", {
+test_that("store is empty at initialization", {
   reset()
   expect_false(has_error())
   expect_false(has_warning())
