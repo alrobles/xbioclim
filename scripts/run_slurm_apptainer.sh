@@ -16,6 +16,9 @@ set -euo pipefail
 # Some clusters require loading the apptainer module; uncomment if needed:
 # module load apptainer
 
+# Match OpenMP threads to allocated CPUs for best performance
+export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-4}"
+
 # ---------- Configuration ----------
 # Root directory containing the input CHELSA monthly rasters.
 # Expected layout: ${INPUT_DIR}/${VAR}_${MM}.tif  (e.g. tas_01.tif)
@@ -33,7 +36,7 @@ fi
 
 # ---------- Derived values ----------
 LON_IDX=${SLURM_ARRAY_TASK_ID}          # 0..359
-LON=$(( LON_IDX - 180 ))                # -180..179
+LON=$(( LON_IDX - 180 ))                # converts 0..359 → -180..179
 
 STRIP_DIR="${OUTPUT_DIR}/lon_${LON}"
 mkdir -p "${STRIP_DIR}" "logs"
