@@ -6,13 +6,13 @@ using namespace Rcpp;
 // Population standard deviation (denominator N, matching xbioclim convention)
 static inline double sd_pop_c(const NumericVector& x) {
   int n = x.size();
-  double m = mean(x);
-  double ss = 0.0;
+  double s = 0.0, ss = 0.0;
   for (int i = 0; i < n; i++) {
-    double d = x[i] - m;
-    ss += d * d;
+    s  += x[i];
+    ss += x[i] * x[i];
   }
-  return std::sqrt(ss / n);
+  double m = s / n;
+  return std::sqrt(ss / n - m * m);
 }
 
 // Rolling quarter sums for 12 monthly values (circular wrapping)

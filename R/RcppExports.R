@@ -7,7 +7,7 @@
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio01_cpp <- function(tas) {
-    .Call('_rxbioclim_bio01_cpp', PACKAGE = 'rxbioclim', tas)
+    .Call(`_rxbioclim_bio01_cpp`, tas)
 }
 
 #' Compute BIO02 (Mean Diurnal Range) for a raster block
@@ -17,7 +17,7 @@ bio01_cpp <- function(tas) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio02_cpp <- function(tasmax, tasmin) {
-    .Call('_rxbioclim_bio02_cpp', PACKAGE = 'rxbioclim', tasmax, tasmin)
+    .Call(`_rxbioclim_bio02_cpp`, tasmax, tasmin)
 }
 
 #' Compute BIO03 (Isothermality) for a raster block
@@ -27,7 +27,7 @@ bio02_cpp <- function(tasmax, tasmin) {
 #' @return Numeric vector with one value per pixel (NaN where BIO07 == 0).
 #' @keywords internal
 bio03_cpp <- function(tasmax, tasmin) {
-    .Call('_rxbioclim_bio03_cpp', PACKAGE = 'rxbioclim', tasmax, tasmin)
+    .Call(`_rxbioclim_bio03_cpp`, tasmax, tasmin)
 }
 
 #' Compute BIO04 (Temperature Seasonality) for a raster block
@@ -36,7 +36,7 @@ bio03_cpp <- function(tasmax, tasmin) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio04_cpp <- function(tas) {
-    .Call('_rxbioclim_bio04_cpp', PACKAGE = 'rxbioclim', tas)
+    .Call(`_rxbioclim_bio04_cpp`, tas)
 }
 
 #' Compute BIO05 (Max Temperature of Warmest Month) for a raster block
@@ -45,7 +45,7 @@ bio04_cpp <- function(tas) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio05_cpp <- function(tasmax) {
-    .Call('_rxbioclim_bio05_cpp', PACKAGE = 'rxbioclim', tasmax)
+    .Call(`_rxbioclim_bio05_cpp`, tasmax)
 }
 
 #' Compute BIO06 (Min Temperature of Coldest Month) for a raster block
@@ -54,7 +54,7 @@ bio05_cpp <- function(tasmax) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio06_cpp <- function(tasmin) {
-    .Call('_rxbioclim_bio06_cpp', PACKAGE = 'rxbioclim', tasmin)
+    .Call(`_rxbioclim_bio06_cpp`, tasmin)
 }
 
 #' Compute BIO07 (Temperature Annual Range) for a raster block
@@ -64,7 +64,7 @@ bio06_cpp <- function(tasmin) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio07_cpp <- function(tasmax, tasmin) {
-    .Call('_rxbioclim_bio07_cpp', PACKAGE = 'rxbioclim', tasmax, tasmin)
+    .Call(`_rxbioclim_bio07_cpp`, tasmax, tasmin)
 }
 
 #' Compute BIO08 (Mean Temperature of Wettest Quarter) for a raster block
@@ -74,7 +74,7 @@ bio07_cpp <- function(tasmax, tasmin) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio08_cpp <- function(tas, pr) {
-    .Call('_rxbioclim_bio08_cpp', PACKAGE = 'rxbioclim', tas, pr)
+    .Call(`_rxbioclim_bio08_cpp`, tas, pr)
 }
 
 #' Compute BIO09 (Mean Temperature of Driest Quarter) for a raster block
@@ -84,7 +84,7 @@ bio08_cpp <- function(tas, pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio09_cpp <- function(tas, pr) {
-    .Call('_rxbioclim_bio09_cpp', PACKAGE = 'rxbioclim', tas, pr)
+    .Call(`_rxbioclim_bio09_cpp`, tas, pr)
 }
 
 #' Compute BIO10 (Mean Temperature of Warmest Quarter) for a raster block
@@ -93,7 +93,7 @@ bio09_cpp <- function(tas, pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio10_cpp <- function(tas) {
-    .Call('_rxbioclim_bio10_cpp', PACKAGE = 'rxbioclim', tas)
+    .Call(`_rxbioclim_bio10_cpp`, tas)
 }
 
 #' Compute BIO11 (Mean Temperature of Coldest Quarter) for a raster block
@@ -102,7 +102,7 @@ bio10_cpp <- function(tas) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio11_cpp <- function(tas) {
-    .Call('_rxbioclim_bio11_cpp', PACKAGE = 'rxbioclim', tas)
+    .Call(`_rxbioclim_bio11_cpp`, tas)
 }
 
 #' Compute BIO12 (Annual Precipitation) for a raster block
@@ -111,7 +111,7 @@ bio11_cpp <- function(tas) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio12_cpp <- function(pr) {
-    .Call('_rxbioclim_bio12_cpp', PACKAGE = 'rxbioclim', pr)
+    .Call(`_rxbioclim_bio12_cpp`, pr)
 }
 
 #' Compute BIO13 (Precipitation of Wettest Month) for a raster block
@@ -120,7 +120,7 @@ bio12_cpp <- function(pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio13_cpp <- function(pr) {
-    .Call('_rxbioclim_bio13_cpp', PACKAGE = 'rxbioclim', pr)
+    .Call(`_rxbioclim_bio13_cpp`, pr)
 }
 
 #' Compute BIO14 (Precipitation of Driest Month) for a raster block
@@ -129,7 +129,7 @@ bio13_cpp <- function(pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio14_cpp <- function(pr) {
-    .Call('_rxbioclim_bio14_cpp', PACKAGE = 'rxbioclim', pr)
+    .Call(`_rxbioclim_bio14_cpp`, pr)
 }
 
 #' Compute BIO15 (Precipitation Seasonality) for a raster block
@@ -138,7 +138,7 @@ bio14_cpp <- function(pr) {
 #' @return Numeric vector with one value per pixel (NaN where mean precip == 0).
 #' @keywords internal
 bio15_cpp <- function(pr) {
-    .Call('_rxbioclim_bio15_cpp', PACKAGE = 'rxbioclim', pr)
+    .Call(`_rxbioclim_bio15_cpp`, pr)
 }
 
 #' Compute BIO16 (Precipitation of Wettest Quarter) for a raster block
@@ -147,7 +147,7 @@ bio15_cpp <- function(pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio16_cpp <- function(pr) {
-    .Call('_rxbioclim_bio16_cpp', PACKAGE = 'rxbioclim', pr)
+    .Call(`_rxbioclim_bio16_cpp`, pr)
 }
 
 #' Compute BIO17 (Precipitation of Driest Quarter) for a raster block
@@ -156,7 +156,7 @@ bio16_cpp <- function(pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio17_cpp <- function(pr) {
-    .Call('_rxbioclim_bio17_cpp', PACKAGE = 'rxbioclim', pr)
+    .Call(`_rxbioclim_bio17_cpp`, pr)
 }
 
 #' Compute BIO18 (Precipitation of Warmest Quarter) for a raster block
@@ -166,7 +166,7 @@ bio17_cpp <- function(pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio18_cpp <- function(tas, pr) {
-    .Call('_rxbioclim_bio18_cpp', PACKAGE = 'rxbioclim', tas, pr)
+    .Call(`_rxbioclim_bio18_cpp`, tas, pr)
 }
 
 #' Compute BIO19 (Precipitation of Coldest Quarter) for a raster block
@@ -176,7 +176,7 @@ bio18_cpp <- function(tas, pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio19_cpp <- function(tas, pr) {
-    .Call('_rxbioclim_bio19_cpp', PACKAGE = 'rxbioclim', tas, pr)
+    .Call(`_rxbioclim_bio19_cpp`, tas, pr)
 }
 
 #' Compute all 19 bioclimatic variables for a raster block
@@ -189,6 +189,6 @@ bio19_cpp <- function(tas, pr) {
 #'   (bio01..bio19), named accordingly.
 #' @keywords internal
 bioclim_cpp <- function(tas, tasmax, tasmin, pr) {
-    .Call('_rxbioclim_bioclim_cpp', PACKAGE = 'rxbioclim', tas, tasmax, tasmin, pr)
+    .Call(`_rxbioclim_bioclim_cpp`, tas, tasmax, tasmin, pr)
 }
 
