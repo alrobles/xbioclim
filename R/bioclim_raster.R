@@ -240,6 +240,10 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
 
   # Explicit finalization on the happy path; prevents double-call from on.exit
   write_started <- FALSE
+  terra::readStop(tas)
+  terra::readStop(tasmax)
+  terra::readStop(tasmin)
+  terra::readStop(pr)
   terra::writeStop(out)
   if (!is.null(cl)) {
     parallel::stopCluster(cl)

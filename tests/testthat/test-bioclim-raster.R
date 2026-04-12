@@ -135,8 +135,8 @@ test_that("bioclim_raster preserves spatial extent and CRS", {
   rasts  <- make_test_rasters()
   result <- bioclim_raster(rasts$tas, rasts$tasmax, rasts$tasmin, rasts$pr)
 
-  expect_equal(terra::ext(result), terra::ext(rasts$tas[[1L]]))
-  expect_equal(terra::crs(result), terra::crs(rasts$tas[[1L]]))
+  expect_equal(terra::ext(result), terra::ext(rasts$tas))
+  expect_equal(terra::crs(result), terra::crs(rasts$tas))
   expect_equal(terra::nrow(result), terra::nrow(rasts$tas))
   expect_equal(terra::ncol(result), terra::ncol(rasts$tas))
 })
