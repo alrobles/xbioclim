@@ -5,6 +5,10 @@ skip_if_no_terra <- function() {
   skip_if_not_installed("terra")
 }
 
+# Reference bioclim result for the standard linear monthly test pattern
+# (tas = 1:12, tasmax = 2:13, tasmin = 0:11, pr = 1:12)
+ref_bioclim <- bioclim(1:12, 2:13, 0:11, 1:12)
+
 # ── Helper: build minimal SpatRasters ───────────────────────────────────────
 
 make_test_rasters <- function(nrows = 4L, ncols = 3L) {
@@ -47,8 +51,6 @@ test_that("bioclim_block returns a 19-column matrix", {
 })
 
 test_that("bioclim_block matches bioclim() for each row", {
-  ref <- bioclim(1:12, 2:13, 0:11, 1:12)
-
   m_tas    <- matrix(rep(1:12, 5), nrow = 5, byrow = TRUE)
   m_tasmax <- matrix(rep(2:13, 5), nrow = 5, byrow = TRUE)
   m_tasmin <- matrix(rep(0:11, 5), nrow = 5, byrow = TRUE)
@@ -56,7 +58,7 @@ test_that("bioclim_block matches bioclim() for each row", {
 
   result <- bioclim_block(m_tas, m_tasmax, m_tasmin, m_pr)
   for (i in seq_len(5)) {
-    expect_equal(result[i, ], unname(ref), tolerance = 1e-6)
+    expect_equal(result[i, ], unname(ref_bioclim), tolerance = 1e-6)
   }
 })
 
@@ -121,12 +123,11 @@ test_that("bioclim_raster result matches bioclim() per-pixel", {
   rasts  <- make_test_rasters()
   result <- bioclim_raster(rasts$tas, rasts$tasmax, rasts$tasmin, rasts$pr)
 
-  ref <- bioclim(1:12, 2:13, 0:11, 1:12)
   result_vals <- terra::values(result)
 
   # Every cell should match the reference (all cells have identical monthly data)
   for (i in seq_len(nrow(result_vals))) {
-    expect_equal(result_vals[i, ], unname(ref), tolerance = 1e-4)
+    expect_equal(result_vals[i, ], unname(ref_bioclim), tolerance = 1e-4)
   }
 })
 
@@ -164,9 +165,8 @@ test_that("bioclim_raster works with explicit n_blocks parameter", {
   result <- bioclim_raster(rasts$tas, rasts$tasmax, rasts$tasmin, rasts$pr,
                             n_blocks = 2L)
   expect_equal(terra::nlyr(result), 19L)
-  ref <- bioclim(1:12, 2:13, 0:11, 1:12)
   result_vals <- terra::values(result)
-  expect_equal(result_vals[1, ], unname(ref), tolerance = 1e-4)
+  expect_equal(result_vals[1, ], unname(ref_bioclim), tolerance = 1e-4)
 })
 
 test_that("bioclim_raster rejects non-SpatRaster input", {

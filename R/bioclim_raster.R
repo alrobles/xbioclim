@@ -221,9 +221,8 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
       # Parallel: split cells into chunks across workers.
       # `bioclim_block` is available on workers via clusterExport above.
       chunks       <- parallel::splitIndices(n_cells, ncores)
-      .fn          <- bioclim_block
       result_parts <- parallel::parLapply(cl, chunks, function(idx) {
-        .fn(
+        bioclim_block(
           v_tas[idx,    , drop = FALSE],
           v_tasmax[idx, , drop = FALSE],
           v_tasmin[idx, , drop = FALSE],
