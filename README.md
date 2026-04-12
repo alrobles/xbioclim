@@ -52,7 +52,10 @@ library(rxbioclim)
 library(terra)
 
 # Each SpatRaster must have exactly 12 layers (one per month)
-# tas, tasmax, tasmin, pr <- rast("path/to/monthly_tas.tif"), ...
+# tas    <- rast("path/to/monthly_tas.tif")
+# tasmax <- rast("path/to/monthly_tasmax.tif")
+# tasmin <- rast("path/to/monthly_tasmin.tif")
+# pr     <- rast("path/to/monthly_pr.tif")
 
 # Sequential (memory-efficient block processing)
 bio <- bioclim_raster(tas, tasmax, tasmin, pr)

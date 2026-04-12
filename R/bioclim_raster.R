@@ -148,8 +148,25 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
     terra::blocks(out, n = as.integer(n_blocks))
   }
 
+  # State variables for cleanup tracking
+  cl            <- NULL
+  write_started <- FALSE
+
+  # Single comprehensive on.exit: runs on both normal exit and errors.
+  # try() prevents cascading failures during cleanup.
+  on.exit(
+    {
+      try(terra::readStop(tas),    silent = TRUE)
+      try(terra::readStop(tasmax), silent = TRUE)
+      try(terra::readStop(tasmin), silent = TRUE)
+      try(terra::readStop(pr),     silent = TRUE)
+      if (write_started) try(terra::writeStop(out), silent = TRUE)
+      if (!is.null(cl)) try(parallel::stopCluster(cl), silent = TRUE)
+    },
+    add = TRUE
+  )
+
   # Setup parallel cluster if requested
-  cl <- NULL
   if (ncores > 1L) {
     if (!requireNamespace("parallel", quietly = TRUE)) {
       warning(
@@ -159,7 +176,6 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
       ncores <- 1L
     } else {
       cl <- parallel::makeCluster(ncores)
-      on.exit(parallel::stopCluster(cl), add = TRUE)
       # Export all package functions needed by workers
       parallel::clusterExport(
         cl,
@@ -179,18 +195,10 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
   terra::readStart(tasmax)
   terra::readStart(tasmin)
   terra::readStart(pr)
-  on.exit(
-    {
-      terra::readStop(tas)
-      terra::readStop(tasmax)
-      terra::readStop(tasmin)
-      terra::readStop(pr)
-    },
-    add = TRUE
-  )
 
   # Open output raster for block-writing
   terra::writeStart(out, filename = filename, overwrite = overwrite, ...)
+  write_started <- TRUE
 
   # Block loop: read -> compute -> write
   for (i in seq_len(bk$n)) {
@@ -210,7 +218,7 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
 
     if (!is.null(cl)) {
       # Parallel: split cells into chunks across workers
-      chunks     <- parallel::splitIndices(n_cells, ncores)
+      chunks       <- parallel::splitIndices(n_cells, ncores)
       result_parts <- parallel::parLapply(cl, chunks, function(idx) {
         bioclim_block(
           v_tas[idx,    , drop = FALSE],
@@ -227,6 +235,12 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
     terra::writeValues(out, result_mat, start = row_start, nrows = n_rows)
   }
 
+  # Explicit finalization on the happy path; prevents double-call from on.exit
+  write_started <- FALSE
   terra::writeStop(out)
+  if (!is.null(cl)) {
+    parallel::stopCluster(cl)
+    cl <- NULL
+  }
   out
 }
