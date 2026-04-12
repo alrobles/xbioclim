@@ -2,6 +2,10 @@
 # package namespace.  This file is sourced automatically when the package loads.
 Rcpp::loadModule("bioclim_mod", TRUE)
 
+# Suppress R CMD check NOTE: 'no visible binding for global variable ClimateBlock'.
+# ClimateBlock is injected into the package namespace by loadModule() above.
+utils::globalVariables("ClimateBlock")
+
 #' Create a C++ ClimateBlock and compute bioclimatic variables
 #'
 #' A convenience wrapper around the C++ \code{ClimateBlock} class exposed by
