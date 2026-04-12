@@ -157,16 +157,16 @@ station_df <- data.frame(
 )
 
 # Apply bioclim() per station using split + lapply
-bio_list <- lapply(split(station_df, station_df$station), function(d) {
-  bioclim(d$tas, d$tasmax, d$tasmin, d$pr)
-})
+# Convert station to character to ensure robust splitting
+bio_list <- lapply(
+  split(station_df, as.character(station_df$station)),
+  function(d) bioclim(d$tas, d$tasmax, d$tasmin, d$pr)
+)
 
-# Combine into a data frame
+# Combine into a data frame, keeping numeric columns numeric
 bio_df <- do.call(rbind, lapply(names(bio_list), function(nm) {
-  c(station = nm, bio_list[[nm]])
+  as.data.frame(as.list(c(station = nm, bio_list[[nm]])))
 }))
-bio_df <- as.data.frame(bio_df)
-bio_df[, -1] <- lapply(bio_df[, -1], as.numeric)
 
 print(bio_df[, c("station", "bio01", "bio04", "bio12", "bio15")])
 ```

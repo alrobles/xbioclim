@@ -92,9 +92,9 @@ bioclim_loop <- function(TAS, TASMAX, TASMIN, PR) {
 
 ```{r apply-rows}
 bioclim_apply <- function(TAS, TASMAX, TASMIN, PR) {
-  t(apply(seq_len(nrow(TAS)), 1, function(i) {
+  t(vapply(seq_len(nrow(TAS)), function(i) {
     bioclim(TAS[i, ], TASMAX[i, ], TASMIN[i, ], PR[i, ])
-  }))
+  }, numeric(19)))
 }
 ```
 
