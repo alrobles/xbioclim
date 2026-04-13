@@ -334,3 +334,35 @@ bioclim_model_compute <- function(ptr) {
     .Call(`_rxbioclim_bioclim_model_compute`, ptr)
 }
 
+#' Check whether GDAL can open a raster file
+#'
+#' @param path Character string: path to the raster file.
+#' @return Logical \code{TRUE} if GDAL can open the file, \code{FALSE}
+#'   otherwise.
+#' @examples
+#' \donttest{
+#' # Works only when GDAL is available:
+#' gdal_can_open(system.file("extdata", "tiny.tif", package = "rxbioclim"))
+#' }
+#' @export
+gdal_can_open <- function(path) {
+    .Call(`_rxbioclim_gdal_can_open`, path)
+}
+
+#' Return metadata about a GDAL-readable raster
+#'
+#' @param path Character string: path to the raster file.
+#' @return Named list with nrows, ncols, nbands, geotransform, crs, scale,
+#'   offset.
+#' @examples
+#' \donttest{
+#' info <- gdal_info(
+#'   system.file("extdata", "tiny.tif", package = "rxbioclim")
+#' )
+#' str(info)
+#' }
+#' @export
+gdal_info <- function(path) {
+    .Call(`_rxbioclim_gdal_info`, path)
+}
+

@@ -502,6 +502,29 @@ BEGIN_RCPP
 END_RCPP
 }
 
+// gdal_can_open
+bool gdal_can_open(const std::string& path);
+RcppExport SEXP _rxbioclim_gdal_can_open(SEXP pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type path(pathSEXP);
+    rcpp_result_gen = Rcpp::wrap(gdal_can_open(path));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gdal_info
+Rcpp::List gdal_info(const std::string& path);
+RcppExport SEXP _rxbioclim_gdal_info(SEXP pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type path(pathSEXP);
+    rcpp_result_gen = Rcpp::wrap(gdal_info(path));
+    return rcpp_result_gen;
+END_RCPP
+}
+
 RcppExport SEXP _rcpp_module_boot_bioclim_mod();
 
 static const R_CallMethodDef CallEntries[] = {
@@ -548,6 +571,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rxbioclim_bioclim_model_bio18", (DL_FUNC) &_rxbioclim_bioclim_model_bio18, 1},
     {"_rxbioclim_bioclim_model_bio19", (DL_FUNC) &_rxbioclim_bioclim_model_bio19, 1},
     {"_rxbioclim_bioclim_model_compute", (DL_FUNC) &_rxbioclim_bioclim_model_compute, 1},
+    {"_rxbioclim_gdal_can_open", (DL_FUNC) &_rxbioclim_gdal_can_open, 1},
+    {"_rxbioclim_gdal_info", (DL_FUNC) &_rxbioclim_gdal_info, 1},
     {"_rcpp_module_boot_bioclim_mod", (DL_FUNC) &_rcpp_module_boot_bioclim_mod, 0},
     {NULL, NULL, 0}
 };

@@ -93,11 +93,19 @@ parallelism.
 
 ### Issue 7: Integrate GdalReader/GdalWriter from xbioclim
 
-- [ ] Port `gdal_io.cpp` and `gdal_io.hpp` from `alrobles/xbioclim`
-- [ ] Tiled windowed reads — only 1-2 tiles in memory at a time
-- [ ] Scale/offset decoding for packed integer rasters
-- [ ] COG (Cloud-Optimised GeoTIFF) output support
-- [ ] GDAL linked via `configure.ac` from Issue 3
+- [x] Add `src/gdal_io.hpp` and `src/gdal_io.cpp` — GdalReader / GdalWriter
+  C++ classes with full `#ifdef HAVE_GDAL` guards
+- [x] Tiled windowed reads — only 1–2 tiles in memory at a time
+  (`GdalReader::read_window` via GDAL `RasterIO`)
+- [x] Scale/offset decoding for packed integer rasters (applied in
+  `read_window` when GDAL band metadata is present)
+- [x] COG-compatible GTiff output — `GdalWriter(cog_compatible = true)` sets
+  `TILED=YES COMPRESS=LZW BLOCKXSIZE=256 BLOCKYSIZE=256 BIGTIFF=IF_SAFER`
+- [x] Optional GDAL — all code compiles without GDAL; functions stop with a
+  clear message at runtime when GDAL is absent
+- [x] Rcpp-exported diagnostics: `gdal_can_open(path)` and `gdal_info(path)`
+- [x] Unit tests in `tests/testthat/test-gdal-io.R` that skip when GDAL is
+  absent; tiny test raster in `inst/extdata/tiny.tif`
 
 > **Depends on:** Issue 3 (GDAL must be linked)
 
