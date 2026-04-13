@@ -80,7 +80,10 @@ monthly mean temperature.}
 
 \item{tasmin}{Numeric vector of length 12: monthly minimum temperature.}
 
-\item{pr}{Numeric vector of length 12: monthly precipitation.}
+\item{pr}{Numeric vector of length 12: monthly precipitation. When the first
+argument (\code{tas}) is a \linkS4class{BioclimData} or
+\linkS4class{BioclimModel} object, \code{pr} should be omitted and will be
+dispatched via the \code{missing} S4 method.}
 
 \item{...}{Currently unused; reserved for future extensions.}
 }

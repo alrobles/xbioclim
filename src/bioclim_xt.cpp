@@ -32,6 +32,9 @@ using namespace Rcpp;
 
 // ── Rolling-quarter primitives (stack-based, OpenMP-safe) ────────────────────
 
+// Isothermality (BIO03) when annual temperature range is zero
+static constexpr double BIO03_ZERO_RANGE_FALLBACK = 0.0;
+
 // Compute rolling 3-month sums for all 12 starting months (circular).
 // qs[k] = x[k] + x[(k+1)%12] + x[(k+2)%12]
 static inline void rolling_quarter_sum_xt(const double* x, double* qs) {
@@ -177,7 +180,7 @@ NumericMatrix bioclim_xt(NumericMatrix tas,
     double b05 = tmx_max;                                   // BIO05
     double b06 = tmn_min;                                   // BIO06
     double b07 = b05 - b06;                                 // BIO07
-    double b03 = (b07 > 0.0) ? 100.0 * b02 / b07 : 0.0;   // BIO03
+    double b03 = (b07 > 0.0) ? 100.0 * b02 / b07 : BIO03_ZERO_RANGE_FALLBACK; // BIO03
     double b04 = 100.0 * sd_pop_xt(t);                      // BIO04
 
     // Precipitation scalars
