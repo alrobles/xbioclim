@@ -49,7 +49,7 @@ test_that("BioclimData() accepts multi-pixel matrices", {
   mat_tasmin <- rbind(vec_tasmin, vec_tasmin)
   mat_pr     <- rbind(vec_pr,     vec_pr)
   bd <- BioclimData(mat_tas, mat_tasmax, mat_tasmin, mat_pr)
-  expect_s4_class(bd, "BioclimData")
+  expect_s4_class(bd, "BiocrlimData")
   expect_equal(nrow(bd@tas), 2L)
 })
 
