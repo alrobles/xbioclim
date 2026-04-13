@@ -27,6 +27,7 @@ Collate:
     'RcppExports.R'
     'primitives.R'
     'bioclim.R'
+    'bioclim_module.R'
     'bioclimmodel.R'
     'bioclim_module.R'
     'rxbioclim-package.R'

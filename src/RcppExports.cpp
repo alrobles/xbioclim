@@ -256,6 +256,8 @@ BEGIN_RCPP
 END_RCPP
 }
 
+RcppExport SEXP _rcpp_module_boot_bioclim_mod();
+
 static const R_CallMethodDef CallEntries[] = {
     {"_rxbioclim_bioclim_model_new", (DL_FUNC) &_rxbioclim_bioclim_model_new, 4},
     {"_rxbioclim_bioclim_model_is_null", (DL_FUNC) &_rxbioclim_bioclim_model_is_null, 1},
@@ -279,6 +281,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rxbioclim_bioclim_model_bio18", (DL_FUNC) &_rxbioclim_bioclim_model_bio18, 1},
     {"_rxbioclim_bioclim_model_bio19", (DL_FUNC) &_rxbioclim_bioclim_model_bio19, 1},
     {"_rxbioclim_bioclim_model_compute", (DL_FUNC) &_rxbioclim_bioclim_model_compute, 1},
+    {"_rcpp_module_boot_bioclim_mod", (DL_FUNC) &_rcpp_module_boot_bioclim_mod, 0},
     {NULL, NULL, 0}
 };
 
