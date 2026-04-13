@@ -1,0 +1,240 @@
+---
+title: "Performance Benchmarking: Block-Based Processing"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Performance Benchmarking: Block-Based Processing}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Overview
+
+This vignette demonstrates a **block-based processing** pattern for computing
+bioclimatic variables over large climate datasets.  Rather than operating on
+one pixel at a time (slow) or loading everything into memory at once
+(impractical for global data), you can split data into blocks of rows,
+process each block with vectorised R, and reassemble the results.
+
+We benchmark four approaches:
+
+1. **Scalar loop** – call `bioclim()` once per pixel in a `for` loop.
+2. **`apply()` over rows** – call `bioclim()` via `apply()`.
+3. **Block processing** – split into chunks, process each chunk with
+   `apply()`, and bind results.
+4. **`vapply()` loop** – call `bioclim()` via `vapply()`.
+
+```{r setup}
+library(rxbioclim)
+```
+
+## Generating synthetic climate data
+
+We create a matrix of synthetic monthly climate values for `N` pixels.  Each
+row is one pixel; columns are months.
+
+```{r synthetic-data}
+generate_climate <- function(n_pixels, seed = 42) {
+  set.seed(seed)
+
+  # Base annual mean temperature, uniformly distributed across latitudes
+  tas_base <- runif(n_pixels, -5, 25)
+
+  # Seasonal amplitude (larger at higher latitudes)
+  amplitude <- runif(n_pixels, 2, 15)
+
+  month_phase <- seq(0, 2 * pi, length.out = 13)[-13]
+
+  TAS <- t(outer(amplitude, sin(month_phase), "*")) +
+         matrix(tas_base, nrow = 12, ncol = n_pixels, byrow = TRUE)
+  TAS <- t(TAS)  # n_pixels × 12
+
+  TASMAX <- TAS + matrix(runif(n_pixels * 12, 2, 8), nrow = n_pixels)
+  TASMIN <- TAS - matrix(runif(n_pixels * 12, 2, 8), nrow = n_pixels)
+
+  # Precipitation: peaks in one season, roughly anti-correlated with temp
+  pr_base <- runif(n_pixels, 10, 200)
+  PR <- abs(
+    t(outer(pr_base, sin(month_phase + pi / 2), "*")) +
+      matrix(pr_base, nrow = 12, ncol = n_pixels, byrow = TRUE)
+  )
+  PR <- t(PR)  # n_pixels × 12
+  PR[PR < 0] <- 0
+
+  list(TAS = TAS, TASMAX = TASMAX, TASMIN = TASMIN, PR = PR)
+}
+
+N <- 1000  # number of pixels for benchmarking
+clim <- generate_climate(N)
+```
+
+## Approach 1: Scalar `for` loop
+
+```{r scalar-loop}
+bioclim_loop <- function(TAS, TASMAX, TASMIN, PR) {
+  n <- nrow(TAS)
+  out <- matrix(NA_real_, nrow = n, ncol = 19)
+  for (i in seq_len(n)) {
+    out[i, ] <- bioclim(TAS[i, ], TASMAX[i, ], TASMIN[i, ], PR[i, ])
+  }
+  colnames(out) <- paste0("bio", sprintf("%02d", 1:19))
+  out
+}
+```
+
+## Approach 2: `apply()` over rows
+
+```{r apply-rows}
+bioclim_apply <- function(TAS, TASMAX, TASMIN, PR) {
+  t(vapply(seq_len(nrow(TAS)), function(i) {
+    bioclim(TAS[i, ], TASMAX[i, ], TASMIN[i, ], PR[i, ])
+  }, numeric(19)))
+}
+```
+
+## Approach 3: Block processing
+
+Block processing mimics how raster packages (terra, stars) handle large
+datasets: data is read, processed, and written in fixed-size blocks to limit
+peak memory usage.
+
+```{r block-processing}
+bioclim_blocks <- function(TAS, TASMAX, TASMIN, PR, block_size = 100) {
+  n <- nrow(TAS)
+  n_blocks <- ceiling(n / block_size)
+  results <- vector("list", n_blocks)
+
+  for (b in seq_len(n_blocks)) {
+    row_start <- (b - 1L) * block_size + 1L
+    row_end   <- min(b * block_size, n)
+    idx <- row_start:row_end
+
+    block_result <- t(apply(idx, 1, function(i) {
+      bioclim(TAS[i, ], TASMAX[i, ], TASMIN[i, ], PR[i, ])
+    }))
+    results[[b]] <- block_result
+  }
+
+  out <- do.call(rbind, results)
+  colnames(out) <- paste0("bio", sprintf("%02d", 1:19))
+  out
+}
+```
+
+## Approach 4: `vapply()` loop
+
+```{r vapply-loop}
+bioclim_vapply <- function(TAS, TASMAX, TASMIN, PR) {
+  t(vapply(seq_len(nrow(TAS)), function(i) {
+    bioclim(TAS[i, ], TASMAX[i, ], TASMIN[i, ], PR[i, ])
+  }, numeric(19)))
+}
+```
+
+## Correctness check
+
+All four approaches should produce identical results (up to floating-point
+precision):
+
+```{r correctness}
+r1 <- bioclim_loop(clim$TAS, clim$TASMAX, clim$TASMIN, clim$PR)
+r2 <- bioclim_apply(clim$TAS, clim$TASMAX, clim$TASMIN, clim$PR)
+r3 <- bioclim_blocks(clim$TAS, clim$TASMAX, clim$TASMIN, clim$PR)
+r4 <- bioclim_vapply(clim$TAS, clim$TASMAX, clim$TASMIN, clim$PR)
+
+stopifnot(
+  all.equal(r1, r2, check.attributes = FALSE),
+  all.equal(r1, r3, check.attributes = FALSE),
+  all.equal(r1, r4, check.attributes = FALSE)
+)
+cat("All approaches produce identical results.\n")
+```
+
+## Benchmark
+
+```{r benchmark}
+times <- list(
+  loop   = system.time(bioclim_loop(clim$TAS, clim$TASMAX, clim$TASMIN, clim$PR)),
+  apply  = system.time(bioclim_apply(clim$TAS, clim$TASMAX, clim$TASMIN, clim$PR)),
+  blocks = system.time(bioclim_blocks(clim$TAS, clim$TASMAX, clim$TASMIN, clim$PR)),
+  vapply = system.time(bioclim_vapply(clim$TAS, clim$TASMAX, clim$TASMIN, clim$PR))
+)
+
+timing_df <- data.frame(
+  approach   = names(times),
+  elapsed_s  = sapply(times, `[[`, "elapsed"),
+  row.names  = NULL
+)
+timing_df$pixels_per_sec <- round(N / timing_df$elapsed_s)
+print(timing_df)
+```
+
+## Block size sensitivity
+
+The optimal block size depends on your system's cache size and memory
+bandwidth.  The plot below shows elapsed time as a function of block size
+(run with N = 500 pixels for speed):
+
+```{r block-size-sensitivity}
+N_small <- 500
+clim_s  <- generate_climate(N_small, seed = 7)
+
+block_sizes  <- c(10, 25, 50, 100, 250, 500)
+block_times  <- sapply(block_sizes, function(bs) {
+  system.time(
+    bioclim_blocks(clim_s$TAS, clim_s$TASMAX, clim_s$TASMIN, clim_s$PR,
+                   block_size = bs)
+  )[["elapsed"]]
+})
+
+sens_df <- data.frame(block_size = block_sizes, elapsed_s = block_times)
+print(sens_df)
+```
+
+Typical observation: very small blocks (< 25) incur per-block overhead,
+while very large blocks do not meaningfully improve throughput because the
+bottleneck shifts to per-pixel computation inside `bioclim()`.  A block
+size of 50–200 is usually a reasonable default.
+
+## Scaling to large datasets
+
+For truly large rasters (e.g., global 0.5° grids ≈ 260 000 land pixels),
+consider:
+
+1. **Pre-allocating output** – use `matrix(NA_real_, nrow = N, ncol = 19)`
+   before the loop and fill rows in-place.
+2. **Parallel processing** – wrap the block loop with `parallel::mclapply()`
+   or `foreach` + `doParallel` to use multiple cores.
+3. **Streaming I/O** – read blocks from disk with `terra::readValues()` or
+   `stars::read_stars()`, process with rxbioclim, and write results back
+   with `terra::writeValues()`.
+
+A sketch of a parallel block loop:
+
+```r
+library(parallel)
+
+bioclim_parallel_blocks <- function(TAS, TASMAX, TASMIN, PR,
+                                    block_size = 200, n_cores = 2L) {
+  n <- nrow(TAS)
+  n_blocks <- ceiling(n / block_size)
+
+  block_ids <- split(seq_len(n), ceiling(seq_len(n) / block_size))
+
+  results <- mclapply(block_ids, function(idx) {
+    t(vapply(idx, function(i) {
+      bioclim(TAS[i, ], TASMAX[i, ], TASMIN[i, ], PR[i, ])
+    }, numeric(19)))
+  }, mc.cores = n_cores)
+
+  out <- do.call(rbind, results)
+  colnames(out) <- paste0("bio", sprintf("%02d", 1:19))
+  out
+}
+```
