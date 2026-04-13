@@ -31,12 +31,13 @@ test_that("push_error accumulates multiple errors", {
 
 test_that("push_error rejects non-character input", {
   reset()
-  expect_error(rxbioclim:::push_error(42))
+  expect_error(rxbioclim:::push_error(42), "'msg' must be a character string")
 })
 
 test_that("push_error rejects vector input", {
   reset()
-  expect_error(rxbioclim:::push_error(c("a", "b")))
+  expect_error(rxbioclim:::push_error(c("a", "b")),
+               "'msg' must be a single character string")
 })
 
 # ── push_warning / bioclim_warnings ──────────────────────────────────────────
@@ -57,7 +58,7 @@ test_that("push_warning accumulates multiple warnings", {
 
 test_that("push_warning rejects non-character input", {
   reset()
-  expect_error(rxbioclim:::push_warning(TRUE))
+  expect_error(rxbioclim:::push_warning(TRUE), "'msg' must be a character string")
 })
 
 # ── clear_messages ───────────────────────────────────────────────────────────
@@ -99,7 +100,8 @@ test_that("check_messages concatenates multiple errors", {
   reset()
   rxbioclim:::push_error("err A")
   rxbioclim:::push_error("err B")
-  expect_error(rxbioclim:::check_messages(), "err A")
+  err <- tryCatch(rxbioclim:::check_messages(), error = function(e) e)
+  expect_equal(conditionMessage(err), "err A\nerr B")
   # After throwing, store is clear
   expect_false(has_error())
 })

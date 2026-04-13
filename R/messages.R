@@ -58,7 +58,13 @@ NULL
 #' @return Invisible `NULL`.
 #' @keywords internal
 push_error <- function(msg) {
-  stopifnot(is.character(msg), length(msg) == 1L)
+  if (!is.character(msg)) {
+    stop("'msg' must be a character string", call. = FALSE)
+  }
+  if (length(msg) != 1L) {
+    stop("'msg' must be a single character string, not a vector of length ",
+         length(msg), call. = FALSE)
+  }
   .rxbioclim_env$errors <- c(.rxbioclim_env$errors, msg)
   invisible(NULL)
 }
@@ -74,7 +80,13 @@ push_error <- function(msg) {
 #' @return Invisible `NULL`.
 #' @keywords internal
 push_warning <- function(msg) {
-  stopifnot(is.character(msg), length(msg) == 1L)
+  if (!is.character(msg)) {
+    stop("'msg' must be a character string", call. = FALSE)
+  }
+  if (length(msg) != 1L) {
+    stop("'msg' must be a single character string, not a vector of length ",
+         length(msg), call. = FALSE)
+  }
   .rxbioclim_env$warnings <- c(.rxbioclim_env$warnings, msg)
   invisible(NULL)
 }

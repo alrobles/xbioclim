@@ -8,9 +8,10 @@
 #' @section Error and warning propagation:
 #' rxbioclim mirrors the `SpatMessages` pattern used by the terra package.
 #' C++ routines record errors and warnings into an internal message store
-#' rather than throwing directly.  After each C++ call the R-side wrapper
-#' invokes [check_messages()] to convert any stored messages into native R
-#' conditions.  Users can also inspect the store programmatically:
+#' rather than throwing directly.  R-side wrappers around C++ calls should
+#' invoke [check_messages()] after each call to convert any stored messages
+#' into native R conditions.  Users can also inspect the store
+#' programmatically:
 #' * [bioclim_errors()] / [bioclim_warnings()] – retrieve stored messages.
 #' * [has_error()] / [has_warning()] – test whether messages exist.
 #' * [clear_messages()] – reset the store.

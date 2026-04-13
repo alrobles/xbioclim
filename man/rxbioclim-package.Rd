@@ -11,6 +11,20 @@ climate data following the WorldClim specification. This is an R
 implementation of the xbioclim C++ library, with a compiled C++ back-end
 exposed through Rcpp Modules.
 }
+\section{Error and warning propagation}{
+rxbioclim mirrors the \code{SpatMessages} pattern used by the terra package.
+C++ routines record errors and warnings into an internal message store
+rather than throwing directly.  R-side wrappers around C++ calls should
+invoke \code{\link[=check_messages]{check_messages()}} after each call to convert any stored messages
+into native R conditions.  Users can also inspect the store
+programmatically:
+\itemize{
+\item \code{\link[=bioclim_errors]{bioclim_errors()}} / \code{\link[=bioclim_warnings]{bioclim_warnings()}} – retrieve stored messages.
+\item \code{\link[=has_error]{has_error()}} / \code{\link[=has_warning]{has_warning()}} – test whether messages exist.
+\item \code{\link[=clear_messages]{clear_messages()}} – reset the store.
+}
+}
+
 \seealso{
 Useful links:
 \itemize{
