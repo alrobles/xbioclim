@@ -125,6 +125,7 @@ with `apply()`.
 # Simulate data for 5 locations
 set.seed(42)
 n_pixels <- 5
+
 make_climate <- function(n) {
   tas_base <- runif(n, 5, 20)
   matrix(
@@ -138,10 +139,18 @@ TASMAX <- TAS + matrix(runif(n_pixels * 12, 3, 8), nrow = n_pixels)
 TASMIN <- TAS - matrix(runif(n_pixels * 12, 3, 8), nrow = n_pixels)
 PR     <- abs(matrix(rnorm(n_pixels * 12, mean = 50, sd = 30), nrow = n_pixels))
 
-# Apply bioclim() to each row
-results <- t(apply(seq_len(n_pixels), 1, function(i) {
-  bioclim(TAS[i, ], TASMAX[i, ], TASMIN[i, ], PR[i, ])
-}))
+# Debugging: print dimensions
+print(dim(TAS))    # Debug step: expect (5, 12)
+print(dim(TASMAX))
+print(dim(TASMIN))
+print(dim(PR))
+
+# Apply processing
+results <- t(
+  vapply(seq_len(nrow(TAS)), function(i) {
+    bioclim(TAS[i, ], TASMAX[i, ], TASMIN[i, ], PR[i, ])
+  }, FUN.VALUE = numeric(19))
+)
 
 head(results)
 ```
