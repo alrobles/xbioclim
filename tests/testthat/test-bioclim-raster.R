@@ -187,3 +187,76 @@ test_that("bioclim_raster rejects SpatRaster with wrong layer count", {
     "must have 12 layers"
   )
 })
+
+test_that("bioclim_raster rejects geometrically mismatched rasters", {
+  skip_if_no_terra()
+  rasts  <- make_test_rasters()
+  r_diff <- make_test_rasters(nrows = 2L, ncols = 3L)$tas
+  expect_error(
+    bioclim_raster(rasts$tas, r_diff, rasts$tasmin, rasts$pr),
+    "same extent"
+  )
+})
+
+test_that("bioclim_raster rejects invalid ncores", {
+  skip_if_no_terra()
+  rasts <- make_test_rasters()
+  expect_error(
+    bioclim_raster(rasts$tas, rasts$tasmax, rasts$tasmin, rasts$pr, ncores = NA),
+    "'ncores' must be a finite scalar integer >= 1"
+  )
+  expect_error(
+    bioclim_raster(rasts$tas, rasts$tasmax, rasts$tasmin, rasts$pr, ncores = 0L),
+    "'ncores' must be a finite scalar integer >= 1"
+  )
+})
+
+test_that("bioclim_raster rejects invalid n_blocks", {
+  skip_if_no_terra()
+  rasts <- make_test_rasters()
+  expect_error(
+    bioclim_raster(rasts$tas, rasts$tasmax, rasts$tasmin, rasts$pr, n_blocks = 0L),
+    "'n_blocks' must be a finite scalar integer >= 1"
+  )
+  expect_error(
+    bioclim_raster(rasts$tas, rasts$tasmax, rasts$tasmin, rasts$pr, n_blocks = NA),
+    "'n_blocks' must be a finite scalar integer >= 1"
+  )
+})
+
+test_that("bioclim_raster writes output to disk when filename is supplied", {
+  skip_if_no_terra()
+  rasts   <- make_test_rasters()
+  outfile <- tempfile(fileext = ".tif")
+  on.exit(unlink(outfile), add = TRUE)
+
+  result <- bioclim_raster(
+    rasts$tas, rasts$tasmax, rasts$tasmin, rasts$pr,
+    filename  = outfile,
+    overwrite = TRUE
+  )
+
+  expect_true(inherits(result, "SpatRaster"))
+  expect_true(file.exists(outfile))
+  expect_equal(terra::nlyr(result), 19L)
+
+  result_vals <- terra::values(result)
+  expect_equal(result_vals[1, ], unname(ref_bioclim), tolerance = 1e-4)
+})
+
+test_that("bioclim_raster works with ncores > 1", {
+  skip_if_no_terra()
+  skip_if_not_installed("parallel")
+  n_avail <- parallel::detectCores()
+  if (is.na(n_avail) || n_avail < 2L) skip("Parallel test requires at least 2 cores")
+
+  rasts  <- make_test_rasters()
+  result <- bioclim_raster(
+    rasts$tas, rasts$tasmax, rasts$tasmin, rasts$pr,
+    ncores = 2L
+  )
+
+  expect_equal(terra::nlyr(result), 19L)
+  result_vals <- terra::values(result)
+  expect_equal(result_vals[1, ], unname(ref_bioclim), tolerance = 1e-4)
+})

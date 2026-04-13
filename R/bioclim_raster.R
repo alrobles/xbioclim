@@ -135,11 +135,31 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
   validate_spatraster(tasmin, "tasmin")
   validate_spatraster(pr,     "pr")
 
+  # Verify that all four rasters share the same geometry
+  if (!terra::compareGeom(tas, tasmax, stopOnError = FALSE) ||
+      !terra::compareGeom(tas, tasmin, stopOnError = FALSE) ||
+      !terra::compareGeom(tas, pr,     stopOnError = FALSE)) {
+    stop(
+      "'tas', 'tasmax', 'tasmin', and 'pr' must share the same extent, ",
+      "resolution, number of rows/columns, and CRS",
+      call. = FALSE
+    )
+  }
+
   ncores_int <- suppressWarnings(as.integer(ncores))
   if (length(ncores_int) != 1L || is.na(ncores_int) || ncores_int < 1L) {
     stop("'ncores' must be a finite scalar integer >= 1", call. = FALSE)
   }
   ncores <- ncores_int
+
+  # Validate n_blocks when supplied
+  if (!is.null(n_blocks)) {
+    n_blocks_int <- suppressWarnings(as.integer(n_blocks))
+    if (length(n_blocks_int) != 1L || is.na(n_blocks_int) || n_blocks_int < 1L) {
+      stop("'n_blocks' must be a finite scalar integer >= 1", call. = FALSE)
+    }
+    n_blocks <- n_blocks_int
+  }
 
   # Create output raster: 19 layers, same footprint as tas
   out <- terra::rast(tas[[1L]], nlyrs = 19L)
@@ -149,7 +169,7 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
   bk <- if (is.null(n_blocks)) {
     terra::blocks(out)
   } else {
-    terra::blocks(out, n = as.integer(n_blocks))
+    terra::blocks(out, n = n_blocks)
   }
 
   # State variables for cleanup tracking
