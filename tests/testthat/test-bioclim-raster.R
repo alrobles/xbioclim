@@ -81,19 +81,19 @@ test_that("bioclim_block returns NA row when any input has NA", {
 
 test_that("validate_spatraster errors on non-SpatRaster input", {
   skip_if_no_terra()
-  expect_error(validate_spatraster(matrix(1:12, 1, 12), "x"), "must be a SpatRaster")
+  expect_error(rxbioclim:::validate_spatraster(matrix(1:12, 1, 12), "x"), "must be a SpatRaster")
 })
 
 test_that("validate_spatraster errors on wrong number of layers", {
   skip_if_no_terra()
   r_wrong <- terra::rast(nrows = 2, ncols = 2, nlyr = 6L)
-  expect_error(validate_spatraster(r_wrong, "tas"), "must have 12 layers")
+  expect_error(rxbioclim:::validate_spatraster(r_wrong, "tas"), "must have 12 layers")
 })
 
 test_that("validate_spatraster passes for valid 12-layer SpatRaster", {
   skip_if_no_terra()
   r_ok <- terra::rast(nrows = 2, ncols = 2, nlyr = 12L)
-  expect_invisible(validate_spatraster(r_ok, "tas"))
+  expect_invisible(rxbioclim:::validate_spatraster(r_ok, "tas"))
 })
 
 # ── bioclim_raster() ─────────────────────────────────────────────────────────
