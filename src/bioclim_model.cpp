@@ -202,6 +202,16 @@ class BioclimModel {
 // [[Rcpp::export]]
 SEXP bioclim_model_new(Rcpp::NumericVector tas, Rcpp::NumericVector tasmax,
                        Rcpp::NumericVector tasmin, Rcpp::NumericVector pr) {
+  if (tas.size() != 12 || tasmax.size() != 12 ||
+      tasmin.size() != 12 || pr.size() != 12) {
+    Rcpp::stop("All input vectors must have length 12 (one value per month).");
+  }
+  if (Rcpp::is_true(Rcpp::any(Rcpp::is_na(tas)))    ||
+      Rcpp::is_true(Rcpp::any(Rcpp::is_na(tasmax))) ||
+      Rcpp::is_true(Rcpp::any(Rcpp::is_na(tasmin))) ||
+      Rcpp::is_true(Rcpp::any(Rcpp::is_na(pr)))) {
+    Rcpp::stop("Input vectors must not contain NA values.");
+  }
   Rcpp::XPtr<BioclimModel> ptr(
       new BioclimModel(Rcpp::as<std::vector<double>>(tas),
                        Rcpp::as<std::vector<double>>(tasmax),

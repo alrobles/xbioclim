@@ -18,8 +18,10 @@
 \alias{bio07,BioclimModel,missing-method}
 \alias{bio08,ANY,ANY-method}
 \alias{bio08,BioclimModel,missing-method}
+\alias{bio08,BioclimModel,NULL-method}
 \alias{bio09,ANY,ANY-method}
 \alias{bio09,BioclimModel,missing-method}
+\alias{bio09,BioclimModel,NULL-method}
 \alias{bio10,ANY-method}
 \alias{bio10,BioclimModel-method}
 \alias{bio11,ANY-method}
@@ -38,8 +40,10 @@
 \alias{bio17,BioclimModel-method}
 \alias{bio18,ANY,ANY-method}
 \alias{bio18,BioclimModel,missing-method}
+\alias{bio18,BioclimModel,NULL-method}
 \alias{bio19,ANY,ANY-method}
 \alias{bio19,BioclimModel,missing-method}
+\alias{bio19,BioclimModel,NULL-method}
 \alias{bioclim,ANY-method}
 \alias{bioclim,BioclimModel-method}
 \title{S4 Methods for BioclimModel Objects and Plain Numeric Vectors}

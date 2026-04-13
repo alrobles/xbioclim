@@ -127,7 +127,9 @@ setMethod("show", "BioclimModel", function(object) {
 #'   bio06,ANY-method              bio06,BioclimModel-method
 #'   bio07,ANY,ANY-method          bio07,BioclimModel,missing-method
 #'   bio08,ANY,ANY-method          bio08,BioclimModel,missing-method
+#'   bio08,BioclimModel,NULL-method
 #'   bio09,ANY,ANY-method          bio09,BioclimModel,missing-method
+#'   bio09,BioclimModel,NULL-method
 #'   bio10,ANY-method              bio10,BioclimModel-method
 #'   bio11,ANY-method              bio11,BioclimModel-method
 #'   bio12,ANY-method              bio12,BioclimModel-method
@@ -137,7 +139,9 @@ setMethod("show", "BioclimModel", function(object) {
 #'   bio16,ANY-method              bio16,BioclimModel-method
 #'   bio17,ANY-method              bio17,BioclimModel-method
 #'   bio18,ANY,ANY-method          bio18,BioclimModel,missing-method
+#'   bio18,BioclimModel,NULL-method
 #'   bio19,ANY,ANY-method          bio19,BioclimModel,missing-method
+#'   bio19,BioclimModel,NULL-method
 #'   bioclim,ANY-method            bioclim,BioclimModel-method
 #' @name BioclimModel-methods
 NULL
@@ -214,29 +218,37 @@ setMethod("bio07", signature("BioclimModel", "missing"),
 
 # ── Two-argument generics: (tas, pr) ─────────────────────────────────────────
 
-setGeneric("bio08", function(tas, pr) standardGeneric("bio08"))
+setGeneric("bio08", function(tas, pr = NULL) standardGeneric("bio08"))
 setMethod("bio08", signature("ANY", "ANY"),
-          function(tas, pr) .bio08_fn(tas, pr))
+          function(tas, pr = NULL) .bio08_fn(tas, pr))
 setMethod("bio08", signature("BioclimModel", "missing"),
-          function(tas, pr) bioclim_model_bio08(tas@pntr))
+          function(tas, pr = NULL) bioclim_model_bio08(tas@pntr))
+setMethod("bio08", signature("BioclimModel", "NULL"),
+          function(tas, pr = NULL) bioclim_model_bio08(tas@pntr))
 
-setGeneric("bio09", function(tas, pr) standardGeneric("bio09"))
+setGeneric("bio09", function(tas, pr = NULL) standardGeneric("bio09"))
 setMethod("bio09", signature("ANY", "ANY"),
-          function(tas, pr) .bio09_fn(tas, pr))
+          function(tas, pr = NULL) .bio09_fn(tas, pr))
 setMethod("bio09", signature("BioclimModel", "missing"),
-          function(tas, pr) bioclim_model_bio09(tas@pntr))
+          function(tas, pr = NULL) bioclim_model_bio09(tas@pntr))
+setMethod("bio09", signature("BioclimModel", "NULL"),
+          function(tas, pr = NULL) bioclim_model_bio09(tas@pntr))
 
-setGeneric("bio18", function(tas, pr) standardGeneric("bio18"))
+setGeneric("bio18", function(tas, pr = NULL) standardGeneric("bio18"))
 setMethod("bio18", signature("ANY", "ANY"),
-          function(tas, pr) .bio18_fn(tas, pr))
+          function(tas, pr = NULL) .bio18_fn(tas, pr))
 setMethod("bio18", signature("BioclimModel", "missing"),
-          function(tas, pr) bioclim_model_bio18(tas@pntr))
+          function(tas, pr = NULL) bioclim_model_bio18(tas@pntr))
+setMethod("bio18", signature("BioclimModel", "NULL"),
+          function(tas, pr = NULL) bioclim_model_bio18(tas@pntr))
 
-setGeneric("bio19", function(tas, pr) standardGeneric("bio19"))
+setGeneric("bio19", function(tas, pr = NULL) standardGeneric("bio19"))
 setMethod("bio19", signature("ANY", "ANY"),
-          function(tas, pr) .bio19_fn(tas, pr))
+          function(tas, pr = NULL) .bio19_fn(tas, pr))
 setMethod("bio19", signature("BioclimModel", "missing"),
-          function(tas, pr) bioclim_model_bio19(tas@pntr))
+          function(tas, pr = NULL) bioclim_model_bio19(tas@pntr))
+setMethod("bio19", signature("BioclimModel", "NULL"),
+          function(tas, pr = NULL) bioclim_model_bio19(tas@pntr))
 
 # ── bioclim() generic ─────────────────────────────────────────────────────────
 #
