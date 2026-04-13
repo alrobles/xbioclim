@@ -4,7 +4,7 @@
 \alias{bioclim}
 \title{Compute All 19 Bioclimatic Variables}
 \usage{
-bioclim(tas, tasmax, tasmin, pr)
+bioclim(tas, tasmax = NULL, tasmin = NULL, pr = NULL)
 }
 \arguments{
 \item{tas}{Numeric vector of length 12: monthly mean temperature.}

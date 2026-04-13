@@ -37,9 +37,9 @@ bio06(tasmin)
 
 bio07(tasmax, tasmin)
 
-bio08(tas, pr)
+bio08(tas, pr = NULL)
 
-bio09(tas, pr)
+bio09(tas, pr = NULL)
 
 bio10(tas)
 
@@ -57,9 +57,9 @@ bio16(pr)
 
 bio17(pr)
 
-bio18(tas, pr)
+bio18(tas, pr = NULL)
 
-bio19(tas, pr)
+bio19(tas, pr = NULL)
 }
 \arguments{
 \item{tas}{Numeric vector of length 12: monthly mean temperature.}

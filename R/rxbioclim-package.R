@@ -2,7 +2,8 @@
 #'
 #' Computes the 19 standard bioclimatic variables (BIO01-BIO19) from monthly
 #' climate data following the WorldClim specification. This is an R
-#' implementation of the xbioclim C++ library.
+#' implementation of the xbioclim C++ library, with a compiled C++ back-end
+#' exposed through Rcpp Modules.
 #'
 #' @section Error and warning propagation:
 #' rxbioclim mirrors the `SpatMessages` pattern used by the terra package.
@@ -16,4 +17,8 @@
 #'
 #' @docType package
 #' @name rxbioclim-package
+#' @useDynLib rxbioclim, .registration = TRUE
+#' @importFrom Rcpp evalCpp
+#' @importFrom methods new validObject setClass setValidity setGeneric
+#'   setMethod show
 "_PACKAGE"
