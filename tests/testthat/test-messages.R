@@ -100,7 +100,7 @@ test_that("check_messages concatenates multiple errors", {
   reset()
   rxbioclim:::push_error("err A")
   rxbioclim:::push_error("err B")
-  err <- catch_cnd(rxbioclim:::check_messages(), classes = "error")
+  err <- tryCatch(rxbioclim:::check_messages(), error = function(e) e)
   expect_equal(conditionMessage(err), "err A\nerr B")
   # After throwing, store is clear
   expect_false(has_error())

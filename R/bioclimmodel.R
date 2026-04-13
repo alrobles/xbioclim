@@ -265,3 +265,36 @@ setMethod("bioclim", "ANY",
 setMethod("bioclim", "BioclimModel",
           function(tas, tasmax = NULL, tasmin = NULL, pr = NULL)
             bioclim_model_compute(tas@pntr))
+
+# ── Re-register BioclimData methods ──────────────────────────────────────────
+#
+# setGeneric() calls above with NULL defaults change the generic signatures
+# so that arguments like `pr` receive NULL (not missing) when omitted.
+# The signature("BioclimData", "missing") methods from BioclimData.R no longer
+# fire in that case. Register single-dispatch BioclimData methods here so they
+# take precedence over ANY for all pr=NULL call patterns.
+
+setMethod("bio02", signature("BioclimData", "missing"),
+          function(tasmax, tasmin) bio02_cpp(tasmax@tasmax, tasmax@tasmin))
+
+setMethod("bio03", signature("BioclimData", "missing"),
+          function(tasmax, tasmin) bio03_cpp(tasmax@tasmax, tasmax@tasmin))
+
+setMethod("bio07", signature("BioclimData", "missing"),
+          function(tasmax, tasmin) bio07_cpp(tasmax@tasmax, tasmax@tasmin))
+
+setMethod("bio08", "BioclimData",
+          function(tas, pr = NULL) bio08_cpp(tas@tas, tas@pr))
+
+setMethod("bio09", "BioclimData",
+          function(tas, pr = NULL) bio09_cpp(tas@tas, tas@pr))
+
+setMethod("bio18", "BioclimData",
+          function(tas, pr = NULL) bio18_cpp(tas@tas, tas@pr))
+
+setMethod("bio19", "BioclimData",
+          function(tas, pr = NULL) bio19_cpp(tas@tas, tas@pr))
+
+setMethod("bioclim", "BioclimData",
+          function(tas, tasmax = NULL, tasmin = NULL, pr = NULL)
+            bioclim_cpp(tas@tas, tas@tasmax, tas@tasmin, tas@pr))

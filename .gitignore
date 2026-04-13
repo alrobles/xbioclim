@@ -6,3 +6,6 @@ inst/doc
 *.o
 *.so
 *.dll
+autom4te.cache/
+config.log
+config.status
