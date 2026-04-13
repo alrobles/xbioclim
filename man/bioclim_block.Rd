@@ -22,7 +22,7 @@ A named numeric vector of length 19 (\code{bio01} through
 }
 \description{
 A convenience wrapper around the C++ \code{ClimateBlock} class exposed by
-the \code{bioclim_mod} Rcpp module. Accepts the same four monthly climate
+the \code{bioclim_mod} Rcpp module.  Accepts the same four monthly climate
 vectors as \code{\link{bioclim}} but delegates the computation to the
 compiled C++ back-end via Rcpp.
 }

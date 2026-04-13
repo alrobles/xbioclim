@@ -7,7 +7,8 @@
 #'
 #' @docType package
 #' @name rxbioclim-package
-#' @useDynLib rxbioclim
+#' @useDynLib rxbioclim, .registration = TRUE
 #' @importFrom Rcpp evalCpp
-#' @importFrom methods new
+#' @importFrom methods new validObject setClass setValidity setGeneric
+#'   setMethod show
 "_PACKAGE"

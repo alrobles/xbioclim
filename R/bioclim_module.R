@@ -7,6 +7,52 @@
 # ClimateBlock is injected into the package namespace by loadModule() in .onLoad().
 utils::globalVariables("ClimateBlock")
 
+#' C++ ClimateBlock class for batch bioclim computation
+#'
+#' An Rcpp module class exposing the C++ \code{ClimateBlock} implementation of
+#' the xbioclim library. Accepts four \code{n_pixels x 12} matrices of monthly
+#' climate data and computes all 19 bioclimatic variables for each pixel via a
+#' compiled C++ back-end.
+#'
+#' \code{ClimateBlock} is loaded into the package namespace when the package
+#' is attached (via \code{\link[Rcpp]{loadModule}} in \code{.onLoad}).
+#'
+#' @section Constructor:
+#' \code{new(ClimateBlock, tas, tasmax, tasmin, pr)}
+#'
+#' \describe{
+#'   \item{\code{tas}}{Numeric matrix of dimensions \code{n_pixels x 12}:
+#'     monthly mean temperature for each pixel.}
+#'   \item{\code{tasmax}}{Numeric matrix of dimensions \code{n_pixels x 12}:
+#'     monthly maximum temperature for each pixel.}
+#'   \item{\code{tasmin}}{Numeric matrix of dimensions \code{n_pixels x 12}:
+#'     monthly minimum temperature for each pixel.}
+#'   \item{\code{pr}}{Numeric matrix of dimensions \code{n_pixels x 12}:
+#'     monthly precipitation for each pixel.}
+#' }
+#'
+#' All four matrices must have exactly 12 columns and the same number of rows.
+#'
+#' @section Methods:
+#' \describe{
+#'   \item{\code{n_pixels()}}{Returns the number of pixels (integer).}
+#'   \item{\code{compute()}}{Computes the 19 bioclimatic variables for all
+#'     pixels and returns an \code{n_pixels x 19} numeric matrix with columns
+#'     named \code{bio01} through \code{bio19}.}
+#' }
+#'
+#' @name ClimateBlock
+#' @export ClimateBlock
+#' @examples
+#' tas    <- matrix(rep(1:12, 3), nrow = 3, byrow = TRUE)
+#' tasmax <- tas + 1
+#' tasmin <- tas - 1
+#' pr     <- matrix(rep(1:12, 3), nrow = 3, byrow = TRUE)
+#' block  <- new(ClimateBlock, tas, tasmax, tasmin, pr)
+#' block$n_pixels()   # 3
+#' result <- block$compute()   # 3 x 19 matrix
+NULL
+
 #' Create a C++ ClimateBlock and compute bioclimatic variables
 #'
 #' A convenience wrapper around the C++ \code{ClimateBlock} class exposed by
