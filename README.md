@@ -18,6 +18,8 @@ remotes::install_github("alrobles/rxbioclim")
 
 ## Usage
 
+### Single-pixel (vector) interface
+
 ```r
 library(rxbioclim)
 
@@ -36,6 +38,38 @@ bio01(tas)         # Mean Annual Temperature
 bio12(pr)          # Annual Precipitation
 bio04(tas)         # Temperature Seasonality
 bio15(pr)          # Precipitation Seasonality
+```
+
+### Raster (SpatRaster) interface
+
+For large rasters, `bioclim_raster()` uses terra's block-loop architecture to
+process data one block at a time, keeping memory use bounded regardless of
+raster size. Multi-core processing within each block is supported via the
+`ncores` argument.
+
+```r
+library(rxbioclim)
+library(terra)
+
+# Each SpatRaster must have exactly 12 layers (one per month)
+# tas    <- rast("path/to/monthly_tas.tif")
+# tasmax <- rast("path/to/monthly_tasmax.tif")
+# tasmin <- rast("path/to/monthly_tasmin.tif")
+# pr     <- rast("path/to/monthly_pr.tif")
+
+# Sequential (memory-efficient block processing)
+bio <- bioclim_raster(tas, tasmax, tasmin, pr)
+
+# Write directly to file to avoid loading the full result into RAM
+bio <- bioclim_raster(tas, tasmax, tasmin, pr,
+                       filename = "bioclim_output.tif",
+                       overwrite = TRUE)
+
+# Multi-core: process cells within each block in parallel
+bio <- bioclim_raster(tas, tasmax, tasmin, pr, ncores = 4L)
+
+nlyr(bio)    # 19
+names(bio)   # "bio01" ... "bio19"
 ```
 
 ## Bioclimatic Variables
