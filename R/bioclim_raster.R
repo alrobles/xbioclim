@@ -43,19 +43,9 @@ validate_spatraster <- function(x, name = "input") {
 #'
 #' @return A numeric matrix (n_cells x 19) of bioclimatic variable values.
 #' @keywords internal
-.compute_bioclim_block <- function(v_tas, v_tasmax, v_tasmin, v_pr) {
-  n_cells <- nrow(v_tas)
-  result  <- matrix(NA_real_, nrow = n_cells, ncol = 19L)
-  for (j in seq_len(n_cells)) {
-    t_row  <- v_tas[j, ]
-    tx_row <- v_tasmax[j, ]
-    tn_row <- v_tasmin[j, ]
-    p_row  <- v_pr[j, ]
-    if (anyNA(t_row) || anyNA(tx_row) || anyNA(tn_row) || anyNA(p_row)) {
-      next
-    }
-    result[j, ] <- bioclim(t_row, tx_row, tn_row, p_row)
-  }
+.compute_bioclim_block <- function(v_tas, v_tasmax, v_tasmin, v_pr, ncores = 1L) {
+  result <- bioclim_cpp(v_tas, v_tasmax, v_tasmin, v_pr, ncores)
+  colnames(result) <- NULL
   result
 }
 
@@ -74,10 +64,9 @@ validate_spatraster <- function(x, name = "input") {
 #' are written to the output raster block by block (using
 #' `terra::writeStart()`, `terra::writeValues()`, and `terra::writeStop()`).
 #'
-#' When `ncores > 1`, cells within each block are split across workers using
-#' `parallel::makeCluster()` / `parallel::parLapply()`, enabling multi-core
-#' computation. Only one block is held in memory at a time regardless of the
-#' number of cores.
+#' When `ncores > 1`, pixels within each block are processed in parallel using
+#' OpenMP threads via `bioclim_cpp()`. Only one block is held in memory at a
+#' time regardless of the number of threads.
 #'
 #' @param tas     SpatRaster with 12 layers: monthly mean temperature.
 #' @param tasmax  SpatRaster with 12 layers: monthly maximum temperature.
@@ -88,8 +77,7 @@ validate_spatraster <- function(x, name = "input") {
 #' @param n_blocks Integer: target number of row blocks. If `NULL` (default),
 #'   terra selects an appropriate number based on available memory.
 #' @param ncores  Integer: number of CPU cores for within-block parallel
-#'   processing. Default is `1` (sequential). Values greater than 1 require
-#'   the \pkg{parallel} package.
+#'   processing via OpenMP. Default is `1` (sequential).
 #' @param overwrite Logical: whether to overwrite an existing output file.
 #'   Default is `FALSE`.
 #' @param ...     Additional arguments passed to `terra::writeStart()`.
@@ -173,7 +161,6 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
   }
 
   # State variables for cleanup tracking
-  cl            <- NULL
   write_started <- FALSE
 
   # Single comprehensive on.exit: runs on both normal exit and errors.
@@ -185,35 +172,9 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
       try(terra::readStop(tasmin), silent = TRUE)
       try(terra::readStop(pr),     silent = TRUE)
       if (write_started) try(terra::writeStop(out), silent = TRUE)
-      if (!is.null(cl)) try(parallel::stopCluster(cl), silent = TRUE)
     },
     add = TRUE
   )
-
-  # Setup parallel cluster if requested
-  if (ncores > 1L) {
-    if (!requireNamespace("parallel", quietly = TRUE)) {
-      warning(
-        "Package 'parallel' is not available; falling back to ncores = 1.",
-        call. = FALSE
-      )
-      ncores <- 1L
-    } else {
-      cl <- parallel::makeCluster(ncores)
-      # Export all package functions needed by workers, sourcing explicitly
-      # from the package namespace so closures resolve correctly on workers.
-      parallel::clusterExport(
-        cl,
-        varlist = c(
-          "bioclim", ".compute_bioclim_block", "sd_pop",
-          "rolling_quarter_sum", "rolling_quarter_mean",
-          "quarter_argmax", "quarter_argmin",
-          "quarter_values", "validate_monthly"
-        ),
-        envir = asNamespace("rxbioclim")
-      )
-    }
-  }
 
   # Open input rasters for block-reading
   terra::readStart(tas)
@@ -241,22 +202,7 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
 
     n_cells <- nrow(v_tas)
 
-    if (!is.null(cl)) {
-      # Parallel: split cells into chunks across workers.
-      # `.compute_bioclim_block` is available on workers via clusterExport above.
-      chunks       <- parallel::splitIndices(n_cells, ncores)
-      result_parts <- parallel::parLapply(cl, chunks, function(idx) {
-        .compute_bioclim_block(
-          v_tas[idx,    , drop = FALSE],
-          v_tasmax[idx, , drop = FALSE],
-          v_tasmin[idx, , drop = FALSE],
-          v_pr[idx,     , drop = FALSE]
-        )
-      })
-      result_mat <- do.call(rbind, result_parts)
-    } else {
-      result_mat <- .compute_bioclim_block(v_tas, v_tasmax, v_tasmin, v_pr)
-    }
+    result_mat <- .compute_bioclim_block(v_tas, v_tasmax, v_tasmin, v_pr, ncores)
 
     terra::writeValues(out, result_mat, start = row_start, nrows = n_rows)
   }
@@ -268,9 +214,5 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
   terra::readStop(tasmin)
   terra::readStop(pr)
   terra::writeStop(out)
-  if (!is.null(cl)) {
-    parallel::stopCluster(cl)
-    cl <- NULL
-  }
   out
 }
