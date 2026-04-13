@@ -280,7 +280,7 @@ test_that("bioclim_raster writes output to disk when filename is supplied", {
   expect_equal(terra::nlyr(result), 19L)
 
   result_vals <- terra::values(result)
-  expect_equal(result_vals[1, ], unname(ref_bioclim), tolerance = 1e-4)
+  expect_equal(unname(result_vals[1, ]), unname(ref_bioclim), tolerance = 1e-4)
 })
 
 test_that("bioclim_raster works with ncores > 1", {
