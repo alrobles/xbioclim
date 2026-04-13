@@ -121,7 +121,9 @@ users. Use `@keywords internal` in roxygen2.
   - failure modes (informative error messages)
   - invariants (e.g., weights sum to 1, matrix orthogonality)
 - For C++ functions, include **cross‑language consistency tests** comparing
-  pure‑R and C++ implementations (see `test-like_neg_ltsgr_cpp_vs_r.R`).
+  pure‑R and C++ implementations (see `test-like_neg_ltsgr_cpp_vs_r.R`) in
+  preliminary versions and after the test pass remove the older r code and
+  keep only the c++ version.
 
 ---
 
