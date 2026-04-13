@@ -473,10 +473,14 @@ NumericMatrix bioclim_cpp(NumericMatrix tas,
   colnames(result) = cnames;
 
 #ifdef _OPENMP
+  int prev_threads = omp_get_max_threads();
   omp_set_num_threads(ncores);
 #endif
 
-  // Raw pointers for OpenMP-safe access (column-major: [i, m] -> ptr[i + m*n])
+  // Use raw REAL() pointers instead of Rcpp proxy objects for OpenMP safety:
+  // Rcpp proxy classes are not thread-safe; raw pointers allow concurrent
+  // reads from input matrices and non-overlapping writes to the output matrix.
+  // Column-major layout: element [i, m] is at ptr[i + m * n].
   const double* tas_ptr    = REAL(tas);
   const double* tasmax_ptr = REAL(tasmax);
   const double* tasmin_ptr = REAL(tasmin);
@@ -586,6 +590,10 @@ NumericMatrix bioclim_cpp(NumericMatrix tas,
     res_ptr[i + 17 * n] = b18;
     res_ptr[i + 18 * n] = b19;
   }
+
+#ifdef _OPENMP
+  omp_set_num_threads(prev_threads);
+#endif
 
   return result;
 }

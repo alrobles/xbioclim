@@ -45,6 +45,9 @@ validate_spatraster <- function(x, name = "input") {
 #' @keywords internal
 .compute_bioclim_block <- function(v_tas, v_tasmax, v_tasmin, v_pr, ncores = 1L) {
   result <- bioclim_cpp(v_tas, v_tasmax, v_tasmin, v_pr, ncores)
+  # Strip column names: terra::writeValues() does not use them, and the raster
+  # layer names are set separately via names(out). Stripping avoids mismatches
+  # when callers (e.g. tests) compare rows against unnamed reference vectors.
   colnames(result) <- NULL
   result
 }
