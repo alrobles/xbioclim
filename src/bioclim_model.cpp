@@ -202,10 +202,15 @@ class BioclimModel {
 // [[Rcpp::export]]
 SEXP bioclim_model_new(Rcpp::NumericVector tas, Rcpp::NumericVector tasmax,
                        Rcpp::NumericVector tasmin, Rcpp::NumericVector pr) {
-  if (tas.size() != 12 || tasmax.size() != 12 ||
-      tasmin.size() != 12 || pr.size() != 12) {
-    Rcpp::stop("All input vectors must have length 12 (one value per month).");
-  }
+  auto check_len = [](const Rcpp::NumericVector& v, const char* name) {
+    if (v.size() != 12)
+      Rcpp::stop("'%s' must have length 12 (one value per month), got %d",
+                 name, (int)v.size());
+  };
+  check_len(tas,    "tas");
+  check_len(tasmax, "tasmax");
+  check_len(tasmin, "tasmin");
+  check_len(pr,     "pr");
   if (Rcpp::is_true(Rcpp::any(Rcpp::is_na(tas)))    ||
       Rcpp::is_true(Rcpp::any(Rcpp::is_na(tasmax))) ||
       Rcpp::is_true(Rcpp::any(Rcpp::is_na(tasmin))) ||
