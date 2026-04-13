@@ -135,7 +135,11 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
   validate_spatraster(tasmin, "tasmin")
   validate_spatraster(pr,     "pr")
 
-  ncores <- max(1L, as.integer(ncores))
+  ncores_int <- suppressWarnings(as.integer(ncores))
+  if (length(ncores_int) != 1L || is.na(ncores_int) || ncores_int < 1L) {
+    stop("'ncores' must be a finite scalar integer >= 1", call. = FALSE)
+  }
+  ncores <- ncores_int
 
   # Create output raster: 19 layers, same footprint as tas
   out <- terra::rast(tas[[1L]], nlyrs = 19L)
