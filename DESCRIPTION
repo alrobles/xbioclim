@@ -28,4 +28,5 @@ Collate:
     'primitives.R'
     'bioclim.R'
     'bioclimmodel.R'
+    'bioclim_module.R'
     'rxbioclim-package.R'
