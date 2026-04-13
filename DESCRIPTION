@@ -17,8 +17,9 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
 Imports:
     methods,
+    Rcpp (>= 1.0.0)
+LinkingTo:
     Rcpp
-LinkingTo: Rcpp
 Suggests:
     parallel,
     terra,
@@ -31,6 +32,7 @@ Collate:
     'RcppExports.R'
     'primitives.R'
     'bioclim.R'
+    'BioclimData.R'
     'bioclim_module.R'
     'bioclimmodel.R'
     'messages.R'
