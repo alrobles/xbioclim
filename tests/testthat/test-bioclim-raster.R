@@ -169,6 +169,42 @@ test_that("bioclim_raster works with explicit n_blocks parameter", {
   expect_equal(result_vals[1, ], unname(ref_bioclim), tolerance = 1e-4)
 })
 
+test_that("bioclim_raster writes output to disk when filename is supplied", {
+  skip_if_no_terra()
+  rasts <- make_test_rasters()
+  outfile <- tempfile(fileext = ".tif")
+  on.exit(unlink(outfile), add = TRUE)
+
+  result <- bioclim_raster(
+    rasts$tas, rasts$tasmax, rasts$tasmin, rasts$pr,
+    filename = outfile,
+    overwrite = TRUE
+  )
+
+  expect_s4_class(result, "SpatRaster")
+  expect_true(file.exists(outfile))
+  expect_equal(terra::nlyr(result), 19L)
+
+  result_vals <- terra::values(result)
+  expect_equal(result_vals[1, ], unname(ref_bioclim), tolerance = 1e-4)
+})
+
+test_that("bioclim_raster works with ncores > 1", {
+  skip_if_no_terra()
+  if (is.na(parallel::detectCores()) || parallel::detectCores() < 2L) {
+    skip("Parallel test requires at least 2 cores")
+  }
+
+  rasts <- make_test_rasters()
+  result <- bioclim_raster(
+    rasts$tas, rasts$tasmax, rasts$tasmin, rasts$pr,
+    ncores = 2L
+  )
+
+  expect_equal(terra::nlyr(result), 19L)
+  result_vals <- terra::values(result)
+  expect_equal(result_vals[1, ], unname(ref_bioclim), tolerance = 1e-4)
+})
 test_that("bioclim_raster rejects non-SpatRaster input", {
   skip_if_no_terra()
   rasts <- make_test_rasters()
