@@ -58,6 +58,12 @@ test_that("BioclimData() rejects non-numeric vectors", {
                "must be numeric")
 })
 
+test_that("BioclimData() rejects non-numeric matrices", {
+  char_mat <- matrix(as.character(1:12), nrow = 1)
+  expect_error(BioclimData(char_mat, vec_tasmax, vec_tasmin, vec_pr),
+               "must be numeric")
+})
+
 test_that("BioclimData() rejects vectors of wrong length", {
   expect_error(BioclimData(1:6, vec_tasmax, vec_tasmin, vec_pr),
                "must have length 12")

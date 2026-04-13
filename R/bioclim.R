@@ -43,9 +43,14 @@
 #' @param ...    Currently unused; reserved for future extensions.
 #'
 #' @return
-#' * For plain numeric-vector inputs: a single numeric value.
-#' * For [BioclimData-class] inputs: a numeric vector with one value per
-#'   pixel (or a matrix for [bioclim]).
+#' * For `bio01`–`bio19` with plain numeric-vector inputs: a single numeric
+#'   value.
+#' * For `bioclim()` with plain numeric-vector inputs: a named numeric vector
+#'   of length 19 (names `bio01`–`bio19`).
+#' * For [BioclimData-class] inputs to `bio01`–`bio19`: a numeric vector with
+#'   one value per pixel.
+#' * For [BioclimData-class] inputs to `bioclim()`: a numeric matrix with one
+#'   row per pixel and 19 named columns (`bio01`–`bio19`).
 #'
 #' @name bioclim-variables
 #' @aliases bio01 bio02 bio03 bio04 bio05 bio06 bio07 bio08 bio09 bio10

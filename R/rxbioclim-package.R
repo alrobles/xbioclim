@@ -7,5 +7,5 @@
 #' @docType package
 #' @name rxbioclim-package
 #' @useDynLib rxbioclim, .registration = TRUE
-#' @importFrom Rcpp sourceCpp
+#' @import methods
 "_PACKAGE"

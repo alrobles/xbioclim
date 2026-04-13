@@ -78,9 +78,14 @@ monthly mean temperature.}
 }
 \value{
 \itemize{
-\item For plain numeric-vector inputs: a single numeric value.
-\item For \linkS4class{BioclimData} inputs: a numeric vector with one value per
-pixel (or a matrix for \link{bioclim}).
+\item For \code{bio01}–\code{bio19} with plain numeric-vector inputs: a single numeric
+value.
+\item For \code{bioclim()} with plain numeric-vector inputs: a named numeric vector
+of length 19 (names \code{bio01}–\code{bio19}).
+\item For \linkS4class{BioclimData} inputs to \code{bio01}–\code{bio19}: a numeric vector with
+one value per pixel.
+\item For \linkS4class{BioclimData} inputs to \code{bioclim()}: a numeric matrix with one
+row per pixel and 19 named columns (\code{bio01}–\code{bio19}).
 }
 }
 \description{

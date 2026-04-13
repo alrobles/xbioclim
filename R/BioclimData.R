@@ -91,6 +91,8 @@ BioclimData <- function(tas, tasmax, tasmin, pr) {
                      nm, length(x)), call. = FALSE)
       matrix(x, nrow = 1L)
     } else if (is.matrix(x)) {
+      if (!is.numeric(x))
+        stop(sprintf("'%s' must be numeric", nm), call. = FALSE)
       storage.mode(x) <- "double"
       x
     } else {
