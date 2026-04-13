@@ -4,7 +4,7 @@
 \alias{bioclim_cpp}
 \title{Compute all 19 bioclimatic variables for a raster block}
 \usage{
-bioclim_cpp(tas, tasmax, tasmin, pr)
+bioclim_cpp(tas, tasmax, tasmin, pr, ncores = 1L)
 }
 \arguments{
 \item{tas}{Numeric matrix (pixels x 12): monthly mean temperature.}
@@ -14,6 +14,8 @@ bioclim_cpp(tas, tasmax, tasmin, pr)
 \item{tasmin}{Numeric matrix (pixels x 12): monthly min temperature.}
 
 \item{pr}{Numeric matrix (pixels x 12): monthly precipitation.}
+
+\item{ncores}{Integer: number of OpenMP threads (default 1).}
 }
 \value{
 Numeric matrix (pixels x 19) with one column per variable
