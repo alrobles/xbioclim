@@ -1,0 +1,181 @@
+---
+title: "Getting Started with rxbioclim"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with rxbioclim}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Overview
+
+**rxbioclim** computes the 19 standard bioclimatic variables (BIO01–BIO19)
+from monthly climate data, following the
+[WorldClim](https://www.worldclim.org/data/bioclim.html) specification.  It is
+an R implementation of the
+[xbioclim](https://github.com/alrobles/xbioclim) C++ library and exposes
+both a *unified* function (`bioclim()`) and *individual* variable functions
+(`bio01()` … `bio19()`).
+
+```{r setup}
+library(rxbioclim)
+```
+
+## Input data format
+
+Every function expects four numeric vectors of **length 12**, one value per
+calendar month (January = 1, …, December = 12):
+
+| Argument | Meaning | Units |
+|----------|---------|-------|
+| `tas`    | Monthly mean temperature | °C |
+| `tasmax` | Monthly maximum temperature | °C |
+| `tasmin` | Monthly minimum temperature | °C |
+| `pr`     | Monthly precipitation | mm |
+
+### Real-world example: Mexico City climate normals
+
+The values below are approximate 1991–2020 climate normals for Mexico City
+(19.4°N, 99.1°W, ~2240 m a.s.l.) drawn from publicly available records.
+
+```{r mexico-city-data}
+# Monthly mean temperature (°C), Jan–Dec
+tas    <- c(12.0, 13.3, 15.8, 17.0, 17.5, 16.5,
+            15.6, 15.6, 15.2, 14.5, 12.9, 12.0)
+
+# Monthly maximum temperature (°C)
+tasmax <- c(21.2, 23.0, 25.7, 26.6, 26.3, 24.4,
+            22.8, 22.9, 22.3, 21.7, 20.5, 20.4)
+
+# Monthly minimum temperature (°C)
+tasmin <- c( 3.5,  4.5,  6.9,  9.4, 10.8, 11.4,
+            10.8, 10.7,  9.9,  8.2,  5.9,  4.1)
+
+# Monthly precipitation (mm)
+pr     <- c(10,  7, 11, 21, 52, 132,
+           163, 152, 116, 62, 16,   8)
+```
+
+## Computing all 19 variables at once
+
+`bioclim()` returns a **named numeric vector** of length 19:
+
+```{r all-19}
+result <- bioclim(tas, tasmax, tasmin, pr)
+print(result)
+```
+
+You can index by name or position:
+
+```{r index}
+result[["bio01"]]   # Mean Annual Temperature
+result["bio12"]     # Annual Precipitation
+result[c("bio04", "bio15")]  # Both seasonality indices
+```
+
+## Computing individual variables
+
+Each variable has its own function.  Use these when you only need one or a
+few variables to avoid computing the full set.
+
+### Temperature variables
+
+```{r temp-vars}
+bio01(tas)              # BIO01: Mean Annual Temperature
+bio02(tasmax, tasmin)   # BIO02: Mean Diurnal Range
+bio03(tasmax, tasmin)   # BIO03: Isothermality
+bio04(tas)              # BIO04: Temperature Seasonality
+bio05(tasmax)           # BIO05: Max Temperature of Warmest Month
+bio06(tasmin)           # BIO06: Min Temperature of Coldest Month
+bio07(tasmax, tasmin)   # BIO07: Temperature Annual Range
+bio08(tas, pr)          # BIO08: Mean Temp of Wettest Quarter
+bio09(tas, pr)          # BIO09: Mean Temp of Driest Quarter
+bio10(tas)              # BIO10: Mean Temp of Warmest Quarter
+bio11(tas)              # BIO11: Mean Temp of Coldest Quarter
+```
+
+### Precipitation variables
+
+```{r precip-vars}
+bio12(pr)               # BIO12: Annual Precipitation
+bio13(pr)               # BIO13: Precipitation of Wettest Month
+bio14(pr)               # BIO14: Precipitation of Driest Month
+bio15(pr)               # BIO15: Precipitation Seasonality (CV)
+bio16(pr)               # BIO16: Precipitation of Wettest Quarter
+bio17(pr)               # BIO17: Precipitation of Driest Quarter
+bio18(tas, pr)          # BIO18: Precipitation of Warmest Quarter
+bio19(tas, pr)          # BIO19: Precipitation of Coldest Quarter
+```
+
+## Multi-pixel (matrix) processing
+
+When you have climate data for many locations, the simplest approach is to
+store each monthly variable as a **matrix** with rows = pixels and
+columns = months, then apply `bioclim()` (or individual functions) row-wise
+with `apply()`.
+
+```{r multi-pixel}
+# Simulate data for 5 locations
+set.seed(42)
+n_pixels <- 5
+make_climate <- function(n) {
+  tas_base <- runif(n, 5, 20)
+  matrix(
+    outer(tas_base, sin(seq(0, pi, length.out = 12)) * 10, "+"),
+    nrow = n, ncol = 12
+  )
+}
+
+TAS    <- make_climate(n_pixels)
+TASMAX <- TAS + matrix(runif(n_pixels * 12, 3, 8), nrow = n_pixels)
+TASMIN <- TAS - matrix(runif(n_pixels * 12, 3, 8), nrow = n_pixels)
+PR     <- abs(matrix(rnorm(n_pixels * 12, mean = 50, sd = 30), nrow = n_pixels))
+
+# Apply bioclim() to each row
+results <- t(apply(seq_len(n_pixels), 1, function(i) {
+  bioclim(TAS[i, ], TASMAX[i, ], TASMIN[i, ], PR[i, ])
+}))
+
+head(results)
+```
+
+## Complete variable reference
+
+| Variable | Description |
+|----------|-------------|
+| BIO01 | Mean Annual Temperature |
+| BIO02 | Mean Diurnal Range (mean of monthly tasmax − tasmin) |
+| BIO03 | Isothermality (100 × BIO02 / BIO07) |
+| BIO04 | Temperature Seasonality (100 × population SD of monthly tas) |
+| BIO05 | Max Temperature of Warmest Month |
+| BIO06 | Min Temperature of Coldest Month |
+| BIO07 | Temperature Annual Range (BIO05 − BIO06) |
+| BIO08 | Mean Temperature of Wettest Quarter |
+| BIO09 | Mean Temperature of Driest Quarter |
+| BIO10 | Mean Temperature of Warmest Quarter |
+| BIO11 | Mean Temperature of Coldest Quarter |
+| BIO12 | Annual Precipitation |
+| BIO13 | Precipitation of Wettest Month |
+| BIO14 | Precipitation of Driest Month |
+| BIO15 | Precipitation Seasonality (Coefficient of Variation) |
+| BIO16 | Precipitation of Wettest Quarter |
+| BIO17 | Precipitation of Driest Quarter |
+| BIO18 | Precipitation of Warmest Quarter |
+| BIO19 | Precipitation of Coldest Quarter |
+
+## Input validation
+
+All functions validate their inputs and produce informative error messages:
+
+```{r validation, error = TRUE}
+bio01(1:6)                    # Wrong length
+bio01(letters[1:12])          # Non-numeric
+bioclim(1:12, 2:13, 0:11, 1:11)  # pr has length 11
+```

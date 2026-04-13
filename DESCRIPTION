@@ -19,8 +19,11 @@ Imports:
     Rcpp
 LinkingTo: Rcpp
 Suggests:
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+VignetteBuilder: knitr
 URL: https://github.com/alrobles/rxbioclim
 BugReports: https://github.com/alrobles/rxbioclim/issues
 Collate:
