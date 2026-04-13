@@ -274,8 +274,14 @@ setMethod("bioclim", "BioclimModel",
 # fire in that case. Register single-dispatch BioclimData methods here so they
 # take precedence over ANY for all pr=NULL call patterns.
 
+setMethod("bio02", signature("BioclimData", "missing"),
+          function(tasmax, tasmin) bio02_cpp(tasmax@tasmax, tasmax@tasmin))
+
 setMethod("bio03", signature("BioclimData", "missing"),
           function(tasmax, tasmin) bio03_cpp(tasmax@tasmax, tasmax@tasmin))
+
+setMethod("bio07", signature("BioclimData", "missing"),
+          function(tasmax, tasmin) bio07_cpp(tasmax@tasmax, tasmax@tasmin))
 
 setMethod("bio08", "BioclimData",
           function(tas, pr = NULL) bio08_cpp(tas@tas, tas@pr))
