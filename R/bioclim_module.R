@@ -1,9 +1,10 @@
-# Load the "bioclim_mod" Rcpp module and make ClimateBlock available in the
-# package namespace.  This file is sourced automatically when the package loads.
-Rcpp::loadModule("bioclim_mod", TRUE)
+# Load the "bioclim_mod" Rcpp module after the package DLL is available.
+.onLoad <- function(libname, pkgname) {
+  Rcpp::loadModule("bioclim_mod", TRUE)
+}
 
 # Suppress R CMD check NOTE: 'no visible binding for global variable ClimateBlock'.
-# ClimateBlock is injected into the package namespace by loadModule() above.
+# ClimateBlock is injected into the package namespace by loadModule() in .onLoad().
 utils::globalVariables("ClimateBlock")
 
 #' Create a C++ ClimateBlock and compute bioclimatic variables
@@ -30,20 +31,20 @@ utils::globalVariables("ClimateBlock")
 #' pr     <- c(60, 55, 50, 40, 30, 15,  5, 10, 25, 45, 55, 65)
 #' bioclim_block(tas, tasmax, tasmin, pr)
 bioclim_block <- function(tas, tasmax, tasmin, pr) {
-    # validate_monthly() is defined in R/primitives.R
-    validate_monthly(tas,    "tas")
-    validate_monthly(tasmax, "tasmax")
-    validate_monthly(tasmin, "tasmin")
-    validate_monthly(pr,     "pr")
+  # validate_monthly() is defined in R/primitives.R
+  validate_monthly(tas,    "tas")
+  validate_monthly(tasmax, "tasmax")
+  validate_monthly(tasmin, "tasmin")
+  validate_monthly(pr,     "pr")
 
-    # Wrap each 12-element vector as a 1 × 12 matrix for ClimateBlock
-    to_mat <- function(x) matrix(as.double(x), nrow = 1L, ncol = 12L)
+  # Wrap each 12-element vector as a 1 × 12 matrix for ClimateBlock
+  to_mat <- function(x) matrix(as.double(x), nrow = 1L, ncol = 12L)
 
-    block  <- methods::new(ClimateBlock,
-                           to_mat(tas), to_mat(tasmax),
-                           to_mat(tasmin), to_mat(pr))
-    result <- block$compute()
+  block  <- methods::new(ClimateBlock,
+                         to_mat(tas), to_mat(tasmax),
+                         to_mat(tasmin), to_mat(pr))
+  result <- block$compute()
 
-    # Return a named vector (same format as bioclim())
-    result[1L, ]
+  # Return a named vector (same format as bioclim())
+  result[1L, ]
 }
