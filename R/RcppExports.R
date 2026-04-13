@@ -188,8 +188,8 @@ bio19_cpp <- function(tas, pr) {
 #' @return Numeric matrix (pixels x 19) with one column per variable
 #'   (bio01..bio19), named accordingly.
 #' @keywords internal
-bioclim_cpp <- function(tas, tasmax, tasmin, pr) {
-    .Call(`_rxbioclim_bioclim_cpp`, tas, tasmax, tasmin, pr)
+bioclim_cpp <- function(tas, tasmax, tasmin, pr, ncores = 1L) {
+    .Call(`_rxbioclim_bioclim_cpp`, tas, tasmax, tasmin, pr, ncores)
 }
 
 #' Create a new C++ BioclimModel and return an external pointer

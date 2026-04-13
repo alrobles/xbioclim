@@ -1,7 +1,10 @@
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 #include <Rcpp.h>
 using namespace Rcpp;
 
-// ── Primitive helpers ─────────────────────────────────────────────────────────
+// ── Primitive helpers (NumericVector) ────────────────────────────────────────
 
 // Population standard deviation (denominator N, matching xbioclim convention)
 static inline double sd_pop_c(const NumericVector& x) {
@@ -44,6 +47,51 @@ static inline double quarter_sum_c(const NumericVector& x, int start) {
 // Mean of 3-month quarter starting at 0-based index
 static inline double quarter_mean_c(const NumericVector& x, int start) {
   return quarter_sum_c(x, start) / 3.0;
+}
+
+// ── Raw double* helpers (OpenMP-safe, no heap allocation) ────────────────────
+
+// Population standard deviation (denominator N) for a 12-element array
+static inline double sd_pop_ptr(const double* x) {
+  double s = 0.0, ss = 0.0;
+  for (int i = 0; i < 12; i++) {
+    s  += x[i];
+    ss += x[i] * x[i];
+  }
+  double m = s / 12.0;
+  return std::sqrt(ss / 12.0 - m * m);
+}
+
+// Sum of 3-month quarter starting at 0-based index (circular)
+static inline double quarter_sum_ptr(const double* x, int start) {
+  return x[start] + x[(start + 1) % 12] + x[(start + 2) % 12];
+}
+
+// Mean of 3-month quarter starting at 0-based index
+static inline double quarter_mean_ptr(const double* x, int start) {
+  return quarter_sum_ptr(x, start) / 3.0;
+}
+
+// 0-based index of quarter with maximum rolling sum
+static inline int quarter_argmax_ptr(const double* x) {
+  int best = 0;
+  double best_sum = x[0] + x[1] + x[2];
+  for (int k = 1; k < 12; k++) {
+    double s = x[k] + x[(k + 1) % 12] + x[(k + 2) % 12];
+    if (s > best_sum) { best_sum = s; best = k; }
+  }
+  return best;
+}
+
+// 0-based index of quarter with minimum rolling sum
+static inline int quarter_argmin_ptr(const double* x) {
+  int best = 0;
+  double best_sum = x[0] + x[1] + x[2];
+  for (int k = 1; k < 12; k++) {
+    double s = x[k] + x[(k + 1) % 12] + x[(k + 2) % 12];
+    if (s < best_sum) { best_sum = s; best = k; }
+  }
+  return best;
 }
 
 // ── BIO01: Mean Annual Temperature ───────────────────────────────────────────
@@ -402,14 +450,17 @@ NumericVector bio19_cpp(NumericMatrix tas, NumericMatrix pr) {
 //' @param tasmax Numeric matrix (pixels x 12): monthly max temperature.
 //' @param tasmin Numeric matrix (pixels x 12): monthly min temperature.
 //' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
+//' @param ncores Integer: number of OpenMP threads (default 1).
 //' @return Numeric matrix (pixels x 19) with one column per variable
-//'   (bio01..bio19), named accordingly.
+//'   (bio01..bio19), named accordingly. Rows with any NA input are returned
+//'   as all-NA.
 //' @keywords internal
 // [[Rcpp::export]]
 NumericMatrix bioclim_cpp(NumericMatrix tas,
                           NumericMatrix tasmax,
                           NumericMatrix tasmin,
-                          NumericMatrix pr) {
+                          NumericMatrix pr,
+                          int ncores = 1) {
   int n = tas.nrow();
   NumericMatrix result(n, 19);
 
@@ -421,66 +472,128 @@ NumericMatrix bioclim_cpp(NumericMatrix tas,
   );
   colnames(result) = cnames;
 
+#ifdef _OPENMP
+  int prev_threads = omp_get_max_threads();
+  omp_set_num_threads(ncores);
+#endif
+
+  // Use raw REAL() pointers instead of Rcpp proxy objects for OpenMP safety:
+  // Rcpp proxy classes are not thread-safe; raw pointers allow concurrent
+  // reads from input matrices and non-overlapping writes to the output matrix.
+  // Column-major layout: element [i, m] is at ptr[i + m * n].
+  const double* tas_ptr    = REAL(tas);
+  const double* tasmax_ptr = REAL(tasmax);
+  const double* tasmin_ptr = REAL(tasmin);
+  const double* pr_ptr     = REAL(pr);
+  double*       res_ptr    = REAL(result);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
   for (int i = 0; i < n; i++) {
-    NumericVector t(tas.row(i));
-    NumericVector tmx(tasmax.row(i));
-    NumericVector tmn(tasmin.row(i));
-    NumericVector p(pr.row(i));
+    // Copy row i into local stack buffers (private per thread)
+    double t[12], tmx[12], tmn[12], p[12];
+    for (int m = 0; m < 12; m++) {
+      t[m]   = tas_ptr[i   + m * n];
+      tmx[m] = tasmax_ptr[i + m * n];
+      tmn[m] = tasmin_ptr[i + m * n];
+      p[m]   = pr_ptr[i    + m * n];
+    }
+
+    // NA check: if any of the 48 input values is NA, write NA row and skip
+    bool has_na = false;
+    for (int m = 0; m < 12; m++) {
+      if (ISNA(t[m]) || ISNA(tmx[m]) || ISNA(tmn[m]) || ISNA(p[m])) {
+        has_na = true;
+        break;
+      }
+    }
+    if (has_na) {
+      for (int j = 0; j < 19; j++) res_ptr[i + j * n] = NA_REAL;
+      continue;
+    }
 
     // Temperature basics
-    double b01 = mean(t);
-    double b02 = mean(tmx - tmn);
-    double b05 = max(tmx);
-    double b06 = min(tmn);
-    double b07 = b05 - b06;
-    double b03 = (b07 == 0.0) ? R_NaN : 100.0 * b02 / b07;
-    double b04 = 100.0 * sd_pop_c(t);
+    double t_sum = 0.0, t_sumsq = 0.0;
+    double tmx_max = tmx[0], tmn_min = tmn[0];
+    double diurnal_sum = 0.0;
+    for (int m = 0; m < 12; m++) {
+      t_sum      += t[m];
+      t_sumsq    += t[m] * t[m];
+      if (tmx[m] > tmx_max) tmx_max = tmx[m];
+      if (tmn[m] < tmn_min) tmn_min = tmn[m];
+      diurnal_sum += tmx[m] - tmn[m];
+    }
+    double b01     = t_sum / 12.0;
+    double b02     = diurnal_sum / 12.0;
+    double b05     = tmx_max;
+    double b06     = tmn_min;
+    double b07     = b05 - b06;
+    double b03     = (b07 == 0.0) ? R_NaN : 100.0 * b02 / b07;
+    double t_sd    = std::sqrt(t_sumsq / 12.0 - b01 * b01);
+    double b04     = 100.0 * t_sd;
 
-    // Quarter indices
-    int wet_start  = quarter_argmax_c(p);
-    int dry_start  = quarter_argmin_c(p);
-    int warm_start = quarter_argmax_c(t);
-    int cold_start = quarter_argmin_c(t);
+    // Quarter indices (temperature)
+    int warm_start = quarter_argmax_ptr(t);
+    int cold_start = quarter_argmin_ptr(t);
+
+    // Quarter indices (precipitation)
+    int wet_start  = quarter_argmax_ptr(p);
+    int dry_start  = quarter_argmin_ptr(p);
 
     // Temperature quarter means
-    double b08 = quarter_mean_c(t, wet_start);
-    double b09 = quarter_mean_c(t, dry_start);
-    double b10 = quarter_mean_c(t, warm_start);
-    double b11 = quarter_mean_c(t, cold_start);
+    double b08 = quarter_mean_ptr(t, wet_start);
+    double b09 = quarter_mean_ptr(t, dry_start);
+    double b10 = quarter_mean_ptr(t, warm_start);
+    double b11 = quarter_mean_ptr(t, cold_start);
 
     // Precipitation basics
-    double b12 = sum(p);
-    double b13 = max(p);
-    double b14 = min(p);
-    double pr_mean = mean(p);
-    double b15 = (pr_mean == 0.0) ? R_NaN : 100.0 * sd_pop_c(p) / pr_mean;
+    double p_sum = 0.0, p_sumsq = 0.0;
+    double p_max = p[0], p_min = p[0];
+    for (int m = 0; m < 12; m++) {
+      p_sum   += p[m];
+      p_sumsq += p[m] * p[m];
+      if (p[m] > p_max) p_max = p[m];
+      if (p[m] < p_min) p_min = p[m];
+    }
+    double b12     = p_sum;
+    double b13     = p_max;
+    double b14     = p_min;
+    double pr_mean = p_sum / 12.0;
+    double p_sd    = std::sqrt(p_sumsq / 12.0 - pr_mean * pr_mean);
+    double b15     = (pr_mean == 0.0) ? R_NaN : 100.0 * p_sd / pr_mean;
 
     // Precipitation quarter sums
-    double b16 = quarter_sum_c(p, wet_start);
-    double b17 = quarter_sum_c(p, dry_start);
-    double b18 = quarter_sum_c(p, warm_start);
-    double b19 = quarter_sum_c(p, cold_start);
+    double b16 = quarter_sum_ptr(p, wet_start);
+    double b17 = quarter_sum_ptr(p, dry_start);
+    double b18 = quarter_sum_ptr(p, warm_start);
+    double b19 = quarter_sum_ptr(p, cold_start);
 
-    result(i, 0)  = b01;
-    result(i, 1)  = b02;
-    result(i, 2)  = b03;
-    result(i, 3)  = b04;
-    result(i, 4)  = b05;
-    result(i, 5)  = b06;
-    result(i, 6)  = b07;
-    result(i, 7)  = b08;
-    result(i, 8)  = b09;
-    result(i, 9)  = b10;
-    result(i, 10) = b11;
-    result(i, 11) = b12;
-    result(i, 12) = b13;
-    result(i, 13) = b14;
-    result(i, 14) = b15;
-    result(i, 15) = b16;
-    result(i, 16) = b17;
-    result(i, 17) = b18;
-    result(i, 18) = b19;
+    // Write results (column-major: result[i, j] == res_ptr[i + j * n])
+    res_ptr[i +  0 * n] = b01;
+    res_ptr[i +  1 * n] = b02;
+    res_ptr[i +  2 * n] = b03;
+    res_ptr[i +  3 * n] = b04;
+    res_ptr[i +  4 * n] = b05;
+    res_ptr[i +  5 * n] = b06;
+    res_ptr[i +  6 * n] = b07;
+    res_ptr[i +  7 * n] = b08;
+    res_ptr[i +  8 * n] = b09;
+    res_ptr[i +  9 * n] = b10;
+    res_ptr[i + 10 * n] = b11;
+    res_ptr[i + 11 * n] = b12;
+    res_ptr[i + 12 * n] = b13;
+    res_ptr[i + 13 * n] = b14;
+    res_ptr[i + 14 * n] = b15;
+    res_ptr[i + 15 * n] = b16;
+    res_ptr[i + 16 * n] = b17;
+    res_ptr[i + 17 * n] = b18;
+    res_ptr[i + 18 * n] = b19;
   }
+
+#ifdef _OPENMP
+  omp_set_num_threads(prev_threads);
+#endif
 
   return result;
 }

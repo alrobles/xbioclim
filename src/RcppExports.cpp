@@ -227,8 +227,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // bioclim_cpp
-NumericMatrix bioclim_cpp(NumericMatrix tas, NumericMatrix tasmax, NumericMatrix tasmin, NumericMatrix pr);
-RcppExport SEXP _rxbioclim_bioclim_cpp(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP) {
+NumericMatrix bioclim_cpp(NumericMatrix tas, NumericMatrix tasmax, NumericMatrix tasmin, NumericMatrix pr, int ncores);
+RcppExport SEXP _rxbioclim_bioclim_cpp(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP, SEXP ncoresSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -236,7 +236,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericMatrix >::type tasmax(tasmaxSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type tasmin(tasminSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type pr(prSEXP);
-    rcpp_result_gen = Rcpp::wrap(bioclim_cpp(tas, tasmax, tasmin, pr));
+    Rcpp::traits::input_parameter< int >::type ncores(ncoresSEXP);
+    rcpp_result_gen = Rcpp::wrap(bioclim_cpp(tas, tasmax, tasmin, pr, ncores));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -508,7 +509,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rxbioclim_bio17_cpp", (DL_FUNC) &_rxbioclim_bio17_cpp, 1},
     {"_rxbioclim_bio18_cpp", (DL_FUNC) &_rxbioclim_bio18_cpp, 2},
     {"_rxbioclim_bio19_cpp", (DL_FUNC) &_rxbioclim_bio19_cpp, 2},
-    {"_rxbioclim_bioclim_cpp", (DL_FUNC) &_rxbioclim_bioclim_cpp, 4},
+    {"_rxbioclim_bioclim_cpp", (DL_FUNC) &_rxbioclim_bioclim_cpp, 5},
     {"_rxbioclim_bioclim_model_new", (DL_FUNC) &_rxbioclim_bioclim_model_new, 4},
     {"_rxbioclim_bioclim_model_is_null", (DL_FUNC) &_rxbioclim_bioclim_model_is_null, 1},
     {"_rxbioclim_bioclim_model_bio01", (DL_FUNC) &_rxbioclim_bioclim_model_bio01, 1},
