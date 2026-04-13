@@ -115,9 +115,9 @@ bioclim_blocks <- function(TAS, TASMAX, TASMIN, PR, block_size = 100) {
     row_end   <- min(b * block_size, n)
     idx <- row_start:row_end
 
-    block_result <- t(apply(idx, 1, function(i) {
+    block_result <- t(vapply(idx, function(i) {
       bioclim(TAS[i, ], TASMAX[i, ], TASMIN[i, ], PR[i, ])
-    }))
+    }, numeric(19)))
     results[[b]] <- block_result
   }
 
