@@ -96,6 +96,17 @@ names(bio)   # "bio01" ... "bio19"
 | BIO18 | Precipitation of Warmest Quarter |
 | BIO19 | Precipitation of Coldest Quarter |
 
+## Documentation
+
+Comprehensive vignettes are available after installing the package:
+
+```r
+vignette("getting-started",  package = "rxbioclim")  # Introduction & real-world examples
+vignette("terra-comparison", package = "rxbioclim")  # rxbioclim vs terra
+vignette("benchmarking",     package = "rxbioclim")  # Block-based performance
+vignette("architecture",     package = "rxbioclim")  # Design & internals
+```
+
 ## License
 
 MIT
