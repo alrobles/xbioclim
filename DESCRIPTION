@@ -36,5 +36,6 @@ Collate:
     'BioclimData.R'
     'bioclim_module.R'
     'bioclimmodel.R'
+    'bioclim_raster.R'
     'messages.R'
     'rxbioclim-package.R'
