@@ -43,7 +43,7 @@ validate_spatraster <- function(x, name = "input") {
 #'
 #' @return A numeric matrix (n_cells x 19) of bioclimatic variable values.
 #' @keywords internal
-bioclim_block <- function(v_tas, v_tasmax, v_tasmin, v_pr) {
+.compute_bioclim_block <- function(v_tas, v_tasmax, v_tasmin, v_pr) {
   n_cells <- nrow(v_tas)
   result  <- matrix(NA_real_, nrow = n_cells, ncol = 19L)
   for (j in seq_len(n_cells)) {
@@ -205,7 +205,7 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
       parallel::clusterExport(
         cl,
         varlist = c(
-          "bioclim", "bioclim_block", "sd_pop",
+          "bioclim", ".compute_bioclim_block", "sd_pop",
           "rolling_quarter_sum", "rolling_quarter_mean",
           "quarter_argmax", "quarter_argmin",
           "quarter_values", "validate_monthly"
@@ -243,10 +243,10 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
 
     if (!is.null(cl)) {
       # Parallel: split cells into chunks across workers.
-      # `bioclim_block` is available on workers via clusterExport above.
+      # `.compute_bioclim_block` is available on workers via clusterExport above.
       chunks       <- parallel::splitIndices(n_cells, ncores)
       result_parts <- parallel::parLapply(cl, chunks, function(idx) {
-        bioclim_block(
+        .compute_bioclim_block(
           v_tas[idx,    , drop = FALSE],
           v_tasmax[idx, , drop = FALSE],
           v_tasmin[idx, , drop = FALSE],
@@ -255,7 +255,7 @@ bioclim_raster <- function(tas, tasmax, tasmin, pr,
       })
       result_mat <- do.call(rbind, result_parts)
     } else {
-      result_mat <- bioclim_block(v_tas, v_tasmax, v_tasmin, v_pr)
+      result_mat <- .compute_bioclim_block(v_tas, v_tasmax, v_tasmin, v_pr)
     }
 
     terra::writeValues(out, result_mat, start = row_start, nrows = n_rows)

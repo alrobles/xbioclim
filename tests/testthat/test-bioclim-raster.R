@@ -36,33 +36,33 @@ make_test_rasters <- function(nrows = 4L, ncols = 3L) {
   )
 }
 
-# ── bioclim_block() ──────────────────────────────────────────────────────────
+# ── .compute_bioclim_block() ─────────────────────────────────────────────────
 
-test_that("bioclim_block returns a 19-column matrix", {
+test_that(".compute_bioclim_block returns a 19-column matrix", {
   m_tas    <- matrix(rep(1:12, 3), nrow = 3, byrow = TRUE)
   m_tasmax <- matrix(rep(2:13, 3), nrow = 3, byrow = TRUE)
   m_tasmin <- matrix(rep(0:11, 3), nrow = 3, byrow = TRUE)
   m_pr     <- matrix(rep(1:12, 3), nrow = 3, byrow = TRUE)
 
-  result <- bioclim_block(m_tas, m_tasmax, m_tasmin, m_pr)
+  result <- rxbioclim:::.compute_bioclim_block(m_tas, m_tasmax, m_tasmin, m_pr)
   expect_true(is.matrix(result))
   expect_equal(nrow(result), 3L)
   expect_equal(ncol(result), 19L)
 })
 
-test_that("bioclim_block matches bioclim() for each row", {
+test_that(".compute_bioclim_block matches bioclim() for each row", {
   m_tas    <- matrix(rep(1:12, 5), nrow = 5, byrow = TRUE)
   m_tasmax <- matrix(rep(2:13, 5), nrow = 5, byrow = TRUE)
   m_tasmin <- matrix(rep(0:11, 5), nrow = 5, byrow = TRUE)
   m_pr     <- matrix(rep(1:12, 5), nrow = 5, byrow = TRUE)
 
-  result <- bioclim_block(m_tas, m_tasmax, m_tasmin, m_pr)
+  result <- rxbioclim:::.compute_bioclim_block(m_tas, m_tasmax, m_tasmin, m_pr)
   for (i in seq_len(5)) {
     expect_equal(result[i, ], unname(ref_bioclim), tolerance = 1e-6)
   }
 })
 
-test_that("bioclim_block returns NA row when any input has NA", {
+test_that(".compute_bioclim_block returns NA row when any input has NA", {
   m_tas    <- matrix(rep(1:12, 3), nrow = 3, byrow = TRUE)
   m_tasmax <- matrix(rep(2:13, 3), nrow = 3, byrow = TRUE)
   m_tasmin <- matrix(rep(0:11, 3), nrow = 3, byrow = TRUE)
@@ -71,7 +71,7 @@ test_that("bioclim_block returns NA row when any input has NA", {
   # Insert NA into the second cell's tas values
   m_tas[2, 1] <- NA
 
-  result <- bioclim_block(m_tas, m_tasmax, m_tasmin, m_pr)
+  result <- rxbioclim:::.compute_bioclim_block(m_tas, m_tasmax, m_tasmin, m_pr)
   expect_false(anyNA(result[1, ]))
   expect_true(all(is.na(result[2, ])))
   expect_false(anyNA(result[3, ]))
