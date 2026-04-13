@@ -12,6 +12,7 @@ implementation of the xbioclim C++ library, with a compiled C++ back-end
 exposed through Rcpp Modules.
 }
 \section{Error and warning propagation}{
+
 rxbioclim mirrors the \code{SpatMessages} pattern used by the terra package.
 C++ routines record errors and warnings into an internal message store
 rather than throwing directly.  R-side wrappers around C++ calls should

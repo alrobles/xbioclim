@@ -314,3 +314,4 @@ bioclim_model_bio19 <- function(ptr) {
 bioclim_model_compute <- function(ptr) {
     .Call(`_rxbioclim_bioclim_model_compute`, ptr)
 }
+
