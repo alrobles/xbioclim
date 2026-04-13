@@ -33,4 +33,5 @@ Collate:
     'bioclim.R'
     'bioclim_module.R'
     'bioclimmodel.R'
+    'messages.R'
     'rxbioclim-package.R'
