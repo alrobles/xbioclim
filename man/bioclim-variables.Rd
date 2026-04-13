@@ -22,47 +22,55 @@
 \alias{bio18}
 \alias{bio19}
 \alias{bioclim}
+\alias{bio02,BioclimData,missing-method}
+\alias{bio03,BioclimData,missing-method}
+\alias{bio07,BioclimData,missing-method}
+\alias{bio08,BioclimData,missing-method}
+\alias{bio09,BioclimData,missing-method}
+\alias{bio18,BioclimData,missing-method}
+\alias{bio19,BioclimData,missing-method}
+\alias{bioclim,BioclimData,missing,missing,missing-method}
 \title{Compute Bioclimatic Variables from Monthly Climate Data}
 \usage{
-bio01(tas)
+bio01(tas, ...)
 
-bio02(tasmax, tasmin)
+bio02(tasmax, tasmin, ...)
 
-bio03(tasmax, tasmin)
+bio03(tasmax, tasmin, ...)
 
-bio04(tas)
+bio04(tas, ...)
 
-bio05(tasmax)
+bio05(tasmax, ...)
 
-bio06(tasmin)
+bio06(tasmin, ...)
 
-bio07(tasmax, tasmin)
+bio07(tasmax, tasmin, ...)
 
-bio08(tas, pr = NULL)
+bio08(tas, pr, ...)
 
-bio09(tas, pr = NULL)
+bio09(tas, pr, ...)
 
-bio10(tas)
+bio10(tas, ...)
 
-bio11(tas)
+bio11(tas, ...)
 
-bio12(pr)
+bio12(pr, ...)
 
-bio13(pr)
+bio13(pr, ...)
 
-bio14(pr)
+bio14(pr, ...)
 
-bio15(pr)
+bio15(pr, ...)
 
-bio16(pr)
+bio16(pr, ...)
 
-bio17(pr)
+bio17(pr, ...)
 
-bio18(tas, pr = NULL)
+bio18(tas, pr, ...)
 
-bio19(tas, pr = NULL)
+bio19(tas, pr, ...)
 
-bioclim(tas, tasmax = NULL, tasmin = NULL, pr = NULL)
+bioclim(tas, tasmax, tasmin, pr, ...)
 }
 \arguments{
 \item{tas}{Numeric vector of length 12 \strong{or} \linkS4class{BioclimData}:
@@ -72,7 +80,10 @@ monthly mean temperature.}
 
 \item{tasmin}{Numeric vector of length 12: monthly minimum temperature.}
 
-\item{pr}{Numeric vector of length 12: monthly precipitation.}
+\item{pr}{Numeric vector of length 12: monthly precipitation. When the first
+argument (\code{tas}) is a \linkS4class{BioclimData} or
+\linkS4class{BioclimModel} object, \code{pr} should be omitted and will be
+dispatched via the \code{missing} S4 method.}
 
 \item{...}{Currently unused; reserved for future extensions.}
 }

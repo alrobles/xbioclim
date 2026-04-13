@@ -185,11 +185,30 @@ bio19_cpp <- function(tas, pr) {
 #' @param tasmax Numeric matrix (pixels x 12): monthly max temperature.
 #' @param tasmin Numeric matrix (pixels x 12): monthly min temperature.
 #' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
+#' @param ncores Integer: number of OpenMP threads (default 1).
 #' @return Numeric matrix (pixels x 19) with one column per variable
 #'   (bio01..bio19), named accordingly.
 #' @keywords internal
 bioclim_cpp <- function(tas, tasmax, tasmin, pr, ncores = 1L) {
     .Call(`_rxbioclim_bioclim_cpp`, tas, tasmax, tasmin, pr, ncores)
+}
+
+#' Compute all 19 bioclimatic variables (vectorized, zero-copy bridge)
+#'
+#' A faster alternative to \code{bioclim_cpp()} that uses whole-array
+#' vectorized operations and maps R matrix memory directly onto C++ pointers
+#' (zero-copy on both input and output).
+#'
+#' @param tas    Numeric matrix (n_pixels x 12): monthly mean temperature.
+#' @param tasmax Numeric matrix (n_pixels x 12): monthly max temperature.
+#' @param tasmin Numeric matrix (n_pixels x 12): monthly min temperature.
+#' @param pr     Numeric matrix (n_pixels x 12): monthly precipitation.
+#' @param ncores Integer: number of OpenMP threads (default 1).
+#' @return Numeric matrix (n_pixels x 19) with one column per variable
+#'   (bio01..bio19), named accordingly.
+#' @keywords internal
+bioclim_xt <- function(tas, tasmax, tasmin, pr, ncores = 1L) {
+    .Call(`_rxbioclim_bioclim_xt`, tas, tasmax, tasmin, pr, ncores)
 }
 
 #' Create a new C++ BioclimModel and return an external pointer

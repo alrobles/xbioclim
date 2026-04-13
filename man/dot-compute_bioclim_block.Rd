@@ -4,7 +4,7 @@
 \alias{.compute_bioclim_block}
 \title{Compute Bioclimatic Variables for a Block of Cells}
 \usage{
-.compute_bioclim_block(v_tas, v_tasmax, v_tasmin, v_pr)
+.compute_bioclim_block(v_tas, v_tasmax, v_tasmin, v_pr, ncores = 1L)
 }
 \arguments{
 \item{v_tas}{Numeric matrix (n_cells x 12): monthly mean temperature.}
@@ -14,6 +14,8 @@
 \item{v_tasmin}{Numeric matrix (n_cells x 12): monthly min temperature.}
 
 \item{v_pr}{Numeric matrix (n_cells x 12): monthly precipitation.}
+
+\item{ncores}{Integer: number of OpenMP threads (default 1).}
 }
 \value{
 A numeric matrix (n_cells x 19) of bioclimatic variable values.

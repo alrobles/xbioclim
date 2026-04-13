@@ -18,10 +18,8 @@
 \alias{bio07,BioclimModel,missing-method}
 \alias{bio08,ANY,ANY-method}
 \alias{bio08,BioclimModel,missing-method}
-\alias{bio08,BioclimModel,NULL-method}
 \alias{bio09,ANY,ANY-method}
 \alias{bio09,BioclimModel,missing-method}
-\alias{bio09,BioclimModel,NULL-method}
 \alias{bio10,ANY-method}
 \alias{bio10,BioclimModel-method}
 \alias{bio11,ANY-method}
@@ -40,20 +38,12 @@
 \alias{bio17,BioclimModel-method}
 \alias{bio18,ANY,ANY-method}
 \alias{bio18,BioclimModel,missing-method}
-\alias{bio18,BioclimModel,NULL-method}
 \alias{bio19,ANY,ANY-method}
 \alias{bio19,BioclimModel,missing-method}
-\alias{bio19,BioclimModel,NULL-method}
-\alias{bioclim,ANY-method}
 \alias{bioclim,BioclimModel-method}
-\title{S4 Methods for BioclimModel Objects and Plain Numeric Vectors}
+\title{S4 Methods for BioclimModel Objects}
 \description{
 S4 method implementations for all 19 bioclimatic variable functions and
-\code{bioclim}. Two dispatch paths exist for each:
-\itemize{
-\item A \code{\link{BioclimModel-class}} path that delegates the
-computation to the underlying C++ object via Rcpp.
-\item A default (\code{ANY}) path that calls the original plain-function
-implementation, preserving full backward compatibility.
-}
+\code{bioclim} that dispatch to the underlying C++ object via Rcpp when
+the first argument is a \code{\link{BioclimModel-class}} instance.
 }

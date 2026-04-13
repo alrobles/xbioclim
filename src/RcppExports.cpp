@@ -241,6 +241,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// bioclim_xt
+NumericMatrix bioclim_xt(NumericMatrix tas, NumericMatrix tasmax, NumericMatrix tasmin, NumericMatrix pr, int ncores);
+RcppExport SEXP _rxbioclim_bioclim_xt(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP, SEXP ncoresSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type tas(tasSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type tasmax(tasmaxSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type tasmin(tasminSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type pr(prSEXP);
+    Rcpp::traits::input_parameter< int >::type ncores(ncoresSEXP);
+    rcpp_result_gen = Rcpp::wrap(bioclim_xt(tas, tasmax, tasmin, pr, ncores));
+    return rcpp_result_gen;
+END_RCPP
+}
 // bioclim_model_new
 SEXP bioclim_model_new(Rcpp::NumericVector tas, Rcpp::NumericVector tasmax, Rcpp::NumericVector tasmin, Rcpp::NumericVector pr);
 RcppExport SEXP _rxbioclim_bioclim_model_new(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP) {
@@ -510,6 +525,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rxbioclim_bio18_cpp", (DL_FUNC) &_rxbioclim_bio18_cpp, 2},
     {"_rxbioclim_bio19_cpp", (DL_FUNC) &_rxbioclim_bio19_cpp, 2},
     {"_rxbioclim_bioclim_cpp", (DL_FUNC) &_rxbioclim_bioclim_cpp, 5},
+    {"_rxbioclim_bioclim_xt", (DL_FUNC) &_rxbioclim_bioclim_xt, 5},
     {"_rxbioclim_bioclim_model_new", (DL_FUNC) &_rxbioclim_bioclim_model_new, 4},
     {"_rxbioclim_bioclim_model_is_null", (DL_FUNC) &_rxbioclim_bioclim_model_is_null, 1},
     {"_rxbioclim_bioclim_model_bio01", (DL_FUNC) &_rxbioclim_bioclim_model_bio01, 1},
