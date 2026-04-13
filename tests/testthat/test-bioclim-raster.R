@@ -1,3 +1,4 @@
+library(testthat)
 # Tests for block-based raster processing (bioclim_raster)
 # Requires the 'terra' package; tests are skipped if terra is not installed.
 
@@ -127,7 +128,7 @@ test_that("bioclim_raster result matches bioclim() per-pixel", {
 
   # Every cell should match the reference (all cells have identical monthly data)
   for (i in seq_len(nrow(result_vals))) {
-    expect_equal(result_vals[i, ], unname(ref_bioclim), tolerance = 1e-4)
+    expect_equal(unname(result_vals[i, ]), unname(ref_bioclim), tolerance = 1e-4)
   }
 })
 
@@ -136,7 +137,8 @@ test_that("bioclim_raster preserves spatial extent and CRS", {
   rasts  <- make_test_rasters()
   result <- bioclim_raster(rasts$tas, rasts$tasmax, rasts$tasmin, rasts$pr)
 
-  expect_equal(terra::ext(result), terra::ext(rasts$tas))
+  expect_equal(as.character(terra::ext(result)),
+               as.character(terra::ext(rasts$tas)))
   expect_equal(terra::crs(result), terra::crs(rasts$tas))
   expect_equal(terra::nrow(result), terra::nrow(rasts$tas))
   expect_equal(terra::ncol(result), terra::ncol(rasts$tas))
@@ -166,7 +168,7 @@ test_that("bioclim_raster works with explicit n_blocks parameter", {
                             n_blocks = 2L)
   expect_equal(terra::nlyr(result), 19L)
   result_vals <- terra::values(result)
-  expect_equal(result_vals[1, ], unname(ref_bioclim), tolerance = 1e-4)
+  expect_equal(unname(result_vals[1, ]), unname(ref_bioclim), tolerance = 1e-4)
 })
 
 test_that("bioclim_raster writes output to disk when filename is supplied", {
@@ -186,7 +188,7 @@ test_that("bioclim_raster writes output to disk when filename is supplied", {
   expect_equal(terra::nlyr(result), 19L)
 
   result_vals <- terra::values(result)
-  expect_equal(result_vals[1, ], unname(ref_bioclim), tolerance = 1e-4)
+  expect_equal(result_vals[1, ], ref_bioclim, tolerance = 1e-4)
 })
 
 test_that("bioclim_raster works with ncores > 1", {
@@ -203,8 +205,9 @@ test_that("bioclim_raster works with ncores > 1", {
 
   expect_equal(terra::nlyr(result), 19L)
   result_vals <- terra::values(result)
-  expect_equal(result_vals[1, ], unname(ref_bioclim), tolerance = 1e-4)
+  expect_equal(unname(result_vals[1, ]), unname(ref_bioclim), tolerance = 1e-4)
 })
+
 test_that("bioclim_raster rejects non-SpatRaster input", {
   skip_if_no_terra()
   rasts <- make_test_rasters()
@@ -294,5 +297,5 @@ test_that("bioclim_raster works with ncores > 1", {
 
   expect_equal(terra::nlyr(result), 19L)
   result_vals <- terra::values(result)
-  expect_equal(result_vals[1, ], unname(ref_bioclim), tolerance = 1e-4)
+  expect_equal(unname(result_vals[1, ]), unname(ref_bioclim), tolerance = 1e-4)
 })
