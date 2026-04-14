@@ -97,30 +97,32 @@ loaded into memory).  Otherwise it returns the output file path as a
 character string.
 }
 \examples{
-\dontrun{
-library(terra)
+\donttest{
+if (has_gdal() && requireNamespace("terra", quietly = TRUE)) {
+  library(terra)
 
-# Create tiny synthetic climate rasters (10x10 pixels, 12 layers each)
-make_rast <- function(vals, file) {
-  r <- rast(nrows = 10, ncols = 10, nlyrs = 12,
-            xmin = 0, xmax = 1, ymin = 0, ymax = 1, crs = "EPSG:4326")
-  for (m in seq_len(12)) values(r[[m]]) <- vals[m]
-  writeRaster(r, file, overwrite = TRUE)
-  file
+  # Create tiny synthetic climate rasters (10x10 pixels, 12 layers each)
+  make_rast <- function(vals, file) {
+    r <- rast(nrows = 10, ncols = 10, nlyrs = 12,
+              xmin = 0, xmax = 1, ymin = 0, ymax = 1, crs = "EPSG:4326")
+    for (m in seq_len(12)) values(r[[m]]) <- vals[m]
+    writeRaster(r, file, overwrite = TRUE)
+    file
+  }
+
+  tmp <- tempdir()
+  tas_file    <- make_rast(c(5,7,10,14,18,22,25,24,20,15,10,6),
+                            file.path(tmp, "tas.tif"))
+  tasmax_file <- make_rast(c(8,10,14,18,23,28,32,31,26,19,13,9),
+                            file.path(tmp, "tasmax.tif"))
+  tasmin_file <- make_rast(c(1,3,6,10,13,17,20,19,15,10,6,2),
+                            file.path(tmp, "tasmin.tif"))
+  pr_file     <- make_rast(c(60,55,48,35,28,22,18,20,35,55,65,68),
+                            file.path(tmp, "pr.tif"))
+
+  result <- bioclim_engine(tas_file, tasmax_file, tasmin_file, pr_file)
+  nlyr(result)  # 19
 }
-
-tmp <- tempdir()
-tas_file    <- make_rast(c(5,7,10,14,18,22,25,24,20,15,10,6),
-                          file.path(tmp, "tas.tif"))
-tasmax_file <- make_rast(c(8,10,14,18,23,28,32,31,26,19,13,9),
-                          file.path(tmp, "tasmax.tif"))
-tasmin_file <- make_rast(c(1,3,6,10,13,17,20,19,15,10,6,2),
-                          file.path(tmp, "tasmin.tif"))
-pr_file     <- make_rast(c(60,55,48,35,28,22,18,20,35,55,65,68),
-                          file.path(tmp, "pr.tif"))
-
-result <- bioclim_engine(tas_file, tasmax_file, tasmin_file, pr_file)
-nlyr(result)  # 19
 }
 }
 \seealso{
