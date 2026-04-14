@@ -4,6 +4,8 @@
 # engine_set_mask, engine_set_threads, engine_compute) are generated in
 # RcppExports.R by Rcpp::compileAttributes().  This file adds:
 #   * has_gdal()  — user-facing GDAL availability check
+#   * has_cuda()  — user-facing CUDA GPU availability check
+#   * cuda_info() — CUDA device information
 
 #' Check whether the package was built with GDAL support
 #'
@@ -30,4 +32,36 @@ has_gdal <- function() {
       TRUE   # GDAL is present but the path is invalid — that's fine
     }
   })
+}
+
+#' Check CUDA GPU availability
+#'
+#' Returns \code{TRUE} when at least one CUDA-capable GPU is detected at
+#' runtime.  Returns \code{FALSE} when the package was built without CUDA
+#' support or when no CUDA-capable device is present.
+#'
+#' @return Logical scalar: \code{TRUE} if at least one CUDA GPU is available.
+#' @seealso \code{\link{cuda_info}}, \code{\link{bioclim_engine}}
+#' @export
+#' @examples
+#' has_cuda()
+has_cuda <- function() {
+  tryCatch(cuda_device_count() > 0L, error = function(e) FALSE)
+}
+
+#' Query CUDA GPU device information
+#'
+#' Returns hardware information about the first CUDA-capable GPU detected on
+#' this machine.
+#'
+#' @return A named list with \code{name} (character GPU model name),
+#'   \code{memory_gb} (numeric total memory in GB), and
+#'   \code{compute_capability} (character, e.g. \code{"8.0"} for A100).
+#'   Returns an empty list when no CUDA device is available.
+#' @seealso \code{\link{has_cuda}}, \code{\link{bioclim_engine}}
+#' @export
+#' @examples
+#' cuda_info()
+cuda_info <- function() {
+  tryCatch(cuda_device_info(), error = function(e) list())
 }

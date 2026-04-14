@@ -614,6 +614,11 @@ PACKAGE_URL=''
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+CUDA_OBJECTS
+CUDA_LIBS
+CUDA_CPPFLAGS
+HAVE_CUDA
+NVCC
 GDAL_LIBS
 GDAL_CPPFLAGS
 OBJEXT
@@ -2854,6 +2859,100 @@ else
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: gdal-config not found; building without GDAL (native engine disabled)" >&5
 printf "%s\n" "$as_me: WARNING: gdal-config not found; building without GDAL (native engine disabled)" >&2;}
 fi
+
+
+
+
+# --- CUDA detection (optional) ---
+HAVE_CUDA=no
+CUDA_CPPFLAGS=""
+CUDA_LIBS=""
+NVCC=""
+CUDA_OBJECTS=""
+
+# Extract the first word of "nvcc", so it can be a program name with args.
+set dummy nvcc; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_NVCC+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  case $NVCC in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_NVCC="$NVCC" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_NVCC="$as_dir$ac_word$ac_exec_ext"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_path_NVCC" && ac_cv_path_NVCC="not-found"
+  ;;
+esac
+fi
+NVCC=$ac_cv_path_NVCC
+if test -n "$NVCC"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $NVCC" >&5
+printf "%s\n" "$NVCC" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+if test "${NVCC}" != "not-found"; then
+    CUDA_VERSION=`${NVCC} --version 2>/dev/null | grep "release" | sed 's/.*release //' | sed 's/,.*//'`
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking CUDA toolkit version" >&5
+printf %s "checking CUDA toolkit version... " >&6; }
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: ${CUDA_VERSION}" >&5
+printf "%s\n" "${CUDA_VERSION}" >&6; }
+
+    # Try to find CUDA include and lib paths
+    CUDA_HOME="${CUDA_HOME:-/usr/local/cuda}"
+    if test -d "${CUDA_HOME}/include" && test -d "${CUDA_HOME}/lib64"; then
+        HAVE_CUDA=yes
+        CUDA_CPPFLAGS="-I${CUDA_HOME}/include -DHAVE_CUDA"
+        CUDA_LIBS="-L${CUDA_HOME}/lib64 -lcudart"
+    elif test -d "${CUDA_HOME}/include" && test -d "${CUDA_HOME}/lib"; then
+        HAVE_CUDA=yes
+        CUDA_CPPFLAGS="-I${CUDA_HOME}/include -DHAVE_CUDA"
+        CUDA_LIBS="-L${CUDA_HOME}/lib -lcudart"
+    else
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: nvcc found but CUDA_HOME paths not detected; building without CUDA" >&5
+printf "%s\n" "$as_me: WARNING: nvcc found but CUDA_HOME paths not detected; building without CUDA" >&2;}
+        NVCC=""
+    fi
+else
+    NVCC=""
+fi
+
+if test "${HAVE_CUDA}" = "yes"; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: CUDA support enabled (version ${CUDA_VERSION})" >&5
+printf "%s\n" "$as_me: CUDA support enabled (version ${CUDA_VERSION})" >&6;}
+    CUDA_OBJECTS="bioclim_cuda.o"
+else
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Building without CUDA support (GPU acceleration disabled)" >&5
+printf "%s\n" "$as_me: Building without CUDA support (GPU acceleration disabled)" >&6;}
+fi
+
+
+
 
 
 

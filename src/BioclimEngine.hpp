@@ -66,6 +66,12 @@ public:
     // Mostly useful for tests.  Values < 1 are clamped to 1.
     void set_tile_size(int tile_size);
 
+    // Set the compute device.  Accepted values: "auto", "cpu", "gpu".
+    // "auto" (default) uses the GPU when at least one CUDA device is present,
+    // otherwise falls back to the CPU.  "gpu" without CUDA compiled in or
+    // without a visible device silently falls back to CPU.
+    void set_device(const std::string& device);
+
     // ── Execution ──────────────────────────────────────────────────────────
 
     // Run the tiled pipeline and return the output file path.
@@ -87,6 +93,10 @@ private:
 
     int n_threads_ = 1;
     int tile_size_ = 256;
+
+    // Compute device: 0 = auto, 1 = CPU, 2 = GPU
+    enum class Device { Auto, CPU, GPU };
+    Device device_ = Device::Auto;
 };
 
 }  // namespace rxbioclim

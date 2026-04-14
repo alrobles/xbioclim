@@ -93,5 +93,49 @@ fi
 AC_SUBST([GDAL_CPPFLAGS])
 AC_SUBST([GDAL_LIBS])
 
+# --- CUDA detection (optional) ---
+HAVE_CUDA=no
+CUDA_CPPFLAGS=""
+CUDA_LIBS=""
+NVCC=""
+CUDA_OBJECTS=""
+
+AC_PATH_PROG([NVCC], [nvcc], [not-found])
+if test "${NVCC}" != "not-found"; then
+    CUDA_VERSION=`${NVCC} --version 2>/dev/null | grep "release" | sed 's/.*release //' | sed 's/,.*//'`
+    AC_MSG_CHECKING([CUDA toolkit version])
+    AC_MSG_RESULT([${CUDA_VERSION}])
+
+    # Try to find CUDA include and lib paths
+    CUDA_HOME="${CUDA_HOME:-/usr/local/cuda}"
+    if test -d "${CUDA_HOME}/include" && test -d "${CUDA_HOME}/lib64"; then
+        HAVE_CUDA=yes
+        CUDA_CPPFLAGS="-I${CUDA_HOME}/include -DHAVE_CUDA"
+        CUDA_LIBS="-L${CUDA_HOME}/lib64 -lcudart"
+    elif test -d "${CUDA_HOME}/include" && test -d "${CUDA_HOME}/lib"; then
+        HAVE_CUDA=yes
+        CUDA_CPPFLAGS="-I${CUDA_HOME}/include -DHAVE_CUDA"
+        CUDA_LIBS="-L${CUDA_HOME}/lib -lcudart"
+    else
+        AC_MSG_WARN([nvcc found but CUDA_HOME paths not detected; building without CUDA])
+        NVCC=""
+    fi
+else
+    NVCC=""
+fi
+
+if test "${HAVE_CUDA}" = "yes"; then
+    AC_MSG_NOTICE([CUDA support enabled (version ${CUDA_VERSION})])
+    CUDA_OBJECTS="bioclim_cuda.o"
+else
+    AC_MSG_NOTICE([Building without CUDA support (GPU acceleration disabled)])
+fi
+
+AC_SUBST([HAVE_CUDA])
+AC_SUBST([CUDA_CPPFLAGS])
+AC_SUBST([CUDA_LIBS])
+AC_SUBST([NVCC])
+AC_SUBST([CUDA_OBJECTS])
+
 AC_CONFIG_FILES([src/Makevars])
 AC_OUTPUT

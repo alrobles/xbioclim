@@ -419,3 +419,52 @@ rasterize_mask_cpp <- function(vector_path, ref_raster_path, output_mask_path) {
 apply_mask_cpp <- function(input_path, mask_path, output_path) {
     invisible(.Call(`_rxbioclim_apply_mask_cpp`, input_path, mask_path, output_path))
 }
+#' Count available CUDA GPU devices
+#'
+#' Returns the number of CUDA-capable GPUs available on this machine.
+#' Returns \code{0} when the package was built without CUDA support or when
+#' no CUDA-capable device is found.
+#'
+#' @return Non-negative integer: number of CUDA devices detected.
+#' @seealso \code{\link{has_cuda}}, \code{\link{cuda_device_info}}
+#' @export
+cuda_device_count <- function() {
+    .Call(`_rxbioclim_cuda_device_count`)
+}
+
+#' Query properties of the first CUDA GPU device
+#'
+#' Returns a named list with hardware information about the first
+#' CUDA-capable GPU.  Returns an empty list when no CUDA device is
+#' available or when the package was built without CUDA.
+#'
+#' @return Named list with:
+#'   \describe{
+#'     \item{name}{Character: GPU model name.}
+#'     \item{memory_gb}{Numeric: total global memory in gigabytes.}
+#'     \item{compute_capability}{Character: e.g. \code{"8.0"} for A100.}
+#'   }
+#'   An empty list when no CUDA device is detected.
+#' @seealso \code{\link{has_cuda}}, \code{\link{cuda_device_count}}
+#' @export
+cuda_device_info <- function() {
+    .Call(`_rxbioclim_cuda_device_info`)
+}
+
+#' Set the compute device for a BioclimEngine instance
+#'
+#' Controls whether the computation runs on a CUDA GPU or the CPU.
+#' When \code{"auto"} is selected the engine uses the GPU if at least one
+#' CUDA device is present, otherwise it falls back to the CPU.  GPU
+#' requests on systems without a CUDA device silently fall back to the CPU.
+#'
+#' @param xptr External pointer returned by \code{\link{engine_create}}.
+#' @param device Character scalar: one of \code{"auto"}, \code{"cpu"},
+#'   or \code{"gpu"}.
+#' @return \code{NULL} invisibly.
+#' @seealso \code{\link{engine_create}}, \code{\link{has_cuda}},
+#'   \code{\link{bioclim_engine}}
+#' @export
+engine_set_device <- function(xptr, device) {
+    invisible(.Call(`_rxbioclim_engine_set_device`, xptr, device))
+}

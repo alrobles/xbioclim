@@ -13,7 +13,8 @@ bioclim_engine(
   mask = NULL,
   threads = 1L,
   tile_size = 256L,
-  overwrite = FALSE
+  overwrite = FALSE,
+  device = c("auto", "cpu", "gpu")
 )
 }
 \arguments{
@@ -42,6 +43,15 @@ Default is \code{256L}.}
 
 \item{overwrite}{Logical: whether to overwrite \code{output} if it already
 exists.  Default is \code{FALSE}.}
+
+\item{device}{Character scalar: compute device to use.  One of
+\code{"auto"} (default), \code{"cpu"}, or \code{"gpu"}.  \code{"auto"}
+selects the GPU when a CUDA device is available, otherwise falls back to
+the CPU.  \code{"gpu"} on a system without CUDA emits a warning and falls
+back to the CPU.  When \code{device = "gpu"} and \code{tile_size} is left
+at its default, the tile size is automatically scaled to match the
+detected GPU memory (4096 for high-memory GPUs such as the A100, 1024
+otherwise).}
 }
 \value{
 A \code{terra::SpatRaster} with 19 layers (BIO01--BIO19) if

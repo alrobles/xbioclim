@@ -607,6 +607,38 @@ END_RCPP
 
 RcppExport SEXP _rcpp_module_boot_bioclim_mod();
 
+// cuda_device_count
+int cuda_device_count();
+RcppExport SEXP _rxbioclim_cuda_device_count() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(cuda_device_count());
+    return rcpp_result_gen;
+END_RCPP
+}
+// cuda_device_info
+Rcpp::List cuda_device_info();
+RcppExport SEXP _rxbioclim_cuda_device_info() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(cuda_device_info());
+    return rcpp_result_gen;
+END_RCPP
+}
+// engine_set_device
+void engine_set_device(SEXP xptr, std::string device);
+RcppExport SEXP _rxbioclim_engine_set_device(SEXP xptrSEXP, SEXP deviceSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type xptr(xptrSEXP);
+    Rcpp::traits::input_parameter< std::string >::type device(deviceSEXP);
+    engine_set_device(xptr, device);
+    return R_NilValue;
+END_RCPP
+}
+
 // rasterize_mask_cpp
 SEXP rasterize_mask_cpp(const std::string& vector_path, const std::string& ref_raster_path, const std::string& output_mask_path);
 RcppExport SEXP _rxbioclim_rasterize_mask_cpp(SEXP vector_pathSEXP, SEXP ref_raster_pathSEXP, SEXP output_mask_pathSEXP) {
@@ -685,6 +717,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rxbioclim_engine_set_threads", (DL_FUNC) &_rxbioclim_engine_set_threads, 2},
     {"_rxbioclim_engine_set_tile_size", (DL_FUNC) &_rxbioclim_engine_set_tile_size, 2},
     {"_rxbioclim_engine_compute", (DL_FUNC) &_rxbioclim_engine_compute, 1},
+    {"_rxbioclim_cuda_device_count", (DL_FUNC) &_rxbioclim_cuda_device_count, 0},
+    {"_rxbioclim_cuda_device_info", (DL_FUNC) &_rxbioclim_cuda_device_info, 0},
+    {"_rxbioclim_engine_set_device", (DL_FUNC) &_rxbioclim_engine_set_device, 2},
     {"_rxbioclim_rasterize_mask_cpp", (DL_FUNC) &_rxbioclim_rasterize_mask_cpp, 3},
     {"_rxbioclim_apply_mask_cpp", (DL_FUNC) &_rxbioclim_apply_mask_cpp, 3},
     {"_rcpp_module_boot_bioclim_mod", (DL_FUNC) &_rcpp_module_boot_bioclim_mod, 0},

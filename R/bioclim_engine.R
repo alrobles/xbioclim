@@ -55,6 +55,14 @@
 #'   Default is \code{256L}.
 #' @param overwrite Logical: whether to overwrite \code{output} if it already
 #'   exists.  Default is \code{FALSE}.
+#' @param device Character scalar: compute device to use.  One of
+#'   \code{"auto"} (default), \code{"cpu"}, or \code{"gpu"}.  \code{"auto"}
+#'   selects the GPU when a CUDA device is available, otherwise falls back to
+#'   the CPU.  \code{"gpu"} on a system without CUDA emits a warning and falls
+#'   back to the CPU.  When \code{device = "gpu"} and \code{tile_size} is left
+#'   at its default, the tile size is automatically scaled to match the
+#'   detected GPU memory (4096 for high-memory GPUs such as the A100, 1024
+#'   otherwise).
 #'
 #' @return A \code{terra::SpatRaster} with 19 layers (BIO01–BIO19) if
 #'   \pkg{terra} is installed, otherwise a character string with the output
@@ -100,8 +108,39 @@ bioclim_engine <- function(
     mask       = NULL,
     threads    = 1L,
     tile_size  = 256L,
-    overwrite  = FALSE
+    overwrite  = FALSE,
+    device     = c("auto", "cpu", "gpu")
 ) {
+
+  device <- match.arg(device)
+
+  # Auto-detect: use GPU if available, otherwise CPU.
+  if (device == "auto") {
+    device <- if (has_cuda()) "gpu" else "cpu"
+  }
+
+  # GPU requested but not available → warn and fall back to CPU.
+  if (device == "gpu" && !has_cuda()) {
+    warning(
+      "CUDA GPU requested but not available. Falling back to CPU.",
+      call. = FALSE
+    )
+    device <- "cpu"
+  }
+
+  # Auto-scale tile size for GPU when the user did not override it.
+  if (device == "gpu" && identical(tile_size, 256L)) {
+    info <- cuda_info()
+    if (length(info) > 0L && isTRUE(info$memory_gb >= 40)) {
+      tile_size <- 4096L
+      message(
+        "GPU detected (", info$name, ", ",
+        round(info$memory_gb, 1L), " GB). Using tile_size=4096."
+      )
+    } else if (length(info) > 0L) {
+      tile_size <- 1024L
+    }
+  }
 
   # ── 0. GDAL availability ─────────────────────────────────────────────────
   if (!has_gdal()) {
@@ -170,6 +209,7 @@ bioclim_engine <- function(
   if (nzchar(mask_path)) engine_set_mask(eng, mask_path)
   engine_set_threads(eng, threads)
   engine_set_tile_size(eng, tile_size)
+  engine_set_device(eng, device)
   engine_compute(eng)
 
   # ── 5. Return result ──────────────────────────────────────────────────────
