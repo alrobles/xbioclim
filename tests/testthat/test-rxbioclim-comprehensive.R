@@ -340,7 +340,7 @@ test_that("L7: bioclim_raster pixel values match bioclim()", {
   for (cell in 1:n_cells) {
     for (j in 1:19) {
       nm <- paste0("bio", sprintf("%02d", j))
-      expect_equal(vals[cell, j], ref_linear[[nm]], tolerance = tol_loose,
+      expect_equal(as.numeric(vals[cell, j]), ref_linear[[nm]], tolerance = tol_loose,
                    label = paste("raster cell", cell, nm))
     }
   }
@@ -660,8 +660,8 @@ test_that("L11: R bioclim() == bioclim_xt() == ClimateBlock == BioclimData", {
 
   for (j in 1:19) {
     nm <- paste0("bio", sprintf("%02d", j))
-    vals <- c(R = r_result[[nm]], xt = xt_result[j],
-              CB = cb_result[j], BD = bd_result[j])
+    vals <- c(R = r_result[[nm]], xt = unname(xt_result[j]),
+              CB = unname(cb_result[j]), BD = unname(bd_result[j]))
 
     if (is.nan(vals["R"])) {
       for (v in vals) expect_true(is.nan(v), label = paste(nm, "NaN consistency"))

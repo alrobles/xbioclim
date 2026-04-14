@@ -41,7 +41,7 @@ bool gdal_can_open(const std::string& path) {  // NOLINT
 #else
     (void)path;
     Rcpp::stop(
-        "gdal_can_open() requires GDAL but rxbioclim was built without it. "
+        "gdal_can_open(): rxbioclim was built without GDAL support. "
         "Install GDAL >= 2.0.1 and reinstall the package."
     );
     return false;  // unreachable, but silences compiler warnings

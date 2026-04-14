@@ -194,14 +194,16 @@ NumericMatrix bioclim_xt(NumericMatrix tas,
     double b13 = p_max;  // BIO13
     double b14 = p_min;  // BIO14
 
-    // BIO15: Precipitation Seasonality (CV = 100 * sd / (mean + 1))
+    // BIO15: Precipitation Seasonality (CV = 100 * sd / mean; NaN when mean == 0)
     double p_mean = p_sum / 12.0;
     double p_ssq  = 0.0;
     for (int m = 0; m < 12; m++) {
       double d = p[m] - p_mean;
       p_ssq += d * d;
     }
-    double b15 = 100.0 * std::sqrt(p_ssq / 12.0) / (p_mean + 1.0);  // BIO15
+    double b15 = (p_mean == 0.0)
+                   ? R_NaN
+                   : 100.0 * std::sqrt(p_ssq / 12.0) / p_mean;  // BIO15
 
     // Rolling quarter sums for temperature and precipitation
     double pr_qs[12], t_qs[12];
