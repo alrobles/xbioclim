@@ -365,7 +365,7 @@ std::string BioclimEngine::compute() {
     return output_path_;
 
 #else
-    Rcpp::stop(
+    throw std::runtime_error(
         "GDAL is required for BioclimEngine. "
         "Rebuild the package with GDAL support."
     );
