@@ -104,12 +104,12 @@ void rasterize_mask(const std::string& vector_path,
     // Burn value 1 for all polygon features in every layer.
     std::vector<double> burn_values(layers.size(), 1.0);
 
-    GDALRasterBandH bands_h[1] = { static_cast<GDALRasterBandH>(band) };
+    int bands_idx[1] = { 1 };  // 1-based band index for GDALRasterizeLayers
 
     CPLErr err = GDALRasterizeLayers(
         out_ds,
         1,                              // nBands
-        bands_h,                        // pahBands
+        bands_idx,                      // panBandList (1-based band indices)
         static_cast<int>(layers.size()),
         layers.data(),
         nullptr,                        // pfnTransformer (identity)
