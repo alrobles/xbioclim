@@ -137,8 +137,13 @@ else
     if test -d "${CUDA_HOME}/include" && test -n "${CUDA_LIB_DIR}"; then
       # Perform an actual compile test — verify nvcc produces object code
       AC_MSG_CHECKING([whether nvcc can compile a trivial CUDA program])
-      CUDA_TEST_SRC="${TMPDIR:-/tmp}/conftest_cuda_$$.cu"
-      CUDA_TEST_OBJ="${TMPDIR:-/tmp}/conftest_cuda_$$.o"
+      if test -z "${TMPDIR}"; then
+        CUDA_TMPDIR=/tmp
+      else
+        CUDA_TMPDIR="${TMPDIR}"
+      fi
+      CUDA_TEST_SRC="${CUDA_TMPDIR}/conftest_cuda_$$.cu"
+      CUDA_TEST_OBJ="${CUDA_TMPDIR}/conftest_cuda_$$.o"
       echo '__global__ void _rxbioclim_check(void) {}' > "${CUDA_TEST_SRC}"
       echo 'int main(void) { return 0; }'             >> "${CUDA_TEST_SRC}"
       if "${NVCC}" -x cu -I"${CUDA_HOME}/include" \
