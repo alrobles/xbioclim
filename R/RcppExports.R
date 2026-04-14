@@ -366,3 +366,38 @@ gdal_info <- function(path) {
     .Call(`_rxbioclim_gdal_info`, path)
 }
 
+#' @keywords internal
+engine_create <- function() {
+    .Call(`_rxbioclim_engine_create`)
+}
+
+#' @keywords internal
+engine_open <- function(xptr, tas_files, tasmax_files, tasmin_files, pr_files) {
+    invisible(.Call(`_rxbioclim_engine_open`, xptr, tas_files, tasmax_files, tasmin_files, pr_files))
+}
+
+#' @keywords internal
+engine_set_output <- function(xptr, path) {
+    invisible(.Call(`_rxbioclim_engine_set_output`, xptr, path))
+}
+
+#' @keywords internal
+engine_set_mask <- function(xptr, mask_path) {
+    invisible(.Call(`_rxbioclim_engine_set_mask`, xptr, mask_path))
+}
+
+#' @keywords internal
+engine_set_threads <- function(xptr, n) {
+    invisible(.Call(`_rxbioclim_engine_set_threads`, xptr, n))
+}
+
+#' @keywords internal
+engine_set_tile_size <- function(xptr, tile_size) {
+    invisible(.Call(`_rxbioclim_engine_set_tile_size`, xptr, tile_size))
+}
+
+#' @keywords internal
+engine_compute <- function(xptr) {
+    .Call(`_rxbioclim_engine_compute`, xptr)
+}
+

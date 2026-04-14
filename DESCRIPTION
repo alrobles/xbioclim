@@ -38,5 +38,6 @@ Collate:
     'bioclim_module.R'
     'bioclimmodel.R'
     'bioclim_raster.R'
+    'engine.R'
     'messages.R'
     'rxbioclim-package.R'
