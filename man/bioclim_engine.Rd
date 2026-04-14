@@ -97,7 +97,7 @@ loaded into memory).  Otherwise it returns the output file path as a
 character string.
 }
 \examples{
-\dontrun{
+\donttest{
 library(terra)
 
 # Create tiny synthetic climate rasters (10x10 pixels, 12 layers each)

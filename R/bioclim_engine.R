@@ -74,7 +74,7 @@
 #'
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' library(terra)
 #'
 #' # Create tiny synthetic climate rasters (10×10 pixels, 12 layers each)

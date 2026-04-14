@@ -1,19 +1,18 @@
-NVCC          = @NVCC@
-CUDA_CPPFLAGS = @CUDA_CPPFLAGS@
-CUDA_LIBS     = @CUDA_LIBS@
-CUDA_OBJECTS  = @CUDA_OBJECTS@
+# ── Substituted by configure ──────────────────────────────────────────
+NVCC            = @NVCC@
+CUDA_CPPFLAGS   = @CUDA_CPPFLAGS@
+CUDA_LIBS       = @CUDA_LIBS@
 CUDA_ARCH_FLAGS = @CUDA_ARCH_FLAGS@
 
+# ── Compiler / linker flags ───────────────────────────────────────────
 PKG_CPPFLAGS = @GDAL_CPPFLAGS@ $(CUDA_CPPFLAGS) -I../inst/include
 PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
 PKG_LIBS     = @GDAL_LIBS@ $(SHLIB_OPENMP_CXXFLAGS) $(CUDA_LIBS)
 
-# All .cpp objects except bioclim_cuda.cpp, which is either compiled by NVCC
-# (when CUDA is available) or omitted entirely (when CUDA is absent).
-CPP_OBJECTS = $(filter-out bioclim_cuda.o, $(patsubst %.cpp,%.o,$(wildcard *.cpp)))
-OBJECTS     = $(CPP_OBJECTS) $(CUDA_OBJECTS)
+# ── Object list (enumerated by configure — no GNU Make extensions) ────
+OBJECTS = @ALL_OBJECTS@
 
-# Compile bioclim_cuda.cpp with nvcc using -x cu to force CUDA compilation.
-# This rule is only invoked when CUDA_OBJECTS is non-empty (HAVE_CUDA=yes).
-bioclim_cuda.o: bioclim_cuda.cpp
-	$(NVCC) -x cu $(CUDA_CPPFLAGS) $(CUDA_ARCH_FLAGS) -Xcompiler -fPIC -c $< -o $@
+# ── CUDA compilation rule (only present when NVCC was found) ──────────
+# When CUDA is absent this section is empty and g++ compiles
+# bioclim_cuda.cpp to an empty object (#ifdef HAVE_CUDA guard).
+@CUDA_NVCC_RULE@
