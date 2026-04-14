@@ -22,6 +22,7 @@ LinkingTo:
     Rcpp
 Suggests:
     parallel,
+    sf,
     terra,
     testthat (>= 3.0.0),
     knitr,
@@ -39,5 +40,6 @@ Collate:
     'bioclimmodel.R'
     'bioclim_raster.R'
     'engine.R'
+    'mask.R'
     'messages.R'
     'rxbioclim-package.R'

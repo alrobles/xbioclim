@@ -607,6 +607,31 @@ END_RCPP
 
 RcppExport SEXP _rcpp_module_boot_bioclim_mod();
 
+// rasterize_mask_cpp
+SEXP rasterize_mask_cpp(const std::string& vector_path, const std::string& ref_raster_path, const std::string& output_mask_path);
+RcppExport SEXP _rxbioclim_rasterize_mask_cpp(SEXP vector_pathSEXP, SEXP ref_raster_pathSEXP, SEXP output_mask_pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type vector_path(vector_pathSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type ref_raster_path(ref_raster_pathSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type output_mask_path(output_mask_pathSEXP);
+    rasterize_mask_cpp(vector_path, ref_raster_path, output_mask_path);
+    return R_NilValue;
+END_RCPP
+}
+// apply_mask_cpp
+SEXP apply_mask_cpp(const std::string& input_path, const std::string& mask_path, const std::string& output_path);
+RcppExport SEXP _rxbioclim_apply_mask_cpp(SEXP input_pathSEXP, SEXP mask_pathSEXP, SEXP output_pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type input_path(input_pathSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type mask_path(mask_pathSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type output_path(output_pathSEXP);
+    apply_mask_cpp(input_path, mask_path, output_path);
+    return R_NilValue;
+END_RCPP
+}
+
 static const R_CallMethodDef CallEntries[] = {
     {"_rxbioclim_bio01_cpp", (DL_FUNC) &_rxbioclim_bio01_cpp, 1},
     {"_rxbioclim_bio02_cpp", (DL_FUNC) &_rxbioclim_bio02_cpp, 2},
@@ -660,6 +685,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rxbioclim_engine_set_threads", (DL_FUNC) &_rxbioclim_engine_set_threads, 2},
     {"_rxbioclim_engine_set_tile_size", (DL_FUNC) &_rxbioclim_engine_set_tile_size, 2},
     {"_rxbioclim_engine_compute", (DL_FUNC) &_rxbioclim_engine_compute, 1},
+    {"_rxbioclim_rasterize_mask_cpp", (DL_FUNC) &_rxbioclim_rasterize_mask_cpp, 3},
+    {"_rxbioclim_apply_mask_cpp", (DL_FUNC) &_rxbioclim_apply_mask_cpp, 3},
     {"_rcpp_module_boot_bioclim_mod", (DL_FUNC) &_rcpp_module_boot_bioclim_mod, 0},
     {NULL, NULL, 0}
 };
