@@ -16,7 +16,7 @@ skip_without_terra <- function() {
   testthat::skip_if_not_installed("terra")
 }
 
-# Create a tiny (3×3, nbands-band) GeoTIFF filled with a constant value.
+# Create a tiny (3×3, nbands-layer) GeoTIFF filled with a constant value.
 make_tiny_raster <- function(value, path, nbands = 12L) {
   r <- terra::rast(
     nrows = 3L, ncols = 3L, nlyrs = nbands,
