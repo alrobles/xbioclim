@@ -162,7 +162,7 @@ void compute_pixel(const double* t, const double* tmx,
         p_ssq += d * d;
     }
     const double b15 = (p_mean == 0.0)
-        ? std::numeric_limits<double>::quiet_NaN()
+        ? R_NaN
         : 100.0 * std::sqrt(p_ssq / 12.0) / p_mean;                 // BIO15
 
     // ── Rolling quarter sums ────────────────────────────────────────────────
