@@ -29,13 +29,13 @@ make_tiny_raster <- function(value, path, nbands = 12L) {
   path
 }
 
-# Build a list of 12 single-band file paths for one climate variable, all
-# filled with `value`, stored under `dir`.
-make_monthly_files <- function(value, dir, prefix) {
+# Create a list of 12 single-band file paths for one climate variable,
+# where month m receives scalar value `vals[m]`, stored under `dir`.
+make_monthly_files <- function(vals, dir, prefix) {
   paths <- character(12L)
   for (m in seq_len(12L)) {
     paths[m] <- file.path(dir, sprintf("%s_%02d.tif", prefix, m))
-    make_tiny_raster(value, paths[m], nbands = 1L)
+    make_tiny_raster(vals[m], paths[m], nbands = 1L)
   }
   paths
 }
@@ -116,15 +116,6 @@ test_that("engine_compute produces a 19-band GeoTIFF (GDAL + terra)", {
   tasmax_files <- make_monthly_files(tasmax_vals, tmpdir, "tasmax")
   tasmin_files <- make_monthly_files(tasmin_vals, tmpdir, "tasmin")
   pr_files     <- make_monthly_files(pr_vals,     tmpdir, "pr")
-
-  # But each make_monthly_files creates files with a single repeated value.
-  # Re-create them so month m has the correct scalar value.
-  for (m in seq_len(12L)) {
-    make_tiny_raster(tas_vals[m],    tas_files[m],    nbands = 1L)
-    make_tiny_raster(tasmax_vals[m], tasmax_files[m], nbands = 1L)
-    make_tiny_raster(tasmin_vals[m], tasmin_files[m], nbands = 1L)
-    make_tiny_raster(pr_vals[m],     pr_files[m],     nbands = 1L)
-  }
 
   output_path <- file.path(tmpdir, "bioclim_output.tif")
 

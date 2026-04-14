@@ -388,7 +388,6 @@ std::string BioclimEngine::compute() {
 //'
 //' @return An \code{externalptr} to a new \code{BioclimEngine} object.
 //' @seealso \code{\link{engine_open}}, \code{\link{engine_compute}}
-//' @keywords internal
 // [[Rcpp::export]]
 SEXP engine_create() {
     Rcpp::XPtr<rxbioclim::BioclimEngine> ptr(
@@ -409,7 +408,6 @@ SEXP engine_create() {
 //' @param pr_files     Character vector (length 1 or 12): precipitation.
 //' @return \code{NULL} invisibly.
 //' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
-//' @keywords internal
 // [[Rcpp::export]]
 void engine_open(SEXP xptr,
                  Rcpp::CharacterVector tas_files,
@@ -432,7 +430,6 @@ void engine_open(SEXP xptr,
 //' @param path Character scalar: output file path.
 //' @return \code{NULL} invisibly.
 //' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
-//' @keywords internal
 // [[Rcpp::export]]
 void engine_set_output(SEXP xptr, std::string path) {
     Rcpp::XPtr<rxbioclim::BioclimEngine>(xptr)->set_output(path);
@@ -447,7 +444,6 @@ void engine_set_output(SEXP xptr, std::string path) {
 //' @param mask_path Character scalar: mask raster path, or \code{""} for none.
 //' @return \code{NULL} invisibly.
 //' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
-//' @keywords internal
 // [[Rcpp::export]]
 void engine_set_mask(SEXP xptr, std::string mask_path) {
     Rcpp::XPtr<rxbioclim::BioclimEngine>(xptr)->set_mask(mask_path);
@@ -462,7 +458,6 @@ void engine_set_mask(SEXP xptr, std::string mask_path) {
 //' @param n    Integer scalar: number of threads.
 //' @return \code{NULL} invisibly.
 //' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
-//' @keywords internal
 // [[Rcpp::export]]
 void engine_set_threads(SEXP xptr, int n) {
     Rcpp::XPtr<rxbioclim::BioclimEngine>(xptr)->set_threads(n);
@@ -499,7 +494,6 @@ void engine_set_tile_size(SEXP xptr, int tile_size) {
 //'   \code{\link{engine_set_output}}).
 //' @seealso \code{\link{engine_create}}, \code{\link{engine_set_output}},
 //'   \code{\link{has_gdal}}
-//' @keywords internal
 // [[Rcpp::export]]
 std::string engine_compute(SEXP xptr) {
     Rcpp::XPtr<rxbioclim::BioclimEngine> eng(xptr);

@@ -65,4 +65,3 @@ via opaque external pointers.
 \seealso{
 \code{\link{has_gdal}}, \code{\link{gdal_can_open}}
 }
-\keyword{internal}

@@ -21,7 +21,7 @@
 #' has_gdal()
 has_gdal <- function() {
   tryCatch({
-    gdal_can_open("/dev/null")
+    gdal_can_open(tempfile(fileext = ".tif"))
     TRUE  # gdal_can_open() returned without throwing — GDAL is present
   }, error = function(e) {
     if (grepl("built without GDAL", conditionMessage(e), fixed = TRUE)) {
