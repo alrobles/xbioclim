@@ -1,8 +1,8 @@
-// bioclim_cuda.cu — GPU kernel for bioclimatic variable computation.
+// bioclim_cuda.cpp — GPU kernel for bioclimatic variable computation.
 //
-// This file is compiled with nvcc only when HAVE_CUDA is defined (detected by
-// configure.ac).  All CUDA-specific code is guarded by #ifdef HAVE_CUDA so
-// that the file compiles to nothing when included without CUDA.
+// This file is compiled with nvcc -x cu only when HAVE_CUDA is defined
+// (detected by configure.ac).  All CUDA-specific code is guarded by
+// #ifdef HAVE_CUDA so that the file compiles to nothing when CUDA is absent.
 //
 // Data layout (matches BioclimEngine.cpp tile buffers):
 //   Input:  var[month * n_pix + i]   — 12 months × n_pix pixels
