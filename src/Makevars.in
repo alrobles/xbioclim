@@ -1,7 +1,8 @@
-NVCC         = @NVCC@
+NVCC          = @NVCC@
 CUDA_CPPFLAGS = @CUDA_CPPFLAGS@
-CUDA_LIBS    = @CUDA_LIBS@
-CUDA_OBJECTS = @CUDA_OBJECTS@
+CUDA_LIBS     = @CUDA_LIBS@
+CUDA_OBJECTS  = @CUDA_OBJECTS@
+CUDA_ARCH_FLAGS = @CUDA_ARCH_FLAGS@
 
 PKG_CPPFLAGS = @GDAL_CPPFLAGS@ $(CUDA_CPPFLAGS) -I../inst/include
 PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
@@ -15,4 +16,4 @@ OBJECTS     = $(CPP_OBJECTS) $(CUDA_OBJECTS)
 # Compile bioclim_cuda.cpp with nvcc using -x cu to force CUDA compilation.
 # This rule is only invoked when CUDA_OBJECTS is non-empty (HAVE_CUDA=yes).
 bioclim_cuda.o: bioclim_cuda.cpp
-	$(NVCC) -x cu -Xcompiler "-fPIC" $(CUDA_CPPFLAGS) -c $< -o $@
+	$(NVCC) -x cu -Xcompiler -fPIC $(CUDA_ARCH_FLAGS) $(CUDA_CPPFLAGS) -c $< -o $@

@@ -38,7 +38,9 @@ if test "${GDAL_CONFIG}" != "not-found"; then
   GDAL_VERSION_MAJOR=`echo "${GDAL_VERSION}" | cut -d. -f1`
   GDAL_VERSION_MINOR=`echo "${GDAL_VERSION}" | cut -d. -f2`
   GDAL_VERSION_PATCH=`echo "${GDAL_VERSION}" | cut -d. -f3`
-  GDAL_VERSION_PATCH=${GDAL_VERSION_PATCH:-0}
+  if test -z "${GDAL_VERSION_PATCH}"; then
+    GDAL_VERSION_PATCH=0
+  fi
 
   if test "${GDAL_VERSION_MAJOR}" -ge 3; then
     GDAL_OK=yes
@@ -94,41 +96,82 @@ AC_SUBST([GDAL_CPPFLAGS])
 AC_SUBST([GDAL_LIBS])
 
 # --- CUDA detection (optional) ---
+# Accept --with-cuda / --without-cuda so users and CRAN reviewers can opt out
+# of CUDA even when nvcc is present on the build machine.
+AC_ARG_WITH([cuda],
+  AS_HELP_STRING([--without-cuda],
+    [disable CUDA GPU support even if nvcc is found (default: auto-detect)]),
+  [with_cuda="${withval}"],
+  [with_cuda=auto]
+)
+
 HAVE_CUDA=no
 CUDA_CPPFLAGS=""
 CUDA_LIBS=""
 NVCC=""
 CUDA_OBJECTS=""
+CUDA_ARCH_FLAGS=""
 
-AC_PATH_PROG([NVCC], [nvcc], [not-found])
-if test "${NVCC}" != "not-found"; then
+if test "${with_cuda}" = "no"; then
+  AC_MSG_NOTICE([CUDA disabled via --without-cuda])
+else
+  AC_PATH_PROG([NVCC], [nvcc], [not-found])
+  if test "${NVCC}" != "not-found"; then
     CUDA_VERSION=`${NVCC} --version 2>/dev/null | grep "release" | sed 's/.*release //' | sed 's/,.*//'`
     AC_MSG_CHECKING([CUDA toolkit version])
     AC_MSG_RESULT([${CUDA_VERSION}])
 
-    # Try to find CUDA include and lib paths
-    CUDA_HOME="${CUDA_HOME:-/usr/local/cuda}"
-    if test -d "${CUDA_HOME}/include" && test -d "${CUDA_HOME}/lib64"; then
-        HAVE_CUDA=yes
-        CUDA_CPPFLAGS="-I${CUDA_HOME}/include -DHAVE_CUDA"
-        CUDA_LIBS="-L${CUDA_HOME}/lib64 -lcudart"
-    elif test -d "${CUDA_HOME}/include" && test -d "${CUDA_HOME}/lib"; then
-        HAVE_CUDA=yes
-        CUDA_CPPFLAGS="-I${CUDA_HOME}/include -DHAVE_CUDA"
-        CUDA_LIBS="-L${CUDA_HOME}/lib -lcudart"
-    else
-        AC_MSG_WARN([nvcc found but CUDA_HOME paths not detected; building without CUDA])
-        NVCC=""
+    # Determine CUDA_HOME
+    if test -z "${CUDA_HOME}"; then
+      CUDA_HOME=/usr/local/cuda
     fi
-else
+
+    # Locate the CUDA library directory
+    CUDA_LIB_DIR=""
+    if test -d "${CUDA_HOME}/lib64"; then
+      CUDA_LIB_DIR="${CUDA_HOME}/lib64"
+    elif test -d "${CUDA_HOME}/lib"; then
+      CUDA_LIB_DIR="${CUDA_HOME}/lib"
+    fi
+
+    if test -d "${CUDA_HOME}/include" && test -n "${CUDA_LIB_DIR}"; then
+      # Perform an actual compile test — verify nvcc produces object code
+      AC_MSG_CHECKING([whether nvcc can compile a trivial CUDA program])
+      CUDA_TEST_SRC="${TMPDIR:-/tmp}/conftest_cuda_$$.cu"
+      CUDA_TEST_OBJ="${TMPDIR:-/tmp}/conftest_cuda_$$.o"
+      echo '__global__ void _rxbioclim_check(void) {}' > "${CUDA_TEST_SRC}"
+      echo 'int main(void) { return 0; }'             >> "${CUDA_TEST_SRC}"
+      if "${NVCC}" -x cu -I"${CUDA_HOME}/include" \
+           -Xcompiler -fPIC \
+           -c "${CUDA_TEST_SRC}" -o "${CUDA_TEST_OBJ}" \
+           >/dev/null 2>&1; then
+        AC_MSG_RESULT([yes])
+        HAVE_CUDA=yes
+        CUDA_CPPFLAGS="-I${CUDA_HOME}/include -DHAVE_CUDA"
+        CUDA_LIBS="-L${CUDA_LIB_DIR} -lcudart"
+        # Architecture flags covering Pascal through Hopper (sm_60 – sm_90)
+        CUDA_ARCH_FLAGS="-gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_89,code=sm_89 -gencode arch=compute_90,code=sm_90"
+      else
+        AC_MSG_RESULT([no — nvcc compile test failed; building without CUDA])
+      fi
+      rm -f "${CUDA_TEST_SRC}" "${CUDA_TEST_OBJ}"
+    else
+      AC_MSG_WARN([nvcc found but CUDA_HOME (${CUDA_HOME}) headers/libs not detected; building without CUDA])
+    fi
+  else
     NVCC=""
+  fi
+
+  if test "${with_cuda}" = "yes" && test "${HAVE_CUDA}" = "no"; then
+    AC_MSG_ERROR([--with-cuda was requested but CUDA could not be configured])
+  fi
 fi
 
 if test "${HAVE_CUDA}" = "yes"; then
-    AC_MSG_NOTICE([CUDA support enabled (version ${CUDA_VERSION})])
-    CUDA_OBJECTS="bioclim_cuda.o"
+  AC_MSG_NOTICE([CUDA support enabled (version ${CUDA_VERSION})])
+  CUDA_OBJECTS="bioclim_cuda.o"
 else
-    AC_MSG_NOTICE([Building without CUDA support (GPU acceleration disabled)])
+  AC_MSG_NOTICE([Building without CUDA support (GPU acceleration disabled)])
 fi
 
 AC_SUBST([HAVE_CUDA])
@@ -136,6 +179,7 @@ AC_SUBST([CUDA_CPPFLAGS])
 AC_SUBST([CUDA_LIBS])
 AC_SUBST([NVCC])
 AC_SUBST([CUDA_OBJECTS])
+AC_SUBST([CUDA_ARCH_FLAGS])
 
 AC_CONFIG_FILES([src/Makevars])
 AC_OUTPUT
