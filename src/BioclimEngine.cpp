@@ -16,6 +16,7 @@
 
 #include "BioclimEngine.hpp"
 #include "gdal_io.hpp"
+#include "rxbioclim_omp.h"
 
 #ifdef HAVE_CUDA
 #include <cuda_runtime.h>
@@ -53,7 +54,7 @@ void BioclimEngine::set_mask(const std::string& path) {
 }
 
 void BioclimEngine::set_threads(int n) {
-    n_threads_ = (n < 1) ? 1 : n;
+    n_threads_ = safe_omp_threads(n);
 }
 
 void BioclimEngine::set_tile_size(int tile_size) {
