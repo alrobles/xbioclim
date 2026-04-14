@@ -92,9 +92,9 @@ bench_median <- function(expr, n = 3L) {
   stats::median(timings)
 }
 
-# ── Benchmark: bioclim_cpp() batch path (matrix interface) ────────────────────
+# ── Benchmark: bioclim() batch path via public S4 API (BioclimData) ───────────
 
-bench_bioclim_cpp <- function(nrow, ncol, n_iter = 3L) {
+bench_bioclim_public <- function(nrow, ncol, n_iter = 3L) {
   n <- nrow * ncol
   set.seed(42L)
 
@@ -113,7 +113,8 @@ bench_bioclim_cpp <- function(nrow, ncol, n_iter = 3L) {
     nrow = n, ncol = 12L
   )
 
-  bench_median(quote(bioclim_cpp(tas, tasmax, tasmin, pr)), n = n_iter)
+  bd <- BioclimData(tas, tasmax, tasmin, pr)
+  bench_median(quote(bioclim(bd)), n = n_iter)
 }
 
 # ── Benchmark: ClimateBlock$compute() (Rcpp module path) ──────────────────────
@@ -143,7 +144,7 @@ bench_climate_block <- function(nrow, ncol, n_iter = 3L) {
   }), n = n_iter)
 }
 
-# ── Benchmark: individual bio*_cpp() functions ────────────────────────────────
+# ── Benchmark: individual bio*() generics via public S4 API (BioclimData) ─────
 
 bench_individual_bio <- function(nrow, ncol, n_iter = 3L) {
   n <- nrow * ncol
@@ -164,26 +165,27 @@ bench_individual_bio <- function(nrow, ncol, n_iter = 3L) {
     nrow = n, ncol = 12L
   )
 
+  bd <- BioclimData(tas, tasmax, tasmin, pr)
   bench_median(quote({
-    bio01_cpp(tas)
-    bio02_cpp(tasmax, tasmin)
-    bio03_cpp(tasmax, tasmin)
-    bio04_cpp(tas)
-    bio05_cpp(tasmax)
-    bio06_cpp(tasmin)
-    bio07_cpp(tasmax, tasmin)
-    bio08_cpp(tas, pr)
-    bio09_cpp(tas, pr)
-    bio10_cpp(tas)
-    bio11_cpp(tas)
-    bio12_cpp(pr)
-    bio13_cpp(pr)
-    bio14_cpp(pr)
-    bio15_cpp(pr)
-    bio16_cpp(pr)
-    bio17_cpp(pr)
-    bio18_cpp(tas, pr)
-    bio19_cpp(tas, pr)
+    bio01(bd)
+    bio02(bd)
+    bio03(bd)
+    bio04(bd)
+    bio05(bd)
+    bio06(bd)
+    bio07(bd)
+    bio08(bd)
+    bio09(bd)
+    bio10(bd)
+    bio11(bd)
+    bio12(bd)
+    bio13(bd)
+    bio14(bd)
+    bio15(bd)
+    bio16(bd)
+    bio17(bd)
+    bio18(bd)
+    bio19(bd)
   }), n = n_iter)
 }
 
@@ -203,27 +205,27 @@ cat("=== rxbioclim benchmark suite ===\n\n")
 # Small grid: 100 x 100 = 10,000 pixels
 cat("--- Small grid (100 x 100 = 10,000 pixels) ---\n")
 small_raster  <- bench_bioclim_raster(100L, 100L)
-small_cpp     <- bench_bioclim_cpp(100L, 100L)
+small_public  <- bench_bioclim_public(100L, 100L)
 small_block   <- bench_climate_block(100L, 100L)
 small_indiv   <- bench_individual_bio(100L, 100L)
 
 cat(sprintf("  bioclim_raster():        %.4f s\n", small_raster))
-cat(sprintf("  bioclim_cpp():           %.4f s\n", small_cpp))
+cat(sprintf("  bioclim(BioclimData()):  %.4f s\n", small_public))
 cat(sprintf("  ClimateBlock$compute():  %.4f s\n", small_block))
-cat(sprintf("  Individual bio*_cpp():   %.4f s\n", small_indiv))
+cat(sprintf("  Individual bio*():       %.4f s\n", small_indiv))
 cat(sprintf("  Target:                  < 0.1 s\n\n"))
 
 # Medium grid: 1000 x 1000 = 1,000,000 pixels
 cat("--- Medium grid (1000 x 1000 = 1,000,000 pixels) ---\n")
 medium_raster <- bench_bioclim_raster(1000L, 1000L)
-medium_cpp    <- bench_bioclim_cpp(1000L, 1000L)
+medium_public <- bench_bioclim_public(1000L, 1000L)
 medium_block  <- bench_climate_block(1000L, 1000L)
 medium_indiv  <- bench_individual_bio(1000L, 1000L)
 
 cat(sprintf("  bioclim_raster():        %.4f s\n", medium_raster))
-cat(sprintf("  bioclim_cpp():           %.4f s\n", medium_cpp))
+cat(sprintf("  bioclim(BioclimData()):  %.4f s\n", medium_public))
 cat(sprintf("  ClimateBlock$compute():  %.4f s\n", medium_block))
-cat(sprintf("  Individual bio*_cpp():   %.4f s\n", medium_indiv))
+cat(sprintf("  Individual bio*():       %.4f s\n", medium_indiv))
 cat(sprintf("  Target:                  < 1.0 s\n\n"))
 
 # ── Summary table ─────────────────────────────────────────────────────────────
@@ -241,10 +243,10 @@ report_row <- function(label, small_t, medium_t, small_lim, medium_lim) {
 }
 
 pass <- TRUE
-pass <- report_row("bioclim_raster()",       small_raster, medium_raster, 0.1, 1.0) && pass
-pass <- report_row("bioclim_cpp()",          small_cpp,    medium_cpp,    0.1, 1.0) && pass
-pass <- report_row("ClimateBlock$compute()", small_block,  medium_block,  0.1, 1.0) && pass
-pass <- report_row("Individual bio*_cpp()",  small_indiv,  medium_indiv,  0.1, 1.0) && pass
+pass <- report_row("bioclim_raster()",       small_raster,  medium_raster,  0.1, 1.0) && pass
+pass <- report_row("bioclim(BioclimData())", small_public,  medium_public,  0.1, 1.0) && pass
+pass <- report_row("ClimateBlock$compute()", small_block,   medium_block,   0.1, 1.0) && pass
+pass <- report_row("Individual bio*()",      small_indiv,   medium_indiv,   0.1, 1.0) && pass
 
 cat("\n")
 
