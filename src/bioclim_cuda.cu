@@ -13,6 +13,22 @@
 
 #include <cuda_runtime.h>
 #include <cmath>
+#include <stdexcept>
+#include <string>
+
+// Quiet NaN bit pattern (IEEE 754 double precision)
+static constexpr unsigned long long kQuietNanBits = 0x7FF8000000000000ULL;
+
+// Macro for CUDA error checking: throws std::runtime_error on failure.
+#define CUDA_CHECK(call)                                                       \
+    do {                                                                       \
+        cudaError_t _e = (call);                                               \
+        if (_e != cudaSuccess) {                                               \
+            throw std::runtime_error(                                          \
+                std::string("CUDA error in " #call ": ") +                    \
+                cudaGetErrorString(_e));                                        \
+        }                                                                      \
+    } while (0)
 
 // ── Device helper functions ───────────────────────────────────────────────────
 
@@ -65,7 +81,7 @@ __global__ void bioclim_kernel(
         const double mv = mask[i];
         if (isnan(mv) || mv == 0.0) {
             for (int j = 0; j < 19; ++j)
-                bio[j * n_pix + i] = __longlong_as_double(0x7FF8000000000000ULL);
+                bio[j * n_pix + i] = __longlong_as_double(kQuietNanBits);
             return;
         }
     }
@@ -83,7 +99,7 @@ __global__ void bioclim_kernel(
     for (int m = 0; m < 12; ++m) {
         if (isnan(t[m]) || isnan(tmx[m]) || isnan(tmn[m]) || isnan(p[m])) {
             for (int j = 0; j < 19; ++j)
-                bio[j * n_pix + i] = __longlong_as_double(0x7FF8000000000000ULL);
+                bio[j * n_pix + i] = __longlong_as_double(kQuietNanBits);
             return;
         }
     }
@@ -177,30 +193,41 @@ void launch_bioclim_cuda(
     double *d_tasmin = nullptr, *d_pr = nullptr;
     double *d_bio = nullptr, *d_mask = nullptr;
 
-    cudaMalloc(reinterpret_cast<void**>(&d_tas),    var_bytes);
-    cudaMalloc(reinterpret_cast<void**>(&d_tasmax), var_bytes);
-    cudaMalloc(reinterpret_cast<void**>(&d_tasmin), var_bytes);
-    cudaMalloc(reinterpret_cast<void**>(&d_pr),     var_bytes);
-    cudaMalloc(reinterpret_cast<void**>(&d_bio),    bio_bytes);
+    // Allocate and transfer input data — clean up everything on any error.
+    try {
+        CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_tas),    var_bytes));
+        CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_tasmax), var_bytes));
+        CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_tasmin), var_bytes));
+        CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_pr),     var_bytes));
+        CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_bio),    bio_bytes));
 
-    cudaMemcpy(d_tas,    h_tas,    var_bytes, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_tasmax, h_tasmax, var_bytes, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_tasmin, h_tasmin, var_bytes, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_pr,     h_pr,     var_bytes, cudaMemcpyHostToDevice);
+        CUDA_CHECK(cudaMemcpy(d_tas,    h_tas,    var_bytes, cudaMemcpyHostToDevice));
+        CUDA_CHECK(cudaMemcpy(d_tasmax, h_tasmax, var_bytes, cudaMemcpyHostToDevice));
+        CUDA_CHECK(cudaMemcpy(d_tasmin, h_tasmin, var_bytes, cudaMemcpyHostToDevice));
+        CUDA_CHECK(cudaMemcpy(d_pr,     h_pr,     var_bytes, cudaMemcpyHostToDevice));
 
-    if (h_mask != nullptr) {
-        cudaMalloc(reinterpret_cast<void**>(&d_mask), mask_bytes);
-        cudaMemcpy(d_mask, h_mask, mask_bytes, cudaMemcpyHostToDevice);
+        if (h_mask != nullptr) {
+            CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_mask), mask_bytes));
+            CUDA_CHECK(cudaMemcpy(d_mask, h_mask, mask_bytes, cudaMemcpyHostToDevice));
+        }
+
+        const int block_size = 256;
+        const int grid_size  = (n_pix + block_size - 1) / block_size;
+        bioclim_kernel<<<grid_size, block_size>>>(
+            d_tas, d_tasmax, d_tasmin, d_pr, d_mask, d_bio, n_pix);
+
+        CUDA_CHECK(cudaDeviceSynchronize());
+        CUDA_CHECK(cudaMemcpy(h_bio, d_bio, bio_bytes, cudaMemcpyDeviceToHost));
+    } catch (...) {
+        // Free any successfully allocated device memory before re-throwing.
+        if (d_tas)    cudaFree(d_tas);
+        if (d_tasmax) cudaFree(d_tasmax);
+        if (d_tasmin) cudaFree(d_tasmin);
+        if (d_pr)     cudaFree(d_pr);
+        if (d_bio)    cudaFree(d_bio);
+        if (d_mask)   cudaFree(d_mask);
+        throw;
     }
-
-    const int block_size = 256;
-    const int grid_size  = (n_pix + block_size - 1) / block_size;
-    bioclim_kernel<<<grid_size, block_size>>>(
-        d_tas, d_tasmax, d_tasmin, d_pr, d_mask, d_bio, n_pix);
-
-    cudaDeviceSynchronize();
-
-    cudaMemcpy(h_bio, d_bio, bio_bytes, cudaMemcpyDeviceToHost);
 
     cudaFree(d_tas);
     cudaFree(d_tasmax);

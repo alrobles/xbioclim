@@ -136,7 +136,7 @@ test_that("bioclim_engine device='gpu' falls back to CPU with a warning when no 
       device    = "gpu",
       overwrite = TRUE
     ),
-    regexp = "Falling back to CPU",
+    regexp = "CUDA GPU requested but not available",
     fixed  = TRUE
   )
   expect_true(file.exists(out))

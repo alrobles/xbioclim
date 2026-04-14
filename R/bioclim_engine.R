@@ -135,7 +135,7 @@ bioclim_engine <- function(
       tile_size <- 4096L
       message(
         "GPU detected (", info$name, ", ",
-        round(info$memory_gb, 1L), " GB). Using tile_size=4096."
+        round(info$memory_gb, 1), " GB). Using tile_size=4096."
       )
     } else if (length(info) > 0L) {
       tile_size <- 1024L
