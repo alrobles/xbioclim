@@ -54,7 +54,8 @@ Rcpp::List cuda_device_info() {
     cudaError_t err = cudaGetDeviceCount(&count);
     if (err != cudaSuccess || count == 0) return Rcpp::List();
     cudaDeviceProp prop;
-    cudaGetDeviceProperties(&prop, 0);
+    err = cudaGetDeviceProperties(&prop, 0);
+    if (err != cudaSuccess) return Rcpp::List();
     return Rcpp::List::create(
         Rcpp::Named("name")               = std::string(prop.name),
         Rcpp::Named("memory_gb")          =
