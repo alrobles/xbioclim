@@ -2982,7 +2982,9 @@ printf "%s\n" "yes" >&6; }
         HAVE_CUDA=yes
         CUDA_CPPFLAGS="-I${CUDA_HOME}/include -DHAVE_CUDA"
         CUDA_LIBS="-L${CUDA_LIB_DIR} -lcudart"
-        # Architecture flags covering Pascal through Hopper (sm_60 – sm_90)
+        # Architecture flags covering Pascal through Hopper (sm_60 – sm_90).
+        # sm_90a (GH100) is intentionally omitted: it requires CUDA >= 12.0
+        # and is not yet present in general-purpose build environments.
         CUDA_ARCH_FLAGS="-gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_89,code=sm_89 -gencode arch=compute_90,code=sm_90"
       else
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no — nvcc compile test failed; building without CUDA" >&5
