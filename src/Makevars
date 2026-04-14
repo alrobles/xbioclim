@@ -1,4 +1,18 @@
 CXX_STD = CXX17
-PKG_CPPFLAGS = -I../inst/include
+
+NVCC         = 
+CUDA_CPPFLAGS = 
+CUDA_LIBS    = 
+CUDA_OBJECTS = 
+
+PKG_CPPFLAGS =  $(CUDA_CPPFLAGS) -I../inst/include
 PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
-PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS)
+PKG_LIBS     =  $(SHLIB_OPENMP_CXXFLAGS) $(CUDA_LIBS)
+
+# Collect all C++ objects automatically and append any CUDA objects.
+CPP_OBJECTS = $(patsubst %.cpp,%.o,$(wildcard *.cpp))
+OBJECTS     = $(CPP_OBJECTS) $(CUDA_OBJECTS)
+
+# Compile .cu files with nvcc (only triggered when CUDA_OBJECTS is non-empty).
+%.o: %.cu
+	$(NVCC) -Xcompiler "-fPIC" $(CUDA_CPPFLAGS) -c $< -o $@

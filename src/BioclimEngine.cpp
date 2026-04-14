@@ -17,6 +17,11 @@
 #include "BioclimEngine.hpp"
 #include "gdal_io.hpp"
 
+#ifdef HAVE_CUDA
+#include <cuda_runtime.h>
+#include "bioclim_cuda.hpp"
+#endif
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -53,6 +58,20 @@ void BioclimEngine::set_threads(int n) {
 
 void BioclimEngine::set_tile_size(int tile_size) {
     tile_size_ = (tile_size < 1) ? 1 : tile_size;
+}
+
+void BioclimEngine::set_device(const std::string& device) {
+    if (device == "auto" || device == "Auto") {
+        device_ = Device::Auto;
+    } else if (device == "cpu" || device == "CPU") {
+        device_ = Device::CPU;
+    } else if (device == "gpu" || device == "GPU") {
+        device_ = Device::GPU;
+    } else {
+        throw std::runtime_error(
+            "BioclimEngine::set_device: unknown device '" + device +
+            "'. Use \"auto\", \"cpu\", or \"gpu\".");
+    }
 }
 
 // ── GDAL-dependent helpers (anonymous namespace, internal linkage) ────────────
@@ -269,6 +288,18 @@ std::string BioclimEngine::compute() {
     // ── Create output dataset ───────────────────────────────────────────────
     GdalWriter writer(output_path_, nrows, ncols, 19, gt, crs);
 
+    // ── Determine compute device ────────────────────────────────────────────
+    bool use_gpu = false;
+#ifdef HAVE_CUDA
+    if (device_ != Device::CPU) {
+        int gpu_count = 0;
+        cudaError_t cuda_err = cudaGetDeviceCount(&gpu_count);
+        if (cuda_err == cudaSuccess && gpu_count > 0) {
+            use_gpu = true;
+        }
+    }
+#endif
+
     // Scratch buffer reused across tiles and bands.
     std::vector<double> band_buf;
 
@@ -319,6 +350,18 @@ std::string BioclimEngine::compute() {
             // Output layout: bio_tile[bio_index * n_pix + pixel_index]
             std::vector<double> bio_tile(static_cast<std::size_t>(19 * n_pix));
 
+#ifdef HAVE_CUDA
+            if (use_gpu) {
+                launch_bioclim_cuda(
+                    tas_tile.data(), tasmax_tile.data(),
+                    tasmin_tile.data(), pr_tile.data(),
+                    mask_buf.empty() ? nullptr : mask_buf.data(),
+                    bio_tile.data(),
+                    n_pix
+                );
+            } else
+#endif
+            {
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static) num_threads(n_threads_)
 #endif
@@ -349,6 +392,7 @@ std::string BioclimEngine::compute() {
                         bio_tile[static_cast<std::size_t>(j * n_pix + i)] = bio[j];
                 }
             }
+            }  // end CPU branch
 
             // ── Write 19 output bands ────────────────────────────────────────
             std::vector<double> out_band(static_cast<std::size_t>(n_pix));
