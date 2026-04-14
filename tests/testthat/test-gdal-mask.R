@@ -277,8 +277,7 @@ test_that("create_mask accepts an sf polygon object", {
     sf::st_polygon(list(matrix(
       c(0, 0, 3, 0, 3, -3, 0, -3, 0, 0),
       ncol = 2, byrow = TRUE
-    ))),
-    crs = NA
+    )))
   )
   poly_sf <- sf::st_sf(geometry = poly_sf)
 

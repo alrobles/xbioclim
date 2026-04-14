@@ -83,7 +83,7 @@ test_that("L1: rolling_quarter_sum circular wrapping", {
   expect_length(qs, 12)
   expect_equal(qs[1],  6)    # 1+2+3
   expect_equal(qs[10], 33)   # 10+11+12
-  expect_equal(qs[11], 23)   # 11+12+1
+  expect_equal(qs[11], 24)   # 11+12+1
   expect_equal(qs[12], 15)   # 12+1+2
 })
 test_that("L1: rolling_quarter_mean = rolling_quarter_sum / 3", {
@@ -264,7 +264,7 @@ test_that("L6: bioclim_xt matches reference values for linear pattern", {
                        to_mat(tasmin_lin), to_mat(pr_lin))
   for (j in 1:19) {
     nm <- paste0("bio", sprintf("%02d", j))
-    expect_equal(result[1, j], ref_linear[[nm]], tolerance = tol_loose,
+    expect_equal(unname(result[1, j]), ref_linear[[nm]], tolerance = tol_loose,
                  label = paste("bioclim_xt", nm))
   }
 })
@@ -298,13 +298,13 @@ test_that("L6: bioclim_xt with realistic climate data", {
   result <- bioclim_xt(to_mat(tas_real), to_mat(tasmax_real),
                        to_mat(tasmin_real), to_mat(pr_real))
   # BIO01 = mean of monthly mean temp
-  expect_equal(result[1, 1], mean(tas_real), tolerance = tol)
+  expect_equal(unname(result[1, 1]), mean(tas_real), tolerance = tol)
   # BIO12 = sum of monthly precip
-  expect_equal(result[1, 12], sum(pr_real), tolerance = tol)
+  expect_equal(unname(result[1, 12]), sum(pr_real), tolerance = tol)
   # BIO05 = max of monthly max temp
-  expect_equal(result[1, 5], max(tasmax_real), tolerance = tol)
+  expect_equal(unname(result[1, 5]), max(tasmax_real), tolerance = tol)
   # BIO06 = min of monthly min temp
-  expect_equal(result[1, 6], min(tasmin_real), tolerance = tol)
+  expect_equal(unname(result[1, 6]), min(tasmin_real), tolerance = tol)
 })
 
 # ============================================================================
@@ -456,11 +456,11 @@ test_that("L8: engine round-trip with tiny rasters", {
 
   vals <- terra::values(out_r)
   # BIO01 = mean(tas_real)
-  expect_equal(vals[1, 1], mean(tas_real), tolerance = tol)
+  expect_equal(unname(vals[1, 1]), mean(tas_real), tolerance = tol)
   # BIO12 = sum(pr_real)
-  expect_equal(vals[1, 12], sum(pr_real), tolerance = tol)
+  expect_equal(unname(vals[1, 12]), sum(pr_real), tolerance = tol)
   # BIO05 = max(tasmax_real)
-  expect_equal(vals[1, 5], max(tasmax_real), tolerance = tol)
+  expect_equal(unname(vals[1, 5]), max(tasmax_real), tolerance = tol)
 })
 
 # ============================================================================
@@ -516,8 +516,8 @@ test_that("L9: bioclim_engine() full round-trip with multi-band files", {
     expect_equal(terra::nlyr(result), 19L)
     vals <- terra::values(result)
     # All 25 pixels should have the same values (uniform input)
-    expect_equal(vals[1, 1], mean(tas_real), tolerance = tol)
-    expect_equal(vals[1, 12], sum(pr_real), tolerance = tol)
+    expect_equal(unname(vals[1, 1]), mean(tas_real), tolerance = tol)
+    expect_equal(unname(vals[1, 12]), sum(pr_real), tolerance = tol)
     # Check consistency: all cells identical
     for (i in 2:25) {
       expect_equal(vals[i, ], vals[1, ], tolerance = 1e-10,
@@ -540,7 +540,7 @@ test_that("L9: bioclim_engine() accepts SpatRaster input", {
     r <- terra::rast(nrows = 3, ncols = 3, nlyrs = 12,
                      xmin = 0, xmax = 1, ymin = 0, ymax = 1, crs = "EPSG:4326")
     for (m in 1:12) terra::values(r[[m]]) <- vals[m]
-    f <- file.path(tmpdir, paste0(sample(letters, 8, replace = TRUE), collapse = ""), ".tif")
+    f <- file.path(tmpdir, paste0(c(sample(letters, 8, replace = TRUE), ".tif"), collapse = ""))
     terra::writeRaster(r, f, overwrite = TRUE)
     terra::rast(f)
   }
@@ -666,11 +666,11 @@ test_that("L11: R bioclim() == bioclim_xt() == ClimateBlock == BioclimData", {
     if (is.nan(vals["R"])) {
       for (v in vals) expect_true(is.nan(v), label = paste(nm, "NaN consistency"))
     } else {
-      expect_equal(vals["xt"], vals["R"], tolerance = 1e-10,
+      expect_equal(unname(vals["xt"]), unname(vals["R"]), tolerance = 1e-10,
                    label = paste(nm, "xt vs R"))
-      expect_equal(vals["CB"], vals["R"], tolerance = 1e-10,
+      expect_equal(unname(vals["CB"]), unname(vals["R"]), tolerance = 1e-10,
                    label = paste(nm, "CB vs R"))
-      expect_equal(vals["BD"], vals["R"], tolerance = 1e-10,
+      expect_equal(unname(vals["BD"]), unname(vals["R"]), tolerance = 1e-10,
                    label = paste(nm, "BD vs R"))
     }
   }
@@ -723,7 +723,7 @@ test_that("L11: bioclim_raster matches bioclim_engine for same input", {
         expect_true(is.na(engine_vals[i, j]) || is.nan(engine_vals[i, j]),
                     label = paste("cell", i, "var", j, "NA consistency"))
       } else {
-        expect_equal(engine_vals[i, j], raster_vals[i, j], tolerance = 1e-6,
+        expect_equal(unname(engine_vals[i, j]), unname(raster_vals[i, j]), tolerance = 1e-6,
                      label = paste("cell", i, "var", j))
       }
     }

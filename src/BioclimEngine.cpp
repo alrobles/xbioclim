@@ -257,13 +257,13 @@ void read_month_window(
 std::string BioclimEngine::compute() {
 #ifdef HAVE_GDAL
     // ── Validate configuration ──────────────────────────────────────────────
+    if (output_path_.empty())
+        throw std::runtime_error("BioclimEngine::compute: output path not set.");
+
     validate_file_vector(tas_files_,    "tas");
     validate_file_vector(tasmax_files_, "tasmax");
     validate_file_vector(tasmin_files_, "tasmin");
     validate_file_vector(pr_files_,     "pr");
-
-    if (output_path_.empty())
-        throw std::runtime_error("BioclimEngine::compute: output path not set.");
 
     // ── Open readers ────────────────────────────────────────────────────────
     const bool tas_multi    = (tas_files_.size()    == 1);
