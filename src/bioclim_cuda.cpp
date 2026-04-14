@@ -133,14 +133,16 @@ __global__ void bioclim_kernel(
     const double b13 = p_max;
     const double b14 = p_min;
 
-    // BIO15: Precipitation Seasonality (CV = 100 * sd / (mean + 1))
+    // BIO15: Precipitation Seasonality (CV = 100 * sd / mean; NaN when mean == 0)
     const double p_mean = p_sum / 12.0;
     double p_ssq = 0.0;
     for (int m = 0; m < 12; ++m) {
         const double d = p[m] - p_mean;
         p_ssq += d * d;
     }
-    const double b15 = 100.0 * sqrt(p_ssq / 12.0) / (p_mean + 1.0);
+    const double b15 = (p_mean == 0.0)
+        ? __longlong_as_double(kQuietNanBits)
+        : 100.0 * sqrt(p_ssq / 12.0) / p_mean;
 
     // -- Rolling quarter sums -------------------------------------------------
     double pr_qs[12], t_qs[12];
