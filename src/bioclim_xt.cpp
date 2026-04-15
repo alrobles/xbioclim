@@ -29,6 +29,7 @@
 #include <Rcpp.h>
 #include <cmath>
 #include <algorithm>
+#include "rxbioclim_omp.h"
 using namespace Rcpp;
 
 // ── Rolling-quarter primitives (stack-based, OpenMP-safe) ────────────────────

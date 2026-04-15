@@ -17,6 +17,7 @@
 
 #include "BioclimEngine.hpp"
 #include "gdal_io.hpp"
+#include "rxbioclim_omp.h"
 
 #ifdef HAVE_CUDA
 #include <cuda_runtime.h>

@@ -163,3 +163,73 @@ test_that("bioclim_engine device='auto' runs without error", {
   )
   expect_true(file.exists(out))
 })
+
+# ── BIO15 NaN/formula alignment: GPU == CPU ───────────────────────────────────
+
+test_that("BIO15 is NaN for zero precipitation (CPU path)", {
+  skip_without_gdal()
+  skip_without_terra()
+
+  tmp <- tempdir()
+  tas    <- make_tiny_raster(15.0, file.path(tmp, "bio15_nan_tas.tif"))
+  tasmax <- make_tiny_raster(20.0, file.path(tmp, "bio15_nan_tasmax.tif"))
+  tasmin <- make_tiny_raster(10.0, file.path(tmp, "bio15_nan_tasmin.tif"))
+  pr     <- make_tiny_raster(0.0,  file.path(tmp, "bio15_nan_pr.tif"))
+  out    <- tempfile(fileext = ".tif")
+
+  bioclim_engine(
+    tas, tasmax, tasmin, pr,
+    output   = out,
+    device   = "cpu",
+    overwrite = TRUE
+  )
+  result <- terra::rast(out)
+  bio15_vals <- as.numeric(terra::values(result[[15]]))
+  expect_true(all(is.nan(bio15_vals) | is.na(bio15_vals)))
+})
+
+test_that("BIO15 GPU and CPU produce identical values (nonzero precipitation)", {
+  skip_without_gdal()
+  skip_without_terra()
+  skip_if(!has_cuda(), "No CUDA device present")
+
+  tmp <- tempdir()
+  tas    <- make_tiny_raster(15.0, file.path(tmp, "bio15_cmp_tas.tif"))
+  tasmax <- make_tiny_raster(20.0, file.path(tmp, "bio15_cmp_tasmax.tif"))
+  tasmin <- make_tiny_raster(10.0, file.path(tmp, "bio15_cmp_tasmin.tif"))
+  pr     <- make_tiny_raster(50.0, file.path(tmp, "bio15_cmp_pr.tif"))
+  out_cpu <- tempfile(fileext = ".tif")
+  out_gpu <- tempfile(fileext = ".tif")
+
+  bioclim_engine(tas, tasmax, tasmin, pr, output = out_cpu,
+                 device = "cpu", overwrite = TRUE)
+  bioclim_engine(tas, tasmax, tasmin, pr, output = out_gpu,
+                 device = "gpu", overwrite = TRUE)
+
+  bio15_cpu <- as.numeric(terra::values(terra::rast(out_cpu)[[15]]))
+  bio15_gpu <- as.numeric(terra::values(terra::rast(out_gpu)[[15]]))
+  expect_equal(bio15_cpu, bio15_gpu, tolerance = 1e-9)
+})
+
+test_that("BIO15 GPU returns NaN for zero precipitation", {
+  skip_without_gdal()
+  skip_without_terra()
+  skip_if(!has_cuda(), "No CUDA device present")
+
+  tmp <- tempdir()
+  tas    <- make_tiny_raster(15.0, file.path(tmp, "bio15_gpu_nan_tas.tif"))
+  tasmax <- make_tiny_raster(20.0, file.path(tmp, "bio15_gpu_nan_tasmax.tif"))
+  tasmin <- make_tiny_raster(10.0, file.path(tmp, "bio15_gpu_nan_tasmin.tif"))
+  pr     <- make_tiny_raster(0.0,  file.path(tmp, "bio15_gpu_nan_pr.tif"))
+  out    <- tempfile(fileext = ".tif")
+
+  bioclim_engine(
+    tas, tasmax, tasmin, pr,
+    output   = out,
+    device   = "gpu",
+    overwrite = TRUE
+  )
+  result <- terra::rast(out)
+  bio15_vals <- as.numeric(terra::values(result[[15]]))
+  expect_true(all(is.nan(bio15_vals) | is.na(bio15_vals)))
+})

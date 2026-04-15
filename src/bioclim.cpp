@@ -3,6 +3,7 @@
 #endif
 #include "rxbioclim_omp.h"
 #include <Rcpp.h>
+#include "rxbioclim_omp.h"
 using namespace Rcpp;
 
 // ── Primitive helpers (NumericVector) ────────────────────────────────────────
