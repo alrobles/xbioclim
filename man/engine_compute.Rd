@@ -10,14 +10,14 @@ engine_compute(xptr)
 \item{xptr}{External pointer returned by \code{\link{engine_create}}.}
 }
 \value{
-Character scalar: the output file path (same as the value passed to
-\code{\link{engine_set_output}}).
+Character scalar: the output directory path (same as the value
+passed to \code{\link{engine_set_output}}).
 }
 \description{
-Reads all monthly climate input rasters tile by tile, computes the 19
-bioclimatic variables (BIO01–BIO19) for every pixel, and writes the results
-to the output raster.  Peak memory is proportional to the tile size, not
-the full raster size.
+Reads all monthly climate input rasters tile by tile, computes the
+bioclimatic variables for every pixel, and writes each selected variable
+to a separate single-band GeoTIFF inside the output directory.  Peak
+memory is proportional to the tile size, not the full raster size.
 }
 \details{
 Requires GDAL support.  Stops with an informative error when the package

@@ -31,7 +31,7 @@ temperature.}
 
 \item{output}{Character string: path to the output directory where
 individual GeoTIFF files will be written (one per variable, named
-\code{bio01.tif} \ldots \code{bio19.tif}).  The directory is created
+\code{bio01.tif} … \code{bio19.tif}).  The directory is created
 automatically if it does not exist.  Defaults to a temporary directory.}
 
 \item{variables}{Integer vector of variable numbers to compute, with
@@ -61,30 +61,18 @@ detected GPU memory (4096 for high-memory GPUs such as the A100, 1024
 otherwise).}
 }
 \value{
-<<<<<<< HEAD
-A \code{terra::SpatRaster} with 19 layers (BIO01–BIO19) if
-\pkg{terra} is installed, otherwise a character string with the output
-file path.
-=======
 If \pkg{terra} is installed, a \code{terra::SpatRaster} with one
-  layer per selected variable (named \code{bio01} \ldots \code{bio19}).
-  Otherwise a character vector of the output file paths.
->>>>>>> ccbdaf39b970abda87293d21ddd021cecc1ec30a
+layer per selected variable (named \code{bio01} … \code{bio19}).
+Otherwise a character vector of the output file paths.
 }
 \description{
 High-level R interface to the \code{BioclimEngine} C++ tiled computation
 pipeline.  Reads four sets of monthly climate rasters (mean temperature,
 maximum temperature, minimum temperature, and precipitation) from disk,
-<<<<<<< HEAD
-computes the 19 standard bioclimatic variables (BIO01–BIO19), and writes
-the result to a GeoTIFF file — one tile at a time so that peak memory is
-proportional to \code{tile_size}, not the full raster extent.
-=======
 computes the requested bioclimatic variables, and writes each variable to
-a separate single-band GeoTIFF inside a directory --- one tile at a time so
+a separate single-band GeoTIFF inside a directory — one tile at a time so
 that peak memory is proportional to \code{tile_size}, not the full raster
 extent.
->>>>>>> ccbdaf39b970abda87293d21ddd021cecc1ec30a
 }
 \details{
 \strong{GDAL requirement.} This function requires the package to have been
@@ -92,7 +80,7 @@ compiled with GDAL support (see \code{\link{has_gdal}}).  If GDAL is not
 available an informative error is raised immediately.
 
 \strong{Variable selection.} By default all 19 standard bioclimatic variables
-(BIO01--BIO19) are computed and written.
+(BIO01–BIO19) are computed and written.
 Pass \code{variables} as an integer vector (e.g. \code{c(1, 12, 15)}) to
 restrict the output to a subset.
 The engine always computes all 19 internally (they share intermediate
@@ -100,7 +88,7 @@ values), but only the selected ones are written to disk, reducing I/O and
 file size.
 
 \strong{Separate output files.} Each selected variable is written to its own
-single-band GeoTIFF named \code{bio01.tif} \ldots \code{bio19.tif} inside the
+single-band GeoTIFF named \code{bio01.tif} … \code{bio19.tif} inside the
 \code{output} directory.  This keeps individual files small and allows
 downstream tools to load only the variables they need.
 
@@ -133,15 +121,6 @@ Otherwise it returns a character vector of the output file paths.
 if (has_gdal() && requireNamespace("terra", quietly = TRUE)) {
   library(terra)
 
-<<<<<<< HEAD
-# Create tiny synthetic climate rasters (10×10 pixels, 12 layers each)
-make_rast <- function(vals, file) {
-  r <- rast(nrows = 10, ncols = 10, nlyrs = 12,
-            xmin = 0, xmax = 1, ymin = 0, ymax = 1, crs = "EPSG:4326")
-  for (m in seq_len(12)) values(r[[m]]) <- vals[m]
-  writeRaster(r, file, overwrite = TRUE)
-  file
-=======
   # Create tiny synthetic climate rasters (10x10 pixels, 12 layers each)
   make_rast <- function(vals, file) {
     r <- rast(nrows = 10, ncols = 10, nlyrs = 12,
@@ -175,7 +154,6 @@ make_rast <- function(vals, file) {
                              overwrite = TRUE)
   nlyr(result2)  # 2
   names(result2) # "bio01" "bio12"
->>>>>>> ccbdaf39b970abda87293d21ddd021cecc1ec30a
 }
 }
 }

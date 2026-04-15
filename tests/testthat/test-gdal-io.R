@@ -9,7 +9,7 @@
 # or CRS set.
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
-
+library(testthat)
 # Return TRUE if rxbioclim was compiled with GDAL support.
 .has_gdal <- function() {
   tryCatch({
@@ -66,7 +66,7 @@ test_that("gdal_info stops with clear message when GDAL is absent", {
     testthat::skip("GDAL is present — testing absence path not applicable")
   }
   expect_error(gdal_info("anything.tif"),
-               regexp = "built without GDAL")
+               regexp = "requires GDAL but rxbioclim was built without it")
 })
 
 test_that("gdal_info returns list with expected names for tiny.tif", {
@@ -118,3 +118,4 @@ test_that("gdal_info path element matches input", {
   info <- gdal_info(path)
   expect_equal(info$path, path)
 })
+
