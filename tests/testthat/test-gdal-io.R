@@ -14,7 +14,7 @@
 .has_gdal <- function() {
   tryCatch({
     # gdal_can_open() stops() when GDAL is absent.
-    gdal_can_open("/dev/null")
+    gdal_can_open(tiny_tif())
     TRUE
   }, error = function(e) {
     msg <- conditionMessage(e)
