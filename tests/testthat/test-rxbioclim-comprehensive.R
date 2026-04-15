@@ -524,8 +524,8 @@ test_that("L9: bioclim_engine() full round-trip with multi-band files", {
                    label = paste("cell", i))
     }
   } else {
-    # Without terra, we get a file path
-    expect_true(file.exists(result))
+    # Without terra, we get a character vector of file paths
+    expect_true(all(file.exists(result)))
   }
 })
 test_that("L9: bioclim_engine() accepts SpatRaster input", {
@@ -570,17 +570,17 @@ test_that("L9: bioclim_engine() overwrite behavior", {
   tasmax_f <- make_tif(tasmax_real, file.path(tmpdir, "tasmax.tif"))
   tasmin_f <- make_tif(tasmin_real,    file.path(tmpdir, "tasmin.tif"))
   pr_f     <- make_tif(pr_real,     file.path(tmpdir, "pr.tif"))
-  out_f    <- file.path(tmpdir, "out.tif")
+  out_d    <- file.path(tmpdir, "out_dir")
 
-  bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f, output = out_f)
-  expect_true(file.exists(out_f))
-  # Second call without overwrite should fail
+  bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f, output = out_d)
+  expect_true(dir.exists(out_d))
+  # Second call without overwrite should fail (files already exist)
 
-  expect_error(bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f, output = out_f),
-               "already exists")
+  expect_error(bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f, output = out_d),
+               "already exist")
   # With overwrite = TRUE should succeed
   expect_no_error(
-    bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f, output = out_f, overwrite = TRUE)
+    bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f, output = out_d, overwrite = TRUE)
   )
 })
 
