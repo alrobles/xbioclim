@@ -25,7 +25,8 @@ Reads \code{input_path} and \code{mask_path} tile-by-tile (one row at a
 time) and writes the result to \code{output_path}.  Pixels where the mask
 equals \code{0} are replaced with \code{NaN} in the output; all other
 pixels retain their original values (with any GDAL scale/offset applied).
-
+}
+\details{
 This function is the low-level C++ entry point.  Most users should call
 the higher-level \code{\link{create_mask}} wrapper instead.
 
@@ -40,14 +41,10 @@ poly   <- tempfile(fileext = ".geojson")
 mask   <- tempfile(fileext = ".tif")
 output <- tempfile(fileext = ".tif")
 writeLines(
-  paste0(
-    '{"type":"FeatureCollection","features":[{"type":"Feature",',
-    '"geometry":{"type":"Polygon",',
-    '"coordinates":[[[0,0],[3,0],[3,-3],[0,-3],[0,0]]]},',
-    '"properties":{}}]}'
-  ),
-  poly
-)
+  '{"type":"FeatureCollection","features":[{"type":"Feature",
+    "geometry":{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]},
+    "properties":{}}]}',
+  poly)
 rasterize_mask_cpp(poly, ref, mask)
 apply_mask_cpp(ref, mask, output)
 }

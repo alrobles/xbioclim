@@ -7,8 +7,8 @@
 rasterize_mask_cpp(vector_path, ref_raster_path, output_mask_path)
 }
 \arguments{
-\item{vector_path}{Character string: path to any OGR-readable vector source
-(shapefile, GeoJSON, GeoPackage, etc.).}
+\item{vector_path}{Character string: path to any OGR-readable vector
+source (shapefile, GeoJSON, GeoPackage, etc.).}
 
 \item{ref_raster_path}{Character string: path to a GDAL-readable raster
 used as the spatial reference (extent, resolution, CRS).}
@@ -25,7 +25,8 @@ Burns all polygon features from a vector source into a new single-band
 GeoTIFF raster that is spatially aligned to a reference raster.  Pixels
 that fall inside at least one polygon are set to \code{1}; all other
 pixels are set to \code{0}.
-
+}
+\details{
 This function is the low-level C++ entry point.  Most users should call
 the higher-level \code{\link{create_mask}} wrapper instead.
 
@@ -39,14 +40,10 @@ ref  <- system.file("extdata", "tiny.tif", package = "rxbioclim")
 poly <- tempfile(fileext = ".geojson")
 mask <- tempfile(fileext = ".tif")
 writeLines(
-  paste0(
-    '{"type":"FeatureCollection","features":[{"type":"Feature",',
-    '"geometry":{"type":"Polygon",',
-    '"coordinates":[[[0,0],[3,0],[3,-3],[0,-3],[0,0]]]},',
-    '"properties":{}}]}'
-  ),
-  poly
-)
+  '{"type":"FeatureCollection","features":[{"type":"Feature",
+    "geometry":{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]},
+    "properties":{}}]}',
+  poly)
 rasterize_mask_cpp(poly, ref, mask)
 }
 }

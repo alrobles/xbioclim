@@ -32,8 +32,7 @@ keep the result in memory.}
 terra selects an appropriate number based on available memory.}
 
 \item{ncores}{Integer: number of CPU cores for within-block parallel
-processing. Default is \code{1} (sequential). Values greater than 1 require
-the \pkg{parallel} package.}
+processing via OpenMP. Default is \code{1} (sequential).}
 
 \item{overwrite}{Logical: whether to overwrite an existing output file.
 Default is \code{FALSE}.}
@@ -57,10 +56,9 @@ proportional to the block size rather than the full raster extent. Results
 are written to the output raster block by block (using
 \code{terra::writeStart()}, \code{terra::writeValues()}, and \code{terra::writeStop()}).
 
-When \code{ncores > 1}, cells within each block are split across workers using
-\code{parallel::makeCluster()} / \code{parallel::parLapply()}, enabling multi-core
-computation. Only one block is held in memory at a time regardless of the
-number of cores.
+When \code{ncores > 1}, pixels within each block are processed in parallel using
+OpenMP threads via \code{bioclim_cpp()}. Only one block is held in memory at a
+time regardless of the number of threads.
 }
 \examples{
 \dontshow{if (requireNamespace("terra", quietly = TRUE)) withAutoprint(\{ # examplesIf}

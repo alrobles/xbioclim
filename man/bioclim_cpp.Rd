@@ -19,7 +19,8 @@ bioclim_cpp(tas, tasmax, tasmin, pr, ncores = 1L)
 }
 \value{
 Numeric matrix (pixels x 19) with one column per variable
-(bio01..bio19), named accordingly.
+(bio01..bio19), named accordingly. Rows with any NA input are returned
+as all-NA.
 }
 \description{
 Compute all 19 bioclimatic variables for a raster block

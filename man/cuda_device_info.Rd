@@ -9,9 +9,9 @@ cuda_device_info()
 \value{
 Named list with:
 \describe{
-  \item{name}{Character: GPU model name.}
-  \item{memory_gb}{Numeric: total global memory in gigabytes.}
-  \item{compute_capability}{Character: e.g. \code{"8.0"} for A100.}
+\item{name}{Character: GPU model name.}
+\item{memory_gb}{Numeric: total global memory in gigabytes.}
+\item{compute_capability}{Character: e.g. \code{"8.0"} for A100.}
 }
 An empty list when no CUDA device is detected.
 }

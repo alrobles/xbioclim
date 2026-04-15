@@ -13,7 +13,8 @@ otherwise.
 \description{
 Returns \code{TRUE} when rxbioclim was compiled with GDAL and the native
 \code{BioclimEngine} tiled pipeline is available, \code{FALSE} otherwise.
-
+}
+\details{
 Internally the function calls \code{\link{gdal_can_open}} with a dummy path
 and inspects whether the resulting error message indicates an absent GDAL
 build.

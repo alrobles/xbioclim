@@ -54,7 +54,7 @@ detected GPU memory (4096 for high-memory GPUs such as the A100, 1024
 otherwise).}
 }
 \value{
-A \code{terra::SpatRaster} with 19 layers (BIO01--BIO19) if
+A \code{terra::SpatRaster} with 19 layers (BIO01–BIO19) if
 \pkg{terra} is installed, otherwise a character string with the output
 file path.
 }
@@ -62,8 +62,8 @@ file path.
 High-level R interface to the \code{BioclimEngine} C++ tiled computation
 pipeline.  Reads four sets of monthly climate rasters (mean temperature,
 maximum temperature, minimum temperature, and precipitation) from disk,
-computes the 19 standard bioclimatic variables (BIO01--BIO19), and writes
-the result to a GeoTIFF file --- one tile at a time so that peak memory is
+computes the 19 standard bioclimatic variables (BIO01–BIO19), and writes
+the result to a GeoTIFF file — one tile at a time so that peak memory is
 proportional to \code{tile_size}, not the full raster extent.
 }
 \details{
@@ -72,7 +72,7 @@ compiled with GDAL support (see \code{\link{has_gdal}}).  If GDAL is not
 available an informative error is raised immediately.
 
 \strong{Tiled processing.} The engine reads and writes rasters in square tiles of
-\code{tile_size} x \code{tile_size} pixels.  Choosing a large tile improves
+\code{tile_size} × \code{tile_size} pixels.  Choosing a large tile improves
 I/O efficiency; a small tile reduces peak RAM.  The default (256) is a
 good balance for most use cases.
 
@@ -86,9 +86,9 @@ automatically via \code{terra::sources()}.
 computation to a specific region.  Pixels outside the mask are written as
 \code{NaN}.  Accepted formats:
 \itemize{
-  \item \code{character} --- path to any GDAL-readable raster or OGR vector.
-  \item \code{sf} object --- written to a temporary GeoJSON and rasterized.
-  \item \code{terra::SpatRaster} --- written to a temporary GeoTIFF.
+\item \code{character} — path to any GDAL-readable raster or OGR vector.
+\item \code{sf} object — written to a temporary GeoJSON and rasterized.
+\item \code{terra::SpatRaster} — written to a temporary GeoTIFF.
 }
 
 \strong{Output.} If \pkg{terra} is installed the function returns a
@@ -100,7 +100,7 @@ character string.
 \dontrun{
 library(terra)
 
-# Create tiny synthetic climate rasters (10x10 pixels, 12 layers each)
+# Create tiny synthetic climate rasters (10×10 pixels, 12 layers each)
 make_rast <- function(vals, file) {
   r <- rast(nrows = 10, ncols = 10, nlyrs = 12,
             xmin = 0, xmax = 1, ymin = 0, ymax = 1, crs = "EPSG:4326")

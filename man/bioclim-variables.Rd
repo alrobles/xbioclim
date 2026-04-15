@@ -22,14 +22,6 @@
 \alias{bio18}
 \alias{bio19}
 \alias{bioclim}
-\alias{bio02,BioclimData,missing-method}
-\alias{bio03,BioclimData,missing-method}
-\alias{bio07,BioclimData,missing-method}
-\alias{bio08,BioclimData,missing-method}
-\alias{bio09,BioclimData,missing-method}
-\alias{bio18,BioclimData,missing-method}
-\alias{bio19,BioclimData,missing-method}
-\alias{bioclim,BioclimData,missing,missing,missing-method}
 \title{Compute Bioclimatic Variables from Monthly Climate Data}
 \usage{
 bio01(tas, ...)
@@ -76,16 +68,13 @@ bioclim(tas, tasmax, tasmin, pr, ...)
 \item{tas}{Numeric vector of length 12 \strong{or} \linkS4class{BioclimData}:
 monthly mean temperature.}
 
+\item{...}{Currently unused; reserved for future extensions.}
+
 \item{tasmax}{Numeric vector of length 12: monthly maximum temperature.}
 
 \item{tasmin}{Numeric vector of length 12: monthly minimum temperature.}
 
-\item{pr}{Numeric vector of length 12: monthly precipitation. When the first
-argument (\code{tas}) is a \linkS4class{BioclimData} or
-\linkS4class{BioclimModel} object, \code{pr} should be omitted and will be
-dispatched via the \code{missing} S4 method.}
-
-\item{...}{Currently unused; reserved for future extensions.}
+\item{pr}{Numeric vector of length 12: monthly precipitation.}
 }
 \value{
 \itemize{

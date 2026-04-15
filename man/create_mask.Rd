@@ -41,18 +41,19 @@ masked output raster invisibly.
 Converts a polygon source to a binary raster mask aligned to a reference
 raster, and optionally applies that mask to an input raster (replacing
 pixels outside all polygons with \code{NA}).
-
+}
+\details{
 The function accepts three types of polygon input:
 \describe{
-  \item{\code{sf} object}{Written to a temporary GeoJSON file via
-    \code{\link[sf:st_write]{sf::st_write()}} and then rasterized.
-    Requires the \pkg{sf} package.}
-  \item{Character file path}{Passed directly to the C++ rasterizer.
-    Any OGR-readable format is supported (shapefile, GeoJSON,
-    GeoPackage, etc.).}
-  \item{\code{SpatRaster} object}{Used directly as a pre-made mask raster.
-    Must already be binary (0/1) and aligned to \code{reference_raster}.
-    Requires the \pkg{terra} package.}
+\item{\code{sf} object}{Written to a temporary GeoJSON file via
+\code{\link[sf:st_write]{sf::st_write()}} and then rasterized.
+Requires the \pkg{sf} package.}
+\item{Character file path}{Passed directly to the C++ rasterizer.
+Any OGR-readable format is supported (shapefile, GeoJSON,
+GeoPackage, etc.).}
+\item{\code{SpatRaster} object}{Used directly as a pre-made mask raster.
+Must already be binary (0/1) and aligned to \code{reference_raster}.
+Requires the \pkg{terra} package.}
 }
 
 All GDAL-dependent operations skip gracefully (returning \code{NULL} invisibly
@@ -76,5 +77,5 @@ mask_path <- create_mask(poly, ref)
 }
 }
 \seealso{
-\code{\link{rasterize_mask_cpp}}, \code{\link{apply_mask_cpp}}
+\code{\link[=rasterize_mask_cpp]{rasterize_mask_cpp()}}, \code{\link[=apply_mask_cpp]{apply_mask_cpp()}}
 }

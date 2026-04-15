@@ -18,7 +18,7 @@ Named list with the following elements:
 \item{\code{nbands}}{Integer: number of raster bands.}
 \item{\code{geotransform}}{Numeric vector of length 6 (GDAL
 convention): \code{[x_origin, pixel_width, rotation_x,
-y_origin, rotation_y, pixel_height]}.}
+      y_origin, rotation_y, pixel_height]}.}
 \item{\code{crs}}{Character: WKT coordinate reference system string,
 or an empty string if not defined.}
 \item{\code{scale}}{Numeric vector (one per band): GDAL scale factor
@@ -31,7 +31,8 @@ or an empty string if not defined.}
 Opens the raster at \code{path} and returns a named list with dimensions,
 geotransform, coordinate reference system, and per-band scale/offset
 values.
-
+}
+\details{
 Data values are always returned as \code{double} (\code{float64}) in
 memory.  If the raster bands carry GDAL scale/offset metadata (e.g. packed
 integers), those are reported here and applied automatically by
