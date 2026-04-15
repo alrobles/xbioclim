@@ -1,10 +1,11 @@
-# Tests for bioclim_engine() — R user-facing API (Issue #24)
+# Tests for bioclim_engine() — R user-facing API
 #
 # Test structure:
 #   1. Input validation (no GDAL needed for most checks).
 #   2. GDAL-gated engine round-trip tests.
-#   3. Mask parameter tests.
-#   4. Overwrite behavior.
+#   3. Variable selection tests.
+#   4. Mask parameter tests.
+#   5. Overwrite behavior.
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -191,9 +192,40 @@ test_that("bioclim_engine() stops for invalid 'tile_size' argument", {
   )
 })
 
+test_that("bioclim_engine() stops for invalid 'variables' argument", {
+  skip_without_gdal()
+  skip_without_terra()
+
+  tmpdir <- tempfile("be_val_")
+  dir.create(tmpdir)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+
+  tas_f    <- make_monthly_files(std_tas_vals,    tmpdir, "tas")
+  tasmax_f <- make_monthly_files(std_tasmax_vals, tmpdir, "tasmax")
+  tasmin_f <- make_monthly_files(std_tasmin_vals, tmpdir, "tasmin")
+  pr_f     <- make_monthly_files(std_pr_vals,     tmpdir, "pr")
+
+  expect_error(
+    bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f, variables = integer(0)),
+    regexp = "'variables' must be a non-empty integer vector"
+  )
+  expect_error(
+    bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f, variables = 0L),
+    regexp = "'variables' must contain values between 1 and 19"
+  )
+  expect_error(
+    bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f, variables = 20L),
+    regexp = "'variables' must contain values between 1 and 19"
+  )
+  expect_error(
+    bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f, variables = c(1L, 1L)),
+    regexp = "'variables' must not contain duplicates"
+  )
+})
+
 # ── 2. Overwrite behavior ─────────────────────────────────────────────────────
 
-test_that("bioclim_engine() stops when output exists and overwrite = FALSE", {
+test_that("bioclim_engine() stops when output files exist and overwrite = FALSE", {
   skip_without_gdal()
   skip_without_terra()
 
@@ -206,17 +238,18 @@ test_that("bioclim_engine() stops when output exists and overwrite = FALSE", {
   tasmin_f <- make_monthly_files(std_tasmin_vals, tmpdir, "tasmin")
   pr_f     <- make_monthly_files(std_pr_vals,     tmpdir, "pr")
 
-  out <- file.path(tmpdir, "existing.tif")
-  writeLines("dummy", out)  # make the file exist
+  out <- file.path(tmpdir, "out_dir")
+  dir.create(out)
+  writeLines("dummy", file.path(out, "bio01.tif"))
 
   expect_error(
     bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f, output = out,
                    overwrite = FALSE),
-    regexp = "already exists"
+    regexp = "already exist"
   )
 })
 
-test_that("bioclim_engine() overwrites existing file when overwrite = TRUE", {
+test_that("bioclim_engine() overwrites existing files when overwrite = TRUE", {
   skip_without_gdal()
   skip_without_terra()
 
@@ -229,19 +262,20 @@ test_that("bioclim_engine() overwrites existing file when overwrite = TRUE", {
   tasmin_f <- make_monthly_files(std_tasmin_vals, tmpdir, "tasmin")
   pr_f     <- make_monthly_files(std_pr_vals,     tmpdir, "pr")
 
-  out <- file.path(tmpdir, "output.tif")
-  writeLines("dummy", out)
+  out <- file.path(tmpdir, "out_dir")
+  dir.create(out)
+  writeLines("dummy", file.path(out, "bio01.tif"))
 
   expect_no_error(
     bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f,
                    output = out, overwrite = TRUE, tile_size = 2L)
   )
-  expect_true(file.exists(out))
+  expect_true(file.exists(file.path(out, "bio01.tif")))
 })
 
 # ── 3. Full round-trip (GDAL + terra required) ────────────────────────────────
 
-test_that("bioclim_engine() returns SpatRaster with 19 bands (12 monthly files)", {
+test_that("bioclim_engine() returns SpatRaster with 19 layers (12 monthly files)", {
   skip_without_gdal()
   skip_without_terra()
 
@@ -253,7 +287,7 @@ test_that("bioclim_engine() returns SpatRaster with 19 bands (12 monthly files)"
   tasmax_f <- make_monthly_files(std_tasmax_vals, tmpdir, "tasmax")
   tasmin_f <- make_monthly_files(std_tasmin_vals, tmpdir, "tasmin")
   pr_f     <- make_monthly_files(std_pr_vals,     tmpdir, "pr")
-  out      <- file.path(tmpdir, "bioclim.tif")
+  out      <- file.path(tmpdir, "bioclim_out")
 
   result <- bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f,
                             output = out, tile_size = 2L)
@@ -262,9 +296,13 @@ test_that("bioclim_engine() returns SpatRaster with 19 bands (12 monthly files)"
   expect_equal(terra::nlyr(result), 19L)
   expect_equal(terra::nrow(result), 3L)
   expect_equal(terra::ncol(result), 3L)
+
+  # Each variable should be a separate file
+  tif_files <- list.files(out, pattern = "\\.tif$")
+  expect_equal(length(tif_files), 19L)
 })
 
-test_that("bioclim_engine() BIO01 is finite and BIO12 ≈ sum(pr)", {
+test_that("bioclim_engine() BIO01 is finite and BIO12 approx sum(pr)", {
   skip_without_gdal()
   skip_without_terra()
 
@@ -284,7 +322,9 @@ test_that("bioclim_engine() BIO01 is finite and BIO12 ≈ sum(pr)", {
               info = "BIO01 should be finite for valid inputs")
 
   expected_pr_sum <- sum(std_pr_vals)
-  bio12_vals <- as.numeric(terra::values(result[[12L]]))
+  # BIO12 is the 12th variable in default 1:19
+  bio12_layer <- result[[which(names(result) == "bio12")]]
+  bio12_vals <- as.numeric(terra::values(bio12_layer))
   expect_true(all(abs(bio12_vals - expected_pr_sum) < 1e-6),
               info = "BIO12 should equal the sum of monthly precipitation")
 })
@@ -334,7 +374,67 @@ test_that("bioclim_engine() accepts terra::SpatRaster inputs", {
   expect_equal(terra::nlyr(result), 19L)
 })
 
-# ── 4. Mask parameter ─────────────────────────────────────────────────────────
+# ── 4. Variable selection ─────────────────────────────────────────────────────
+
+test_that("bioclim_engine() writes only requested variables", {
+  skip_without_gdal()
+  skip_without_terra()
+
+  tmpdir <- tempfile("be_vars_")
+  dir.create(tmpdir)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+
+  tas_f    <- make_monthly_files(std_tas_vals,    tmpdir, "tas")
+  tasmax_f <- make_monthly_files(std_tasmax_vals, tmpdir, "tasmax")
+  tasmin_f <- make_monthly_files(std_tasmin_vals, tmpdir, "tasmin")
+  pr_f     <- make_monthly_files(std_pr_vals,     tmpdir, "pr")
+  out      <- file.path(tmpdir, "subset_out")
+
+  result <- bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f,
+                            output = out, variables = c(1L, 12L, 15L),
+                            tile_size = 2L)
+
+  expect_true(inherits(result, "SpatRaster"))
+  expect_equal(terra::nlyr(result), 3L)
+  expect_equal(names(result), c("bio01", "bio12", "bio15"))
+
+  # Only 3 files should exist
+  tif_files <- list.files(out, pattern = "\\.tif$")
+  expect_equal(sort(tif_files), c("bio01.tif", "bio12.tif", "bio15.tif"))
+})
+
+test_that("bioclim_engine() single variable produces 1-layer result", {
+  skip_without_gdal()
+  skip_without_terra()
+
+  tmpdir <- tempfile("be_single_")
+  dir.create(tmpdir)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+
+  tas_f    <- make_monthly_files(std_tas_vals,    tmpdir, "tas")
+  tasmax_f <- make_monthly_files(std_tasmax_vals, tmpdir, "tasmax")
+  tasmin_f <- make_monthly_files(std_tasmin_vals, tmpdir, "tasmin")
+  pr_f     <- make_monthly_files(std_pr_vals,     tmpdir, "pr")
+  out      <- file.path(tmpdir, "single_out")
+
+  result <- bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f,
+                            output = out, variables = 12L,
+                            tile_size = 2L)
+
+  expect_true(inherits(result, "SpatRaster"))
+  expect_equal(terra::nlyr(result), 1L)
+  expect_equal(names(result), "bio12")
+
+  # Only 1 file should exist
+  tif_files <- list.files(out, pattern = "\\.tif$")
+  expect_equal(tif_files, "bio12.tif")
+
+  # Value check: BIO12 = sum of precipitation
+  bio12_vals <- as.numeric(terra::values(result))
+  expect_true(all(abs(bio12_vals - sum(std_pr_vals)) < 1e-6))
+})
+
+# ── 5. Mask parameter ─────────────────────────────────────────────────────────
 
 test_that("bioclim_engine() accepts a raster mask file path", {
   skip_without_gdal()

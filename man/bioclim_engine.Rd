@@ -9,7 +9,8 @@ bioclim_engine(
   tasmax,
   tasmin,
   pr,
-  output = tempfile(fileext = ".tif"),
+  output = tempfile("bioclim_"),
+  variables = 1:19,
   mask = NULL,
   threads = 1L,
   tile_size = 256L,
@@ -28,8 +29,14 @@ temperature.}
 
 \item{pr}{Like \code{tas} but for monthly precipitation.}
 
-\item{output}{Character string: path for the output GeoTIFF (19 bands).
-Defaults to a temporary file.}
+\item{output}{Character string: path to the output directory where
+individual GeoTIFF files will be written (one per variable, named
+\code{bio01.tif} \ldots \code{bio19.tif}).  The directory is created
+automatically if it does not exist.  Defaults to a temporary directory.}
+
+\item{variables}{Integer vector of variable numbers to compute, with
+values in \code{1:19}.  Default is \code{1:19} (all 19 variables).
+For example, \code{c(1, 12)} writes only BIO01 and BIO12.}
 
 \item{mask}{Optional mask: a character file path, an \code{sf} object
 (polygon), or a \code{terra::SpatRaster}.  \code{NULL} (default) means
@@ -41,8 +48,8 @@ is \code{1L}.}
 \item{tile_size}{Positive integer: tile dimension (pixels) for tiled I/O.
 Default is \code{256L}.}
 
-\item{overwrite}{Logical: whether to overwrite \code{output} if it already
-exists.  Default is \code{FALSE}.}
+\item{overwrite}{Logical: whether to overwrite existing output files inside
+\code{output}.  Default is \code{FALSE}.}
 
 \item{device}{Character scalar: compute device to use.  One of
 \code{"auto"} (default), \code{"cpu"}, or \code{"gpu"}.  \code{"auto"}
@@ -54,22 +61,36 @@ detected GPU memory (4096 for high-memory GPUs such as the A100, 1024
 otherwise).}
 }
 \value{
-A \code{terra::SpatRaster} with 19 layers (BIO01--BIO19) if
-\pkg{terra} is installed, otherwise a character string with the output
-file path.
+If \pkg{terra} is installed, a \code{terra::SpatRaster} with one
+  layer per selected variable (named \code{bio01} \ldots \code{bio19}).
+  Otherwise a character vector of the output file paths.
 }
 \description{
 High-level R interface to the \code{BioclimEngine} C++ tiled computation
 pipeline.  Reads four sets of monthly climate rasters (mean temperature,
 maximum temperature, minimum temperature, and precipitation) from disk,
-computes the 19 standard bioclimatic variables (BIO01--BIO19), and writes
-the result to a GeoTIFF file --- one tile at a time so that peak memory is
-proportional to \code{tile_size}, not the full raster extent.
+computes the requested bioclimatic variables, and writes each variable to
+a separate single-band GeoTIFF inside a directory --- one tile at a time so
+that peak memory is proportional to \code{tile_size}, not the full raster
+extent.
 }
 \details{
 \strong{GDAL requirement.} This function requires the package to have been
 compiled with GDAL support (see \code{\link{has_gdal}}).  If GDAL is not
 available an informative error is raised immediately.
+
+\strong{Variable selection.} By default all 19 standard bioclimatic variables
+(BIO01--BIO19) are computed and written.
+Pass \code{variables} as an integer vector (e.g. \code{c(1, 12, 15)}) to
+restrict the output to a subset.
+The engine always computes all 19 internally (they share intermediate
+values), but only the selected ones are written to disk, reducing I/O and
+file size.
+
+\strong{Separate output files.} Each selected variable is written to its own
+single-band GeoTIFF named \code{bio01.tif} \ldots \code{bio19.tif} inside the
+\code{output} directory.  This keeps individual files small and allows
+downstream tools to load only the variables they need.
 
 \strong{Tiled processing.} The engine reads and writes rasters in square tiles of
 \code{tile_size} x \code{tile_size} pixels.  Choosing a large tile improves
@@ -92,9 +113,8 @@ computation to a specific region.  Pixels outside the mask are written as
 }
 
 \strong{Output.} If \pkg{terra} is installed the function returns a
-\code{terra::SpatRaster} pointing at the output file (metadata only, not
-loaded into memory).  Otherwise it returns the output file path as a
-character string.
+\code{terra::SpatRaster} whose layers correspond to the selected variables.
+Otherwise it returns a character vector of the output file paths.
 }
 \examples{
 \donttest{
@@ -120,8 +140,20 @@ if (has_gdal() && requireNamespace("terra", quietly = TRUE)) {
   pr_file     <- make_rast(c(60,55,48,35,28,22,18,20,35,55,65,68),
                             file.path(tmp, "pr.tif"))
 
-  result <- bioclim_engine(tas_file, tasmax_file, tasmin_file, pr_file)
-  nlyr(result)  # 19
+  # Compute all 19 variables (one file each in a directory)
+  out_dir <- file.path(tmp, "bioclim_out")
+  result <- bioclim_engine(tas_file, tasmax_file, tasmin_file, pr_file,
+                            output = out_dir, overwrite = TRUE)
+  nlyr(result)   # 19
+  list.files(out_dir, pattern = "[.]tif$")
+
+  # Compute only BIO01 and BIO12
+  out_dir2 <- file.path(tmp, "bioclim_subset")
+  result2 <- bioclim_engine(tas_file, tasmax_file, tasmin_file, pr_file,
+                             output = out_dir2, variables = c(1L, 12L),
+                             overwrite = TRUE)
+  nlyr(result2)  # 2
+  names(result2) # "bio01" "bio12"
 }
 }
 }

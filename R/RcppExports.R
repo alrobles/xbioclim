@@ -391,6 +391,17 @@ engine_set_tile_size <- function(xptr, tile_size) {
     invisible(.Call(`_rxbioclim_engine_set_tile_size`, xptr, tile_size))
 }
 
+#' Select which bioclimatic variables to write
+#'
+#' @param xptr      External pointer returned by \code{\link{engine_create}}.
+#' @param variables Integer vector with elements in 1..19.
+#' @return \code{NULL} invisibly.
+#' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
+#' @export
+engine_set_variables <- function(xptr, variables) {
+    invisible(.Call(`_rxbioclim_engine_set_variables`, xptr, variables))
+}
+
 engine_compute <- function(xptr) {
     .Call(`_rxbioclim_engine_compute`, xptr)
 }

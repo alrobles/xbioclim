@@ -593,6 +593,17 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// engine_set_variables
+void engine_set_variables(SEXP xptr, Rcpp::IntegerVector variables);
+RcppExport SEXP _rxbioclim_engine_set_variables(SEXP xptrSEXP, SEXP variablesSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type xptr(xptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type variables(variablesSEXP);
+    engine_set_variables(xptr, variables);
+    return R_NilValue;
+END_RCPP
+}
 // engine_compute
 std::string engine_compute(SEXP xptr);
 RcppExport SEXP _rxbioclim_engine_compute(SEXP xptrSEXP) {
@@ -716,6 +727,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rxbioclim_engine_set_mask", (DL_FUNC) &_rxbioclim_engine_set_mask, 2},
     {"_rxbioclim_engine_set_threads", (DL_FUNC) &_rxbioclim_engine_set_threads, 2},
     {"_rxbioclim_engine_set_tile_size", (DL_FUNC) &_rxbioclim_engine_set_tile_size, 2},
+    {"_rxbioclim_engine_set_variables", (DL_FUNC) &_rxbioclim_engine_set_variables, 2},
     {"_rxbioclim_engine_compute", (DL_FUNC) &_rxbioclim_engine_compute, 1},
     {"_rxbioclim_cuda_device_count", (DL_FUNC) &_rxbioclim_cuda_device_count, 0},
     {"_rxbioclim_cuda_device_info", (DL_FUNC) &_rxbioclim_cuda_device_info, 0},
