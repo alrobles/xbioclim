@@ -121,9 +121,11 @@ else
     AC_MSG_CHECKING([CUDA toolkit version])
     AC_MSG_RESULT([${CUDA_VERSION}])
 
-    # Determine CUDA_HOME
+    # Determine CUDA_HOME — derive from nvcc path if not set explicitly.
     if test -z "${CUDA_HOME}"; then
-      CUDA_HOME=/usr/local/cuda
+      # Try to infer from nvcc location: .../cuda/X.Y/bin/nvcc → .../cuda/X.Y
+      CUDA_HOME=`dirname "${NVCC}"`   # .../bin
+      CUDA_HOME=`dirname "${CUDA_HOME}"`  # .../cuda/X.Y or /usr/local/cuda
     fi
 
     # Locate the CUDA library directory
@@ -154,10 +156,24 @@ else
         HAVE_CUDA=yes
         CUDA_CPPFLAGS="-I${CUDA_HOME}/include -DHAVE_CUDA"
         CUDA_LIBS="-L${CUDA_LIB_DIR} -lcudart"
-        # Architecture flags covering Pascal through Hopper (sm_60 – sm_90).
-        # sm_90a (GH100) is intentionally omitted: it requires CUDA >= 12.0
-        # and is not yet present in general-purpose build environments.
-        CUDA_ARCH_FLAGS="-gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_89,code=sm_89 -gencode arch=compute_90,code=sm_90"
+        # Architecture flags — adapt to the CUDA toolkit version because
+        # newer toolkits drop support for older GPU architectures:
+        #   CUDA 11.x : sm_60 – sm_86
+        #   CUDA 12.x : sm_60 – sm_90  (Pascal through Hopper)
+        #   CUDA 13.0+: sm_75 – sm_90  (Maxwell/Pascal/Volta dropped)
+        CUDA_MAJOR=`echo "${CUDA_VERSION}" | cut -d. -f1`
+        AC_MSG_CHECKING([CUDA architecture flags for toolkit ${CUDA_MAJOR}.x])
+        if test "${CUDA_MAJOR}" -ge 13 2>/dev/null; then
+          # CUDA 13+: Turing (sm_75) is the oldest supported architecture.
+          CUDA_ARCH_FLAGS="-gencode arch=compute_75,code=sm_75 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_89,code=sm_89 -gencode arch=compute_90,code=sm_90"
+        elif test "${CUDA_MAJOR}" -ge 12 2>/dev/null; then
+          # CUDA 12.x: Pascal (sm_60) through Hopper (sm_90).
+          CUDA_ARCH_FLAGS="-gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_75,code=sm_75 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_89,code=sm_89 -gencode arch=compute_90,code=sm_90"
+        else
+          # CUDA 11.x and older: Pascal through Ampere.
+          CUDA_ARCH_FLAGS="-gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_75,code=sm_75 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_86,code=sm_86"
+        fi
+        AC_MSG_RESULT([${CUDA_ARCH_FLAGS}])
       else
         AC_MSG_RESULT([no — nvcc compile test failed; building without CUDA])
       fi
