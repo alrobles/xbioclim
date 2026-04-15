@@ -441,17 +441,19 @@ test_that("L8: engine round-trip with tiny rasters", {
   tasmax_f <- make_tif(tasmax_real, file.path(tmpdir, "tasmax.tif"))
   tasmin_f <- make_tif(tasmin_real, file.path(tmpdir, "tasmin.tif"))
   pr_f     <- make_tif(pr_real,     file.path(tmpdir, "pr.tif"))
-  out_f    <- file.path(tmpdir, "bio_out.tif")
+  out_d    <- file.path(tmpdir, "bio_out")
+  dir.create(out_d, recursive = TRUE)
 
   ptr <- engine_create()
   engine_open(ptr, tas_f, tasmax_f, tasmin_f, pr_f)
-  engine_set_output(ptr, out_f)
+  engine_set_output(ptr, out_d)
   engine_set_threads(ptr, 1L)
   engine_set_tile_size(ptr, 2L)  # force edge-tile handling
   result_path <- engine_compute(ptr)
 
-  expect_true(file.exists(result_path))
-  out_r <- terra::rast(result_path)
+  expect_true(dir.exists(result_path))
+  bio_files <- file.path(result_path, sprintf("bio%02d.tif", 1:19))
+  out_r <- terra::rast(bio_files)
   expect_equal(terra::nlyr(out_r), 19L)
 
   vals <- terra::values(out_r)

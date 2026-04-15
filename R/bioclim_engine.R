@@ -120,7 +120,7 @@
 #'   result <- bioclim_engine(tas_file, tasmax_file, tasmin_file, pr_file,
 #'                             output = out_dir, overwrite = TRUE)
 #'   nlyr(result)   # 19
-#'   list.files(out_dir, pattern = "\\.tif$")
+#'   list.files(out_dir, pattern = "[.]tif$")
 #'
 #'   # Compute only BIO01 and BIO12
 #'   out_dir2 <- file.path(tmp, "bioclim_subset")
