@@ -12,10 +12,12 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+#include "rxbioclim_omp.h"
 #include <Rcpp.h>
 
 #include "BioclimEngine.hpp"
 #include "gdal_io.hpp"
+#include "rxbioclim_omp.h"
 
 #ifdef HAVE_CUDA
 #include <cuda_runtime.h>
@@ -24,6 +26,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iomanip>
 #include <limits>
 #include <memory>
 #include <sstream>
@@ -53,7 +56,7 @@ void BioclimEngine::set_mask(const std::string& path) {
 }
 
 void BioclimEngine::set_threads(int n) {
-    n_threads_ = (n < 1) ? 1 : n;
+    n_threads_ = rxbioclim_safe_threads(n);
 }
 
 void BioclimEngine::set_tile_size(int tile_size) {
@@ -72,6 +75,18 @@ void BioclimEngine::set_device(const std::string& device) {
             "BioclimEngine::set_device: unknown device '" + device +
             "'. Use \"auto\", \"cpu\", or \"gpu\".");
     }
+}
+
+void BioclimEngine::set_variables(const std::vector<int>& variables) {
+    for (int v : variables) {
+        if (v < 1 || v > 19) {
+            std::ostringstream oss;
+            oss << "BioclimEngine::set_variables: variable index must be "
+                   "1-19, got " << v << ".";
+            throw std::runtime_error(oss.str());
+        }
+    }
+    variables_ = variables;
 }
 
 // ── GDAL-dependent helpers (anonymous namespace, internal linkage) ────────────
@@ -265,6 +280,13 @@ std::string BioclimEngine::compute() {
     validate_file_vector(tasmin_files_, "tasmin");
     validate_file_vector(pr_files_,     "pr");
 
+    // ── Determine effective variable set ─────────────────────────────────────
+    std::vector<int> eff_vars = variables_;
+    if (eff_vars.empty()) {
+        eff_vars.resize(19);
+        for (int i = 0; i < 19; ++i) eff_vars[i] = i + 1;
+    }
+
     // ── Open readers ────────────────────────────────────────────────────────
     const bool tas_multi    = (tas_files_.size()    == 1);
     const bool tasmax_multi = (tasmax_files_.size() == 1);
@@ -287,8 +309,18 @@ std::string BioclimEngine::compute() {
     if (!mask_path_.empty())
         mask_reader = std::make_unique<GdalReader>(mask_path_);
 
-    // ── Create output dataset ───────────────────────────────────────────────
-    GdalWriter writer(output_path_, nrows, ncols, 19, gt, crs);
+    // ── Create one output dataset per selected variable ─────────────────────
+    // output_path_ is a directory; each variable is written to a separate
+    // single-band GeoTIFF named bio01.tif … bio19.tif.
+    std::vector<std::unique_ptr<GdalWriter>> writers;
+    writers.reserve(eff_vars.size());
+    for (int v : eff_vars) {
+        std::ostringstream fname;
+        fname << output_path_ << "/bio"
+              << std::setw(2) << std::setfill('0') << v << ".tif";
+        writers.push_back(
+            std::make_unique<GdalWriter>(fname.str(), nrows, ncols, 1, gt, crs));
+    }
 
     // ── Determine compute device ────────────────────────────────────────────
     bool use_gpu = false;
@@ -396,18 +428,19 @@ std::string BioclimEngine::compute() {
             }
             }  // end CPU branch
 
-            // ── Write 19 output bands ────────────────────────────────────────
+            // ── Write selected output bands (one file per variable) ──────────
             std::vector<double> out_band(static_cast<std::size_t>(n_pix));
-            for (int j = 0; j < 19; ++j) {
+            for (std::size_t wi = 0; wi < eff_vars.size(); ++wi) {
+                const int j = eff_vars[wi] - 1;  // 0-based index
                 for (int i = 0; i < n_pix; ++i)
                     out_band[static_cast<std::size_t>(i)] =
                         bio_tile[static_cast<std::size_t>(j * n_pix + i)];
-                writer.write_window(xoff, yoff, xsize, ysize, j + 1, out_band);
+                writers[wi]->write_window(xoff, yoff, xsize, ysize, 1, out_band);
             }
         }
     }
 
-    writer.close();
+    for (auto& w : writers) w->close();
     return output_path_;
 
 #else
@@ -525,19 +558,36 @@ void engine_set_tile_size(SEXP xptr, int tile_size) {
     Rcpp::XPtr<rxbioclim::BioclimEngine>(xptr)->set_tile_size(tile_size);
 }
 
+//' Select which bioclimatic variables to write
+//'
+//' Restricts the output to a subset of the 19 standard bioclimatic variables.
+//' The engine always computes all 19 internally (they share intermediate
+//' values), but only the selected ones are written to disk.
+//'
+//' @param xptr      External pointer returned by \code{\link{engine_create}}.
+//' @param variables Integer vector with elements in 1..19.
+//' @return \code{NULL} invisibly.
+//' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
+//' @export
+// [[Rcpp::export]]
+void engine_set_variables(SEXP xptr, Rcpp::IntegerVector variables) {
+    Rcpp::XPtr<rxbioclim::BioclimEngine> eng(xptr);
+    eng->set_variables(Rcpp::as<std::vector<int>>(variables));
+}
+
 //' Run the bioclimatic-variable computation pipeline
 //'
-//' Reads all monthly climate input rasters tile by tile, computes the 19
-//' bioclimatic variables (BIO01–BIO19) for every pixel, and writes the results
-//' to the output raster.  Peak memory is proportional to the tile size, not
-//' the full raster size.
+//' Reads all monthly climate input rasters tile by tile, computes the
+//' bioclimatic variables for every pixel, and writes each selected variable
+//' to a separate single-band GeoTIFF inside the output directory.  Peak
+//' memory is proportional to the tile size, not the full raster size.
 //'
 //' Requires GDAL support.  Stops with an informative error when the package
 //' was built without GDAL.
 //'
 //' @param xptr External pointer returned by \code{\link{engine_create}}.
-//' @return Character scalar: the output file path (same as the value passed to
-//'   \code{\link{engine_set_output}}).
+//' @return Character scalar: the output directory path (same as the value
+//'   passed to \code{\link{engine_set_output}}).
 //' @seealso \code{\link{engine_create}}, \code{\link{engine_set_output}},
 //'   \code{\link{has_gdal}}
 // [[Rcpp::export]]

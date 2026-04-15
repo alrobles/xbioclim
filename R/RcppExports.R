@@ -438,6 +438,48 @@ bioclim_xt <- function(tas, tasmax, tasmin, pr, ncores = 1L) {
     .Call(`_rxbioclim_bioclim_xt`, tas, tasmax, tasmin, pr, ncores)
 }
 
+<<<<<<< HEAD
+=======
+#' Select which bioclimatic variables to write
+#'
+#' @param xptr      External pointer returned by \code{\link{engine_create}}.
+#' @param variables Integer vector with elements in 1..19.
+#' @return \code{NULL} invisibly.
+#' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
+#' @export
+engine_set_variables <- function(xptr, variables) {
+    invisible(.Call(`_rxbioclim_engine_set_variables`, xptr, variables))
+}
+
+engine_compute <- function(xptr) {
+    .Call(`_rxbioclim_engine_compute`, xptr)
+}
+
+#' Rasterize a vector polygon layer to a binary mask raster
+#'
+#' @param vector_path Character string: path to any OGR-readable vector source.
+#' @param ref_raster_path Character string: path to a GDAL-readable raster used
+#'   as the spatial reference.
+#' @param output_mask_path Character string: file path for the output mask GeoTIFF.
+#' @return Invisibly returns \code{NULL}.
+#' @seealso \code{\link{create_mask}}, \code{\link{apply_mask_cpp}}
+#' @export
+rasterize_mask_cpp <- function(vector_path, ref_raster_path, output_mask_path) {
+    invisible(.Call(`_rxbioclim_rasterize_mask_cpp`, vector_path, ref_raster_path, output_mask_path))
+}
+
+#' Apply a binary mask raster to an input raster
+#'
+#' @param input_path Character string: path to a GDAL-readable raster.
+#' @param mask_path Character string: path to a single-band binary mask raster.
+#' @param output_path Character string: file path for the output masked raster.
+#' @return Invisibly returns \code{NULL}.
+#' @seealso \code{\link{create_mask}}, \code{\link{rasterize_mask_cpp}}
+#' @export
+apply_mask_cpp <- function(input_path, mask_path, output_path) {
+    invisible(.Call(`_rxbioclim_apply_mask_cpp`, input_path, mask_path, output_path))
+}
+>>>>>>> ccbdaf39b970abda87293d21ddd021cecc1ec30a
 #' Count available CUDA GPU devices
 #'
 #' Returns the number of CUDA-capable GPUs available on this machine.

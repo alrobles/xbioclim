@@ -72,6 +72,35 @@ nlyr(bio)    # 19
 names(bio)   # "bio01" ... "bio19"
 ```
 
+### Native GDAL engine (`bioclim_engine`)
+
+For maximum control and minimal file sizes, `bioclim_engine()` reads climate
+data directly via GDAL, writes each bioclimatic variable to a **separate
+single-band GeoTIFF** inside an output directory, and lets you select which
+of the 19 variables to compute.
+
+```r
+library(rxbioclim)
+
+# Compute all 19 variables — one file each in a directory
+result <- bioclim_engine(
+  "tas.tif", "tasmax.tif", "tasmin.tif", "pr.tif",
+  output = "bioclim_output/",
+  overwrite = TRUE
+)
+list.files("bioclim_output/")
+# "bio01.tif" "bio02.tif" ... "bio19.tif"
+
+# Compute only BIO01 (mean annual temp) and BIO12 (annual precip)
+result <- bioclim_engine(
+  "tas.tif", "tasmax.tif", "tasmin.tif", "pr.tif",
+  output    = "bioclim_subset/",
+  variables = c(1L, 12L),
+  overwrite = TRUE
+)
+names(result)  # "bio01" "bio12"
+```
+
 ## Bioclimatic Variables
 
 | Variable | Description |

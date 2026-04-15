@@ -11,7 +11,7 @@
 
 .has_gdal_mask <- function() {
   tryCatch({
-    gdal_can_open("/dev/null")
+    gdal_can_open(tiny_tif())
     TRUE
   }, error = function(e) {
     msg <- conditionMessage(e)

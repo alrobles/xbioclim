@@ -72,6 +72,12 @@ public:
     // without a visible device silently falls back to CPU.
     void set_device(const std::string& device);
 
+    // Select which bioclimatic variables to write.  Each element must be in
+    // [1, 19].  An empty vector (the default) means "write all 19".
+    // The engine always computes all 19 internally (they share intermediate
+    // values), but only the selected ones are written to disk.
+    void set_variables(const std::vector<int>& variables);
+
     // ── Execution ──────────────────────────────────────────────────────────
 
     // Run the tiled pipeline and return the output file path.
@@ -97,6 +103,9 @@ private:
     // Compute device: 0 = auto, 1 = CPU, 2 = GPU
     enum class Device { Auto, CPU, GPU };
     Device device_ = Device::Auto;
+
+    // 1-based indices of variables to write; empty = all 19.
+    std::vector<int> variables_;
 };
 
 }  // namespace rxbioclim

@@ -117,22 +117,25 @@ test_that("engine_compute produces a 19-band GeoTIFF (GDAL + terra)", {
   tasmin_files <- make_monthly_files(tasmin_vals, tmpdir, "tasmin")
   pr_files     <- make_monthly_files(pr_vals,     tmpdir, "pr")
 
-  output_path <- file.path(tmpdir, "bioclim_output.tif")
+  output_dir <- file.path(tmpdir, "bioclim_output")
+  dir.create(output_dir, recursive = TRUE)
 
   ptr <- engine_create()
   engine_open(ptr, tas_files, tasmax_files, tasmin_files, pr_files)
-  engine_set_output(ptr, output_path)
+  engine_set_output(ptr, output_dir)
   engine_set_tile_size(ptr, 2L)   # tiny tiles to exercise edge-tile code
   engine_set_threads(ptr, 1L)
 
   result_path <- engine_compute(ptr)
 
-  # Output file must exist and match the configured path.
-  expect_equal(result_path, output_path)
-  expect_true(file.exists(output_path))
+  # Output directory must exist and contain bio01.tif … bio19.tif.
+  expect_equal(result_path, output_dir)
+  expect_true(dir.exists(output_dir))
+  expect_true(file.exists(file.path(output_dir, "bio01.tif")))
 
-  # Output must have exactly 19 bands.
-  out_rast <- terra::rast(output_path)
+  # Load all 19 variable files and check dimensions.
+  bio_files <- file.path(output_dir, sprintf("bio%02d.tif", 1:19))
+  out_rast <- terra::rast(bio_files)
   expect_equal(terra::nlyr(out_rast), 19L)
 
   # Output dimensions must match input (3 rows × 3 cols).
@@ -182,17 +185,19 @@ test_that("engine_compute handles 1-multi-band-file input (GDAL + terra)", {
   tasmin_file <- make_multiband(tasmin_vals, file.path(tmpdir, "tasmin.tif"))
   pr_file     <- make_multiband(pr_vals,     file.path(tmpdir, "pr.tif"))
 
-  output_path <- file.path(tmpdir, "bioclim_mb.tif")
+  output_dir <- file.path(tmpdir, "bioclim_mb")
+  dir.create(output_dir, recursive = TRUE)
 
   ptr <- engine_create()
   engine_open(ptr, tas_file, tasmax_file, tasmin_file, pr_file)
-  engine_set_output(ptr, output_path)
+  engine_set_output(ptr, output_dir)
   engine_set_tile_size(ptr, 2L)
 
   result_path <- engine_compute(ptr)
 
-  expect_true(file.exists(result_path))
-  out_rast <- terra::rast(result_path)
+  expect_true(dir.exists(result_path))
+  bio_files <- file.path(result_path, sprintf("bio%02d.tif", 1:19))
+  out_rast <- terra::rast(bio_files)
   expect_equal(terra::nlyr(out_rast), 19L)
 })
 
@@ -212,7 +217,7 @@ test_that("engine_compute stops when file list has wrong length (GDAL)", {
   skip_without_gdal()
 
   ptr <- engine_create()
-  engine_set_output(ptr, tempfile(fileext = ".tif"))
+  engine_set_output(ptr, tempfile("engine_out_"))
 
   # 3 files — neither 1 nor 12
   bad_files <- rep(tempfile(fileext = ".tif"), 3L)
