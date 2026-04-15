@@ -12,6 +12,7 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+#include "rxbioclim_omp.h"
 #include <Rcpp.h>
 
 #include "BioclimEngine.hpp"
@@ -54,7 +55,7 @@ void BioclimEngine::set_mask(const std::string& path) {
 }
 
 void BioclimEngine::set_threads(int n) {
-    n_threads_ = safe_omp_threads(n);
+    n_threads_ = rxbioclim_safe_threads(n);
 }
 
 void BioclimEngine::set_tile_size(int tile_size) {

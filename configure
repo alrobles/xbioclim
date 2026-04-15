@@ -614,6 +614,8 @@ PACKAGE_URL=''
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+ALL_OBJECTS
+CUDA_NVCC_RULE
 CUDA_ARCH_FLAGS
 CUDA_OBJECTS
 CUDA_LIBS
@@ -3008,10 +3010,21 @@ if test "${HAVE_CUDA}" = "yes"; then
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: CUDA support enabled (version ${CUDA_VERSION})" >&5
 printf "%s\n" "$as_me: CUDA support enabled (version ${CUDA_VERSION})" >&6;}
   CUDA_OBJECTS="bioclim_cuda.o"
+  # When CUDA is present, compile bioclim_cuda.cpp with nvcc instead of g++.
+  CUDA_NVCC_RULE="bioclim_cuda.o: bioclim_cuda.cpp
+	\$(NVCC) -x cu \$(CUDA_CPPFLAGS) \$(CUDA_ARCH_FLAGS) -Xcompiler -fPIC -c \$< -o \$@"
 else
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Building without CUDA support (GPU acceleration disabled)" >&5
 printf "%s\n" "$as_me: Building without CUDA support (GPU acceleration disabled)" >&6;}
+  CUDA_NVCC_RULE=""
 fi
+
+# Enumerate all .o files explicitly (no GNU Make extensions needed).
+# bioclim_cuda.o is always included: when CUDA is absent, g++ compiles it
+# to an empty object because all code is guarded by #ifdef HAVE_CUDA.
+ALL_OBJECTS="bioclim.o bioclim_cuda.o bioclim_model.o bioclim_xt.o BioclimEngine.o cuda_utils.o gdal_io.o gdal_io_rcpp.o gdal_mask.o gdal_mask_rcpp.o rcpp_bioclim_mod.o RcppExports.o"
+
+
 
 
 

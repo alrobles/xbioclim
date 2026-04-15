@@ -177,9 +177,18 @@ fi
 if test "${HAVE_CUDA}" = "yes"; then
   AC_MSG_NOTICE([CUDA support enabled (version ${CUDA_VERSION})])
   CUDA_OBJECTS="bioclim_cuda.o"
+  # When CUDA is present, compile bioclim_cuda.cpp with nvcc instead of g++.
+  CUDA_NVCC_RULE="bioclim_cuda.o: bioclim_cuda.cpp
+	\$(NVCC) -x cu \$(CUDA_CPPFLAGS) \$(CUDA_ARCH_FLAGS) -Xcompiler -fPIC -c \$< -o \$@"
 else
   AC_MSG_NOTICE([Building without CUDA support (GPU acceleration disabled)])
+  CUDA_NVCC_RULE=""
 fi
+
+# Enumerate all .o files explicitly (no GNU Make extensions needed).
+# bioclim_cuda.o is always included: when CUDA is absent, g++ compiles it
+# to an empty object because all code is guarded by #ifdef HAVE_CUDA.
+ALL_OBJECTS="bioclim.o bioclim_cuda.o bioclim_model.o bioclim_xt.o BioclimEngine.o cuda_utils.o gdal_io.o gdal_io_rcpp.o gdal_mask.o gdal_mask_rcpp.o rcpp_bioclim_mod.o RcppExports.o"
 
 AC_SUBST([HAVE_CUDA])
 AC_SUBST([CUDA_CPPFLAGS])
@@ -187,6 +196,8 @@ AC_SUBST([CUDA_LIBS])
 AC_SUBST([NVCC])
 AC_SUBST([CUDA_OBJECTS])
 AC_SUBST([CUDA_ARCH_FLAGS])
+AC_SUBST([CUDA_NVCC_RULE])
+AC_SUBST([ALL_OBJECTS])
 
 AC_CONFIG_FILES([src/Makevars])
 AC_OUTPUT
