@@ -1,4 +1,4 @@
-Package: rxbioclim
+Package: xbioclim
 Type: Package
 Title: Bioclimatic Variables from Monthly Climate Data
 Version: 0.1.0
@@ -18,7 +18,6 @@ SystemRequirements: GNU make, C++17;
     CUDA toolkit (>= 11.0) with nvcc for GPU acceleration
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Imports:
     methods,
     Rcpp (>= 1.0.0)
@@ -33,8 +32,8 @@ Suggests:
     rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-URL: https://github.com/alrobles/rxbioclim
-BugReports: https://github.com/alrobles/rxbioclim/issues
+URL: https://github.com/alrobles/xbioclim
+BugReports: https://github.com/alrobles/xbioclim/issues
 Collate:
     'RcppExports.R'
     'primitives.R'
@@ -47,4 +46,5 @@ Collate:
     'engine.R'
     'mask.R'
     'messages.R'
-    'rxbioclim-package.R'
+    'xbioclim-package.R'
+Config/roxygen2/version: 8.0.0

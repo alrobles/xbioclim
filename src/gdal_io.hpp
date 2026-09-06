@@ -1,4 +1,4 @@
-// gdal_io.hpp — GDAL-backed tiled raster I/O for rxbioclim.
+// gdal_io.hpp — GDAL-backed tiled raster I/O for xbioclim.
 //
 // Provides GdalReader and GdalWriter C++ classes that implement windowed
 // (tiled) reads and writes so that only 1–2 tiles need to reside in memory
@@ -32,7 +32,7 @@
 #include <ogr_spatialref.h>
 #endif
 
-namespace rxbioclim {
+namespace xbioclim {
 
 // ── GdalReader ──────────────────────────────────────────────────────────────
 
@@ -140,4 +140,4 @@ private:
     bool closed_ = false;
 };
 
-} // namespace rxbioclim
+} // namespace xbioclim

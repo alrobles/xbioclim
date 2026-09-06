@@ -16,11 +16,11 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-This vignette explains the internal architecture of **rxbioclim** for
+This vignette explains the internal architecture of **xbioclim** for
 advanced users who want to extend, embed, or contribute to the package.
 It covers:
 
-- The relationship between rxbioclim and the upstream **xbioclim** C++
+- The relationship between xbioclim and the upstream **xbioclim** C++
   library
 - The layered design of internal primitive helpers
 - The public function API (individual `bioXX()` functions and the unified
@@ -30,7 +30,7 @@ It covers:
 
 ## Relationship with xbioclim (C++ library)
 
-rxbioclim is a faithful R port of
+xbioclim is a faithful R port of
 [xbioclim](https://github.com/alrobles/xbioclim), a header-only C++17
 library that computes the same 19 WorldClim bioclimatic variables.  The
 design goals of both implementations are identical:
@@ -39,13 +39,13 @@ design goals of both implementations are identical:
   exactly, including the population standard deviation (denominator *N*, not
   *N−1*) used in BIO04 and BIO15.
 - **Minimal dependencies** – xbioclim depends only on the C++ standard
-  library; rxbioclim depends only on base R.
+  library; xbioclim depends only on base R.
 - **Stateless functions** – no global state, no side effects; all functions
   are pure.
 
 The mapping between the two APIs is 1-to-1:
 
-| C++ (xbioclim) | R (rxbioclim) |
+| C++ (xbioclim) | R (xbioclim) |
 |----------------|---------------|
 | `xbioclim::bio01(tas)` | `bio01(tas)` |
 | `xbioclim::bio02(tasmax, tasmin)` | `bio02(tasmax, tasmin)` |
@@ -232,7 +232,7 @@ Key properties of this pattern:
   (e.g., `terra::readValues()` / `ncdf4::ncvar_get()`) without changing
   the processing logic.
 
-See `vignette("benchmarking", package = "rxbioclim")` for timing
+See `vignette("benchmarking", package = "xbioclim")` for timing
 comparisons of several block-processing strategies.
 
 ## Adding new variables
@@ -259,7 +259,7 @@ bio04_alt <- function(tas) {
 ## Formula reference
 
 The formulas below are the authoritative definitions used in both xbioclim
-and rxbioclim.  Symbols: *T̄ₘ* = monthly mean temp, *T̂ₘ* = monthly max
+and xbioclim.  Symbols: *T̄ₘ* = monthly mean temp, *T̂ₘ* = monthly max
 temp, *Ťₘ* = monthly min temp, *Pₘ* = monthly precipitation.
 
 | Variable | Formula |

@@ -26,7 +26,7 @@ skip_without_gdal <- function() {
 }
 
 tiny_tif <- function() {
-  system.file("extdata", "tiny.tif", package = "rxbioclim")
+  system.file("extdata", "tiny.tif", package = "xbioclim")
 }
 
 # A GeoJSON polygon that covers the full extent of tiny.tif.

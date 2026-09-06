@@ -36,7 +36,7 @@ support.
 \examples{
 \donttest{
 # Requires GDAL support at build time.
-ref  <- system.file("extdata", "tiny.tif", package = "rxbioclim")
+ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
 poly <- tempfile(fileext = ".geojson")
 mask <- tempfile(fileext = ".tif")
 writeLines(

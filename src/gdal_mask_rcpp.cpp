@@ -37,7 +37,7 @@ using namespace Rcpp;
 //' @examples
 //' \donttest{
 //' # Requires GDAL support at build time.
-//' ref  <- system.file("extdata", "tiny.tif", package = "rxbioclim")
+//' ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
 //' poly <- tempfile(fileext = ".geojson")
 //' mask <- tempfile(fileext = ".tif")
 //' writeLines(
@@ -53,7 +53,7 @@ SEXP rasterize_mask_cpp(const std::string& vector_path,   // NOLINT
                         const std::string& ref_raster_path,
                         const std::string& output_mask_path) {
     try {
-        rxbioclim::rasterize_mask(vector_path,
+        xbioclim::rasterize_mask(vector_path,
                                   ref_raster_path,
                                   output_mask_path);
     } catch (const std::exception& e) {
@@ -87,7 +87,7 @@ SEXP rasterize_mask_cpp(const std::string& vector_path,   // NOLINT
 //' @examples
 //' \donttest{
 //' # Requires GDAL support at build time.
-//' ref    <- system.file("extdata", "tiny.tif", package = "rxbioclim")
+//' ref    <- system.file("extdata", "tiny.tif", package = "xbioclim")
 //' poly   <- tempfile(fileext = ".geojson")
 //' mask   <- tempfile(fileext = ".tif")
 //' output <- tempfile(fileext = ".tif")
@@ -105,7 +105,7 @@ SEXP apply_mask_cpp(const std::string& input_path,   // NOLINT
                     const std::string& mask_path,
                     const std::string& output_path) {
     try {
-        rxbioclim::apply_mask(input_path, mask_path, output_path);
+        xbioclim::apply_mask(input_path, mask_path, output_path);
     } catch (const std::exception& e) {
         Rcpp::stop(e.what());
     }

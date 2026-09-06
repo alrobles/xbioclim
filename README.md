@@ -1,8 +1,8 @@
-# rxbioclim
+# xbioclim
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/alrobles/rxbioclim/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/alrobles/rxbioclim/actions/workflows/R-CMD-check.yaml)
-[![test-coverage](https://github.com/alrobles/rxbioclim/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/alrobles/rxbioclim/actions/workflows/test-coverage.yaml)
+[![R-CMD-check](https://github.com/alrobles/xbioclim/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/alrobles/xbioclim/actions/workflows/R-CMD-check.yaml)
+[![test-coverage](https://github.com/alrobles/xbioclim/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/alrobles/xbioclim/actions/workflows/test-coverage.yaml)
 <!-- badges: end -->
 
 An R package for computing the 19 standard bioclimatic variables (BIO01–BIO19) from monthly climate data, following the [WorldClim](https://www.worldclim.org/data/bioclim.html) specification. This is an R implementation of the [xbioclim](https://github.com/alrobles/xbioclim) C++ library.
@@ -13,7 +13,7 @@ Install the development version from GitHub:
 
 ```r
 # install.packages("remotes")
-remotes::install_github("alrobles/rxbioclim")
+remotes::install_github("alrobles/xbioclim")
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ remotes::install_github("alrobles/rxbioclim")
 ### Single-pixel (vector) interface
 
 ```r
-library(rxbioclim)
+library(xbioclim)
 
 # Monthly climate data (12 values, one per month)
 tas    <- c(5, 7, 10, 14, 18, 22, 25, 24, 20, 15, 10, 6)
@@ -48,7 +48,7 @@ raster size. Multi-core processing within each block is supported via the
 `ncores` argument.
 
 ```r
-library(rxbioclim)
+library(xbioclim)
 library(terra)
 
 # Each SpatRaster must have exactly 12 layers (one per month)
@@ -80,7 +80,7 @@ single-band GeoTIFF** inside an output directory, and lets you select which
 of the 19 variables to compute.
 
 ```r
-library(rxbioclim)
+library(xbioclim)
 
 # Compute all 19 variables — one file each in a directory
 result <- bioclim_engine(
@@ -130,10 +130,10 @@ names(result)  # "bio01" "bio12"
 Comprehensive vignettes are available after installing the package:
 
 ```r
-vignette("getting-started",  package = "rxbioclim")  # Introduction & real-world examples
-vignette("terra-comparison", package = "rxbioclim")  # rxbioclim vs terra
-vignette("benchmarking",     package = "rxbioclim")  # Block-based performance
-vignette("architecture",     package = "rxbioclim")  # Design & internals
+vignette("getting-started",  package = "xbioclim")  # Introduction & real-world examples
+vignette("terra-comparison", package = "xbioclim")  # xbioclim vs terra
+vignette("benchmarking",     package = "xbioclim")  # Block-based performance
+vignette("architecture",     package = "xbioclim")  # Design & internals
 ```
 
 ## License

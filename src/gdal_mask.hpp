@@ -1,4 +1,4 @@
-// gdal_mask.hpp — Polygon-to-raster masking for rxbioclim.
+// gdal_mask.hpp — Polygon-to-raster masking for xbioclim.
 //
 // Provides two operations:
 //
@@ -27,7 +27,7 @@
 #include <ogr_api.h>
 #endif
 
-namespace rxbioclim {
+namespace xbioclim {
 
 // Rasterize a vector polygon source into a temporary binary mask GeoTIFF.
 //
@@ -63,4 +63,4 @@ void apply_mask(const std::string& input_path,
                 const std::string& mask_path,
                 const std::string& output_path);
 
-} // namespace rxbioclim
+} // namespace xbioclim

@@ -22,6 +22,6 @@ GDAL support.
 \examples{
 \donttest{
 # Works only when GDAL is available:
-gdal_can_open(system.file("extdata", "tiny.tif", package = "rxbioclim"))
+gdal_can_open(system.file("extdata", "tiny.tif", package = "xbioclim"))
 }
 }

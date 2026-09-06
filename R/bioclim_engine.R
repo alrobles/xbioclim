@@ -180,7 +180,7 @@ bioclim_engine <- function(
     stop(
       "bioclim_engine() requires GDAL support. ",
       "The package was built without GDAL. ",
-      "Please reinstall rxbioclim on a system with libgdal-dev.",
+      "Please reinstall xbioclim on a system with libgdal-dev.",
       call. = FALSE
     )
   }

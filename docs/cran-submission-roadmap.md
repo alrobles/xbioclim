@@ -1,4 +1,4 @@
-# rxbioclim: CRAN Submission Roadmap
+# xbioclim: CRAN Submission Roadmap
 
 > Last updated: 2026-04-14
 > Status: **In Progress** — All prior optimization phases complete. CRAN submission prep begins now.
@@ -7,7 +7,7 @@
 
 ## Overview
 
-This roadmap covers the engineering work needed to get `rxbioclim` accepted on
+This roadmap covers the engineering work needed to get `xbioclim` accepted on
 CRAN while preserving its optional CUDA GPU acceleration. The central challenge
 is that **CRAN's check farm has no GPUs** — the package must build, install, and
 pass `R CMD check --as-cran` cleanly on CPU-only machines across Linux, macOS,
@@ -31,11 +31,11 @@ These issues will cause **immediate rejection** if not addressed.
 | 4 | Drop `CXX_STD = CXX17` (default since R 4.3) | `src/Makevars.in`, `src/Makevars.win`, `src/Makevars.ucrt` | [#32][i32] |
 | 5 | Remove generated `src/Makevars` from git | `src/Makevars`, `.gitignore` | [#33][i33] |
 
-[i29]: https://github.com/alrobles/rxbioclim/issues/29
-[i30]: https://github.com/alrobles/rxbioclim/issues/30
-[i31]: https://github.com/alrobles/rxbioclim/issues/31
-[i32]: https://github.com/alrobles/rxbioclim/issues/32
-[i33]: https://github.com/alrobles/rxbioclim/issues/33
+[i29]: https://github.com/alrobles/xbioclim/issues/29
+[i30]: https://github.com/alrobles/xbioclim/issues/30
+[i31]: https://github.com/alrobles/xbioclim/issues/31
+[i32]: https://github.com/alrobles/xbioclim/issues/32
+[i33]: https://github.com/alrobles/xbioclim/issues/33
 
 ---
 
@@ -51,10 +51,10 @@ These will likely cause rejection during CRAN human review.
 | 9 | Add nvcc compile test in configure | `configure.ac` | [#36][i36] |
 | 10 | Cap OpenMP threads for CRAN compliance | `src/BioclimEngine.cpp`, `src/bioclim.cpp`, `src/bioclim_xt.cpp` | [#37][i37] |
 
-[i34]: https://github.com/alrobles/rxbioclim/issues/34
-[i35]: https://github.com/alrobles/rxbioclim/issues/35
-[i36]: https://github.com/alrobles/rxbioclim/issues/36
-[i37]: https://github.com/alrobles/rxbioclim/issues/37
+[i34]: https://github.com/alrobles/xbioclim/issues/34
+[i35]: https://github.com/alrobles/xbioclim/issues/35
+[i36]: https://github.com/alrobles/xbioclim/issues/36
+[i37]: https://github.com/alrobles/xbioclim/issues/37
 
 ---
 
@@ -66,14 +66,14 @@ These will likely cause rejection during CRAN human review.
 | 12 | Wrap engine examples in `\donttest{}` | `R/bioclim_engine.R` | [#38][i38] |
 | 13 | Write `cran-comments.md` + test on R-hub / win-builder | `cran-comments.md` | [#39][i39] |
 
-[i38]: https://github.com/alrobles/rxbioclim/issues/38
-[i39]: https://github.com/alrobles/rxbioclim/issues/39
+[i38]: https://github.com/alrobles/xbioclim/issues/38
+[i39]: https://github.com/alrobles/xbioclim/issues/39
 
 ---
 
 ## CRAN Policy Quick Reference
 
-| Requirement | Impact on rxbioclim |
+| Requirement | Impact on xbioclim |
 |-------------|---------------------|
 | `configure` must be POSIX `/bin/sh` | Current `configure.ac` is POSIX-clean ✓ |
 | No GNU Make extensions without declaration | **VIOLATION**: `$(wildcard)` / `$(patsubst)` in `Makevars.in` |
@@ -104,7 +104,7 @@ These will likely cause rejection during CRAN human review.
 | **gpuR** | OpenCL compile-time detection | ✓ Active |
 | **gputools** | Hard nvcc requirement | ✗ Archived (2017) |
 
-**rxbioclim follows the MPCR approach** — the safest compile-time strategy with
+**xbioclim follows the MPCR approach** — the safest compile-time strategy with
 proven CRAN acceptance.
 
 ---

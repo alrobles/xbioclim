@@ -1,9 +1,9 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-#include "rxbioclim_omp.h"
+#include "xbioclim_omp.h"
 #include <Rcpp.h>
-#include "rxbioclim_omp.h"
+#include "xbioclim_omp.h"
 using namespace Rcpp;
 
 // ── Primitive helpers (NumericVector) ────────────────────────────────────────
@@ -476,7 +476,7 @@ NumericMatrix bioclim_cpp(NumericMatrix tas,
 
 #ifdef _OPENMP
   int prev_threads = omp_get_max_threads();
-  omp_set_num_threads(rxbioclim_safe_threads(ncores));
+  omp_set_num_threads(xbioclim_safe_threads(ncores));
 #endif
 
   // Use raw REAL() pointers instead of Rcpp proxy objects for OpenMP safety:

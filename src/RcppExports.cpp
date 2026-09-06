@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // engine_create
 SEXP engine_create();
-RcppExport SEXP _rxbioclim_engine_create() {
+RcppExport SEXP _xbioclim_engine_create() {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -22,7 +22,7 @@ END_RCPP
 }
 // engine_open
 void engine_open(SEXP xptr, Rcpp::CharacterVector tas_files, Rcpp::CharacterVector tasmax_files, Rcpp::CharacterVector tasmin_files, Rcpp::CharacterVector pr_files);
-RcppExport SEXP _rxbioclim_engine_open(SEXP xptrSEXP, SEXP tas_filesSEXP, SEXP tasmax_filesSEXP, SEXP tasmin_filesSEXP, SEXP pr_filesSEXP) {
+RcppExport SEXP _xbioclim_engine_open(SEXP xptrSEXP, SEXP tas_filesSEXP, SEXP tasmax_filesSEXP, SEXP tasmin_filesSEXP, SEXP pr_filesSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type xptr(xptrSEXP);
@@ -36,7 +36,7 @@ END_RCPP
 }
 // engine_set_output
 void engine_set_output(SEXP xptr, std::string path);
-RcppExport SEXP _rxbioclim_engine_set_output(SEXP xptrSEXP, SEXP pathSEXP) {
+RcppExport SEXP _xbioclim_engine_set_output(SEXP xptrSEXP, SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type xptr(xptrSEXP);
@@ -47,7 +47,7 @@ END_RCPP
 }
 // engine_set_mask
 void engine_set_mask(SEXP xptr, std::string mask_path);
-RcppExport SEXP _rxbioclim_engine_set_mask(SEXP xptrSEXP, SEXP mask_pathSEXP) {
+RcppExport SEXP _xbioclim_engine_set_mask(SEXP xptrSEXP, SEXP mask_pathSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type xptr(xptrSEXP);
@@ -58,7 +58,7 @@ END_RCPP
 }
 // engine_set_threads
 void engine_set_threads(SEXP xptr, int n);
-RcppExport SEXP _rxbioclim_engine_set_threads(SEXP xptrSEXP, SEXP nSEXP) {
+RcppExport SEXP _xbioclim_engine_set_threads(SEXP xptrSEXP, SEXP nSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type xptr(xptrSEXP);
@@ -69,7 +69,7 @@ END_RCPP
 }
 // engine_set_tile_size
 void engine_set_tile_size(SEXP xptr, int tile_size);
-RcppExport SEXP _rxbioclim_engine_set_tile_size(SEXP xptrSEXP, SEXP tile_sizeSEXP) {
+RcppExport SEXP _xbioclim_engine_set_tile_size(SEXP xptrSEXP, SEXP tile_sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type xptr(xptrSEXP);
@@ -80,7 +80,7 @@ END_RCPP
 }
 // engine_set_variables
 void engine_set_variables(SEXP xptr, Rcpp::IntegerVector variables);
-RcppExport SEXP _rxbioclim_engine_set_variables(SEXP xptrSEXP, SEXP variablesSEXP) {
+RcppExport SEXP _xbioclim_engine_set_variables(SEXP xptrSEXP, SEXP variablesSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type xptr(xptrSEXP);
@@ -91,7 +91,7 @@ END_RCPP
 }
 // engine_compute
 std::string engine_compute(SEXP xptr);
-RcppExport SEXP _rxbioclim_engine_compute(SEXP xptrSEXP) {
+RcppExport SEXP _xbioclim_engine_compute(SEXP xptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -102,7 +102,7 @@ END_RCPP
 }
 // bio01_cpp
 NumericVector bio01_cpp(NumericMatrix tas);
-RcppExport SEXP _rxbioclim_bio01_cpp(SEXP tasSEXP) {
+RcppExport SEXP _xbioclim_bio01_cpp(SEXP tasSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -113,7 +113,7 @@ END_RCPP
 }
 // bio02_cpp
 NumericVector bio02_cpp(NumericMatrix tasmax, NumericMatrix tasmin);
-RcppExport SEXP _rxbioclim_bio02_cpp(SEXP tasmaxSEXP, SEXP tasminSEXP) {
+RcppExport SEXP _xbioclim_bio02_cpp(SEXP tasmaxSEXP, SEXP tasminSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -125,7 +125,7 @@ END_RCPP
 }
 // bio03_cpp
 NumericVector bio03_cpp(NumericMatrix tasmax, NumericMatrix tasmin);
-RcppExport SEXP _rxbioclim_bio03_cpp(SEXP tasmaxSEXP, SEXP tasminSEXP) {
+RcppExport SEXP _xbioclim_bio03_cpp(SEXP tasmaxSEXP, SEXP tasminSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -137,7 +137,7 @@ END_RCPP
 }
 // bio04_cpp
 NumericVector bio04_cpp(NumericMatrix tas);
-RcppExport SEXP _rxbioclim_bio04_cpp(SEXP tasSEXP) {
+RcppExport SEXP _xbioclim_bio04_cpp(SEXP tasSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -148,7 +148,7 @@ END_RCPP
 }
 // bio05_cpp
 NumericVector bio05_cpp(NumericMatrix tasmax);
-RcppExport SEXP _rxbioclim_bio05_cpp(SEXP tasmaxSEXP) {
+RcppExport SEXP _xbioclim_bio05_cpp(SEXP tasmaxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -159,7 +159,7 @@ END_RCPP
 }
 // bio06_cpp
 NumericVector bio06_cpp(NumericMatrix tasmin);
-RcppExport SEXP _rxbioclim_bio06_cpp(SEXP tasminSEXP) {
+RcppExport SEXP _xbioclim_bio06_cpp(SEXP tasminSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -170,7 +170,7 @@ END_RCPP
 }
 // bio07_cpp
 NumericVector bio07_cpp(NumericMatrix tasmax, NumericMatrix tasmin);
-RcppExport SEXP _rxbioclim_bio07_cpp(SEXP tasmaxSEXP, SEXP tasminSEXP) {
+RcppExport SEXP _xbioclim_bio07_cpp(SEXP tasmaxSEXP, SEXP tasminSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -182,7 +182,7 @@ END_RCPP
 }
 // bio08_cpp
 NumericVector bio08_cpp(NumericMatrix tas, NumericMatrix pr);
-RcppExport SEXP _rxbioclim_bio08_cpp(SEXP tasSEXP, SEXP prSEXP) {
+RcppExport SEXP _xbioclim_bio08_cpp(SEXP tasSEXP, SEXP prSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -194,7 +194,7 @@ END_RCPP
 }
 // bio09_cpp
 NumericVector bio09_cpp(NumericMatrix tas, NumericMatrix pr);
-RcppExport SEXP _rxbioclim_bio09_cpp(SEXP tasSEXP, SEXP prSEXP) {
+RcppExport SEXP _xbioclim_bio09_cpp(SEXP tasSEXP, SEXP prSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -206,7 +206,7 @@ END_RCPP
 }
 // bio10_cpp
 NumericVector bio10_cpp(NumericMatrix tas);
-RcppExport SEXP _rxbioclim_bio10_cpp(SEXP tasSEXP) {
+RcppExport SEXP _xbioclim_bio10_cpp(SEXP tasSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -217,7 +217,7 @@ END_RCPP
 }
 // bio11_cpp
 NumericVector bio11_cpp(NumericMatrix tas);
-RcppExport SEXP _rxbioclim_bio11_cpp(SEXP tasSEXP) {
+RcppExport SEXP _xbioclim_bio11_cpp(SEXP tasSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -228,7 +228,7 @@ END_RCPP
 }
 // bio12_cpp
 NumericVector bio12_cpp(NumericMatrix pr);
-RcppExport SEXP _rxbioclim_bio12_cpp(SEXP prSEXP) {
+RcppExport SEXP _xbioclim_bio12_cpp(SEXP prSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -239,7 +239,7 @@ END_RCPP
 }
 // bio13_cpp
 NumericVector bio13_cpp(NumericMatrix pr);
-RcppExport SEXP _rxbioclim_bio13_cpp(SEXP prSEXP) {
+RcppExport SEXP _xbioclim_bio13_cpp(SEXP prSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -250,7 +250,7 @@ END_RCPP
 }
 // bio14_cpp
 NumericVector bio14_cpp(NumericMatrix pr);
-RcppExport SEXP _rxbioclim_bio14_cpp(SEXP prSEXP) {
+RcppExport SEXP _xbioclim_bio14_cpp(SEXP prSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -261,7 +261,7 @@ END_RCPP
 }
 // bio15_cpp
 NumericVector bio15_cpp(NumericMatrix pr);
-RcppExport SEXP _rxbioclim_bio15_cpp(SEXP prSEXP) {
+RcppExport SEXP _xbioclim_bio15_cpp(SEXP prSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -272,7 +272,7 @@ END_RCPP
 }
 // bio16_cpp
 NumericVector bio16_cpp(NumericMatrix pr);
-RcppExport SEXP _rxbioclim_bio16_cpp(SEXP prSEXP) {
+RcppExport SEXP _xbioclim_bio16_cpp(SEXP prSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -283,7 +283,7 @@ END_RCPP
 }
 // bio17_cpp
 NumericVector bio17_cpp(NumericMatrix pr);
-RcppExport SEXP _rxbioclim_bio17_cpp(SEXP prSEXP) {
+RcppExport SEXP _xbioclim_bio17_cpp(SEXP prSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -294,7 +294,7 @@ END_RCPP
 }
 // bio18_cpp
 NumericVector bio18_cpp(NumericMatrix tas, NumericMatrix pr);
-RcppExport SEXP _rxbioclim_bio18_cpp(SEXP tasSEXP, SEXP prSEXP) {
+RcppExport SEXP _xbioclim_bio18_cpp(SEXP tasSEXP, SEXP prSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -306,7 +306,7 @@ END_RCPP
 }
 // bio19_cpp
 NumericVector bio19_cpp(NumericMatrix tas, NumericMatrix pr);
-RcppExport SEXP _rxbioclim_bio19_cpp(SEXP tasSEXP, SEXP prSEXP) {
+RcppExport SEXP _xbioclim_bio19_cpp(SEXP tasSEXP, SEXP prSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -318,7 +318,7 @@ END_RCPP
 }
 // bioclim_cpp
 NumericMatrix bioclim_cpp(NumericMatrix tas, NumericMatrix tasmax, NumericMatrix tasmin, NumericMatrix pr, int ncores);
-RcppExport SEXP _rxbioclim_bioclim_cpp(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP, SEXP ncoresSEXP) {
+RcppExport SEXP _xbioclim_bioclim_cpp(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP, SEXP ncoresSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -333,7 +333,7 @@ END_RCPP
 }
 // bioclim_model_new
 SEXP bioclim_model_new(Rcpp::NumericVector tas, Rcpp::NumericVector tasmax, Rcpp::NumericVector tasmin, Rcpp::NumericVector pr);
-RcppExport SEXP _rxbioclim_bioclim_model_new(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_new(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -347,7 +347,7 @@ END_RCPP
 }
 // bioclim_model_is_null
 bool bioclim_model_is_null(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_is_null(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_is_null(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -358,7 +358,7 @@ END_RCPP
 }
 // bioclim_model_bio01
 double bioclim_model_bio01(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio01(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio01(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -369,7 +369,7 @@ END_RCPP
 }
 // bioclim_model_bio02
 double bioclim_model_bio02(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio02(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio02(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -380,7 +380,7 @@ END_RCPP
 }
 // bioclim_model_bio03
 double bioclim_model_bio03(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio03(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio03(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -391,7 +391,7 @@ END_RCPP
 }
 // bioclim_model_bio04
 double bioclim_model_bio04(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio04(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio04(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -402,7 +402,7 @@ END_RCPP
 }
 // bioclim_model_bio05
 double bioclim_model_bio05(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio05(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio05(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -413,7 +413,7 @@ END_RCPP
 }
 // bioclim_model_bio06
 double bioclim_model_bio06(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio06(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio06(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -424,7 +424,7 @@ END_RCPP
 }
 // bioclim_model_bio07
 double bioclim_model_bio07(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio07(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio07(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -435,7 +435,7 @@ END_RCPP
 }
 // bioclim_model_bio08
 double bioclim_model_bio08(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio08(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio08(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -446,7 +446,7 @@ END_RCPP
 }
 // bioclim_model_bio09
 double bioclim_model_bio09(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio09(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio09(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -457,7 +457,7 @@ END_RCPP
 }
 // bioclim_model_bio10
 double bioclim_model_bio10(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio10(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio10(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -468,7 +468,7 @@ END_RCPP
 }
 // bioclim_model_bio11
 double bioclim_model_bio11(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio11(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio11(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -479,7 +479,7 @@ END_RCPP
 }
 // bioclim_model_bio12
 double bioclim_model_bio12(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio12(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio12(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -490,7 +490,7 @@ END_RCPP
 }
 // bioclim_model_bio13
 double bioclim_model_bio13(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio13(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio13(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -501,7 +501,7 @@ END_RCPP
 }
 // bioclim_model_bio14
 double bioclim_model_bio14(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio14(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio14(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -512,7 +512,7 @@ END_RCPP
 }
 // bioclim_model_bio15
 double bioclim_model_bio15(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio15(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio15(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -523,7 +523,7 @@ END_RCPP
 }
 // bioclim_model_bio16
 double bioclim_model_bio16(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio16(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio16(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -534,7 +534,7 @@ END_RCPP
 }
 // bioclim_model_bio17
 double bioclim_model_bio17(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio17(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio17(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -545,7 +545,7 @@ END_RCPP
 }
 // bioclim_model_bio18
 double bioclim_model_bio18(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio18(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio18(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -556,7 +556,7 @@ END_RCPP
 }
 // bioclim_model_bio19
 double bioclim_model_bio19(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_bio19(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_bio19(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -567,7 +567,7 @@ END_RCPP
 }
 // bioclim_model_compute
 Rcpp::NumericVector bioclim_model_compute(SEXP ptr);
-RcppExport SEXP _rxbioclim_bioclim_model_compute(SEXP ptrSEXP) {
+RcppExport SEXP _xbioclim_bioclim_model_compute(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -578,7 +578,7 @@ END_RCPP
 }
 // bioclim_xt
 NumericMatrix bioclim_xt(NumericMatrix tas, NumericMatrix tasmax, NumericMatrix tasmin, NumericMatrix pr, int ncores);
-RcppExport SEXP _rxbioclim_bioclim_xt(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP, SEXP ncoresSEXP) {
+RcppExport SEXP _xbioclim_bioclim_xt(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP, SEXP ncoresSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -593,7 +593,7 @@ END_RCPP
 }
 // cuda_device_count
 int cuda_device_count();
-RcppExport SEXP _rxbioclim_cuda_device_count() {
+RcppExport SEXP _xbioclim_cuda_device_count() {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -603,7 +603,7 @@ END_RCPP
 }
 // cuda_device_info
 Rcpp::List cuda_device_info();
-RcppExport SEXP _rxbioclim_cuda_device_info() {
+RcppExport SEXP _xbioclim_cuda_device_info() {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -613,7 +613,7 @@ END_RCPP
 }
 // engine_set_device
 void engine_set_device(SEXP xptr, std::string device);
-RcppExport SEXP _rxbioclim_engine_set_device(SEXP xptrSEXP, SEXP deviceSEXP) {
+RcppExport SEXP _xbioclim_engine_set_device(SEXP xptrSEXP, SEXP deviceSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type xptr(xptrSEXP);
@@ -624,7 +624,7 @@ END_RCPP
 }
 // gdal_can_open
 bool gdal_can_open(const std::string& path);
-RcppExport SEXP _rxbioclim_gdal_can_open(SEXP pathSEXP) {
+RcppExport SEXP _xbioclim_gdal_can_open(SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -635,7 +635,7 @@ END_RCPP
 }
 // gdal_info
 Rcpp::List gdal_info(const std::string& path);
-RcppExport SEXP _rxbioclim_gdal_info(SEXP pathSEXP) {
+RcppExport SEXP _xbioclim_gdal_info(SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -646,7 +646,7 @@ END_RCPP
 }
 // rasterize_mask_cpp
 SEXP rasterize_mask_cpp(const std::string& vector_path, const std::string& ref_raster_path, const std::string& output_mask_path);
-RcppExport SEXP _rxbioclim_rasterize_mask_cpp(SEXP vector_pathSEXP, SEXP ref_raster_pathSEXP, SEXP output_mask_pathSEXP) {
+RcppExport SEXP _xbioclim_rasterize_mask_cpp(SEXP vector_pathSEXP, SEXP ref_raster_pathSEXP, SEXP output_mask_pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -659,7 +659,7 @@ END_RCPP
 }
 // apply_mask_cpp
 SEXP apply_mask_cpp(const std::string& input_path, const std::string& mask_path, const std::string& output_path);
-RcppExport SEXP _rxbioclim_apply_mask_cpp(SEXP input_pathSEXP, SEXP mask_pathSEXP, SEXP output_pathSEXP) {
+RcppExport SEXP _xbioclim_apply_mask_cpp(SEXP input_pathSEXP, SEXP mask_pathSEXP, SEXP output_pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -674,69 +674,69 @@ END_RCPP
 RcppExport SEXP _rcpp_module_boot_bioclim_mod();
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_rxbioclim_engine_create", (DL_FUNC) &_rxbioclim_engine_create, 0},
-    {"_rxbioclim_engine_open", (DL_FUNC) &_rxbioclim_engine_open, 5},
-    {"_rxbioclim_engine_set_output", (DL_FUNC) &_rxbioclim_engine_set_output, 2},
-    {"_rxbioclim_engine_set_mask", (DL_FUNC) &_rxbioclim_engine_set_mask, 2},
-    {"_rxbioclim_engine_set_threads", (DL_FUNC) &_rxbioclim_engine_set_threads, 2},
-    {"_rxbioclim_engine_set_tile_size", (DL_FUNC) &_rxbioclim_engine_set_tile_size, 2},
-    {"_rxbioclim_engine_set_variables", (DL_FUNC) &_rxbioclim_engine_set_variables, 2},
-    {"_rxbioclim_engine_compute", (DL_FUNC) &_rxbioclim_engine_compute, 1},
-    {"_rxbioclim_bio01_cpp", (DL_FUNC) &_rxbioclim_bio01_cpp, 1},
-    {"_rxbioclim_bio02_cpp", (DL_FUNC) &_rxbioclim_bio02_cpp, 2},
-    {"_rxbioclim_bio03_cpp", (DL_FUNC) &_rxbioclim_bio03_cpp, 2},
-    {"_rxbioclim_bio04_cpp", (DL_FUNC) &_rxbioclim_bio04_cpp, 1},
-    {"_rxbioclim_bio05_cpp", (DL_FUNC) &_rxbioclim_bio05_cpp, 1},
-    {"_rxbioclim_bio06_cpp", (DL_FUNC) &_rxbioclim_bio06_cpp, 1},
-    {"_rxbioclim_bio07_cpp", (DL_FUNC) &_rxbioclim_bio07_cpp, 2},
-    {"_rxbioclim_bio08_cpp", (DL_FUNC) &_rxbioclim_bio08_cpp, 2},
-    {"_rxbioclim_bio09_cpp", (DL_FUNC) &_rxbioclim_bio09_cpp, 2},
-    {"_rxbioclim_bio10_cpp", (DL_FUNC) &_rxbioclim_bio10_cpp, 1},
-    {"_rxbioclim_bio11_cpp", (DL_FUNC) &_rxbioclim_bio11_cpp, 1},
-    {"_rxbioclim_bio12_cpp", (DL_FUNC) &_rxbioclim_bio12_cpp, 1},
-    {"_rxbioclim_bio13_cpp", (DL_FUNC) &_rxbioclim_bio13_cpp, 1},
-    {"_rxbioclim_bio14_cpp", (DL_FUNC) &_rxbioclim_bio14_cpp, 1},
-    {"_rxbioclim_bio15_cpp", (DL_FUNC) &_rxbioclim_bio15_cpp, 1},
-    {"_rxbioclim_bio16_cpp", (DL_FUNC) &_rxbioclim_bio16_cpp, 1},
-    {"_rxbioclim_bio17_cpp", (DL_FUNC) &_rxbioclim_bio17_cpp, 1},
-    {"_rxbioclim_bio18_cpp", (DL_FUNC) &_rxbioclim_bio18_cpp, 2},
-    {"_rxbioclim_bio19_cpp", (DL_FUNC) &_rxbioclim_bio19_cpp, 2},
-    {"_rxbioclim_bioclim_cpp", (DL_FUNC) &_rxbioclim_bioclim_cpp, 5},
-    {"_rxbioclim_bioclim_model_new", (DL_FUNC) &_rxbioclim_bioclim_model_new, 4},
-    {"_rxbioclim_bioclim_model_is_null", (DL_FUNC) &_rxbioclim_bioclim_model_is_null, 1},
-    {"_rxbioclim_bioclim_model_bio01", (DL_FUNC) &_rxbioclim_bioclim_model_bio01, 1},
-    {"_rxbioclim_bioclim_model_bio02", (DL_FUNC) &_rxbioclim_bioclim_model_bio02, 1},
-    {"_rxbioclim_bioclim_model_bio03", (DL_FUNC) &_rxbioclim_bioclim_model_bio03, 1},
-    {"_rxbioclim_bioclim_model_bio04", (DL_FUNC) &_rxbioclim_bioclim_model_bio04, 1},
-    {"_rxbioclim_bioclim_model_bio05", (DL_FUNC) &_rxbioclim_bioclim_model_bio05, 1},
-    {"_rxbioclim_bioclim_model_bio06", (DL_FUNC) &_rxbioclim_bioclim_model_bio06, 1},
-    {"_rxbioclim_bioclim_model_bio07", (DL_FUNC) &_rxbioclim_bioclim_model_bio07, 1},
-    {"_rxbioclim_bioclim_model_bio08", (DL_FUNC) &_rxbioclim_bioclim_model_bio08, 1},
-    {"_rxbioclim_bioclim_model_bio09", (DL_FUNC) &_rxbioclim_bioclim_model_bio09, 1},
-    {"_rxbioclim_bioclim_model_bio10", (DL_FUNC) &_rxbioclim_bioclim_model_bio10, 1},
-    {"_rxbioclim_bioclim_model_bio11", (DL_FUNC) &_rxbioclim_bioclim_model_bio11, 1},
-    {"_rxbioclim_bioclim_model_bio12", (DL_FUNC) &_rxbioclim_bioclim_model_bio12, 1},
-    {"_rxbioclim_bioclim_model_bio13", (DL_FUNC) &_rxbioclim_bioclim_model_bio13, 1},
-    {"_rxbioclim_bioclim_model_bio14", (DL_FUNC) &_rxbioclim_bioclim_model_bio14, 1},
-    {"_rxbioclim_bioclim_model_bio15", (DL_FUNC) &_rxbioclim_bioclim_model_bio15, 1},
-    {"_rxbioclim_bioclim_model_bio16", (DL_FUNC) &_rxbioclim_bioclim_model_bio16, 1},
-    {"_rxbioclim_bioclim_model_bio17", (DL_FUNC) &_rxbioclim_bioclim_model_bio17, 1},
-    {"_rxbioclim_bioclim_model_bio18", (DL_FUNC) &_rxbioclim_bioclim_model_bio18, 1},
-    {"_rxbioclim_bioclim_model_bio19", (DL_FUNC) &_rxbioclim_bioclim_model_bio19, 1},
-    {"_rxbioclim_bioclim_model_compute", (DL_FUNC) &_rxbioclim_bioclim_model_compute, 1},
-    {"_rxbioclim_bioclim_xt", (DL_FUNC) &_rxbioclim_bioclim_xt, 5},
-    {"_rxbioclim_cuda_device_count", (DL_FUNC) &_rxbioclim_cuda_device_count, 0},
-    {"_rxbioclim_cuda_device_info", (DL_FUNC) &_rxbioclim_cuda_device_info, 0},
-    {"_rxbioclim_engine_set_device", (DL_FUNC) &_rxbioclim_engine_set_device, 2},
-    {"_rxbioclim_gdal_can_open", (DL_FUNC) &_rxbioclim_gdal_can_open, 1},
-    {"_rxbioclim_gdal_info", (DL_FUNC) &_rxbioclim_gdal_info, 1},
-    {"_rxbioclim_rasterize_mask_cpp", (DL_FUNC) &_rxbioclim_rasterize_mask_cpp, 3},
-    {"_rxbioclim_apply_mask_cpp", (DL_FUNC) &_rxbioclim_apply_mask_cpp, 3},
+    {"_xbioclim_engine_create", (DL_FUNC) &_xbioclim_engine_create, 0},
+    {"_xbioclim_engine_open", (DL_FUNC) &_xbioclim_engine_open, 5},
+    {"_xbioclim_engine_set_output", (DL_FUNC) &_xbioclim_engine_set_output, 2},
+    {"_xbioclim_engine_set_mask", (DL_FUNC) &_xbioclim_engine_set_mask, 2},
+    {"_xbioclim_engine_set_threads", (DL_FUNC) &_xbioclim_engine_set_threads, 2},
+    {"_xbioclim_engine_set_tile_size", (DL_FUNC) &_xbioclim_engine_set_tile_size, 2},
+    {"_xbioclim_engine_set_variables", (DL_FUNC) &_xbioclim_engine_set_variables, 2},
+    {"_xbioclim_engine_compute", (DL_FUNC) &_xbioclim_engine_compute, 1},
+    {"_xbioclim_bio01_cpp", (DL_FUNC) &_xbioclim_bio01_cpp, 1},
+    {"_xbioclim_bio02_cpp", (DL_FUNC) &_xbioclim_bio02_cpp, 2},
+    {"_xbioclim_bio03_cpp", (DL_FUNC) &_xbioclim_bio03_cpp, 2},
+    {"_xbioclim_bio04_cpp", (DL_FUNC) &_xbioclim_bio04_cpp, 1},
+    {"_xbioclim_bio05_cpp", (DL_FUNC) &_xbioclim_bio05_cpp, 1},
+    {"_xbioclim_bio06_cpp", (DL_FUNC) &_xbioclim_bio06_cpp, 1},
+    {"_xbioclim_bio07_cpp", (DL_FUNC) &_xbioclim_bio07_cpp, 2},
+    {"_xbioclim_bio08_cpp", (DL_FUNC) &_xbioclim_bio08_cpp, 2},
+    {"_xbioclim_bio09_cpp", (DL_FUNC) &_xbioclim_bio09_cpp, 2},
+    {"_xbioclim_bio10_cpp", (DL_FUNC) &_xbioclim_bio10_cpp, 1},
+    {"_xbioclim_bio11_cpp", (DL_FUNC) &_xbioclim_bio11_cpp, 1},
+    {"_xbioclim_bio12_cpp", (DL_FUNC) &_xbioclim_bio12_cpp, 1},
+    {"_xbioclim_bio13_cpp", (DL_FUNC) &_xbioclim_bio13_cpp, 1},
+    {"_xbioclim_bio14_cpp", (DL_FUNC) &_xbioclim_bio14_cpp, 1},
+    {"_xbioclim_bio15_cpp", (DL_FUNC) &_xbioclim_bio15_cpp, 1},
+    {"_xbioclim_bio16_cpp", (DL_FUNC) &_xbioclim_bio16_cpp, 1},
+    {"_xbioclim_bio17_cpp", (DL_FUNC) &_xbioclim_bio17_cpp, 1},
+    {"_xbioclim_bio18_cpp", (DL_FUNC) &_xbioclim_bio18_cpp, 2},
+    {"_xbioclim_bio19_cpp", (DL_FUNC) &_xbioclim_bio19_cpp, 2},
+    {"_xbioclim_bioclim_cpp", (DL_FUNC) &_xbioclim_bioclim_cpp, 5},
+    {"_xbioclim_bioclim_model_new", (DL_FUNC) &_xbioclim_bioclim_model_new, 4},
+    {"_xbioclim_bioclim_model_is_null", (DL_FUNC) &_xbioclim_bioclim_model_is_null, 1},
+    {"_xbioclim_bioclim_model_bio01", (DL_FUNC) &_xbioclim_bioclim_model_bio01, 1},
+    {"_xbioclim_bioclim_model_bio02", (DL_FUNC) &_xbioclim_bioclim_model_bio02, 1},
+    {"_xbioclim_bioclim_model_bio03", (DL_FUNC) &_xbioclim_bioclim_model_bio03, 1},
+    {"_xbioclim_bioclim_model_bio04", (DL_FUNC) &_xbioclim_bioclim_model_bio04, 1},
+    {"_xbioclim_bioclim_model_bio05", (DL_FUNC) &_xbioclim_bioclim_model_bio05, 1},
+    {"_xbioclim_bioclim_model_bio06", (DL_FUNC) &_xbioclim_bioclim_model_bio06, 1},
+    {"_xbioclim_bioclim_model_bio07", (DL_FUNC) &_xbioclim_bioclim_model_bio07, 1},
+    {"_xbioclim_bioclim_model_bio08", (DL_FUNC) &_xbioclim_bioclim_model_bio08, 1},
+    {"_xbioclim_bioclim_model_bio09", (DL_FUNC) &_xbioclim_bioclim_model_bio09, 1},
+    {"_xbioclim_bioclim_model_bio10", (DL_FUNC) &_xbioclim_bioclim_model_bio10, 1},
+    {"_xbioclim_bioclim_model_bio11", (DL_FUNC) &_xbioclim_bioclim_model_bio11, 1},
+    {"_xbioclim_bioclim_model_bio12", (DL_FUNC) &_xbioclim_bioclim_model_bio12, 1},
+    {"_xbioclim_bioclim_model_bio13", (DL_FUNC) &_xbioclim_bioclim_model_bio13, 1},
+    {"_xbioclim_bioclim_model_bio14", (DL_FUNC) &_xbioclim_bioclim_model_bio14, 1},
+    {"_xbioclim_bioclim_model_bio15", (DL_FUNC) &_xbioclim_bioclim_model_bio15, 1},
+    {"_xbioclim_bioclim_model_bio16", (DL_FUNC) &_xbioclim_bioclim_model_bio16, 1},
+    {"_xbioclim_bioclim_model_bio17", (DL_FUNC) &_xbioclim_bioclim_model_bio17, 1},
+    {"_xbioclim_bioclim_model_bio18", (DL_FUNC) &_xbioclim_bioclim_model_bio18, 1},
+    {"_xbioclim_bioclim_model_bio19", (DL_FUNC) &_xbioclim_bioclim_model_bio19, 1},
+    {"_xbioclim_bioclim_model_compute", (DL_FUNC) &_xbioclim_bioclim_model_compute, 1},
+    {"_xbioclim_bioclim_xt", (DL_FUNC) &_xbioclim_bioclim_xt, 5},
+    {"_xbioclim_cuda_device_count", (DL_FUNC) &_xbioclim_cuda_device_count, 0},
+    {"_xbioclim_cuda_device_info", (DL_FUNC) &_xbioclim_cuda_device_info, 0},
+    {"_xbioclim_engine_set_device", (DL_FUNC) &_xbioclim_engine_set_device, 2},
+    {"_xbioclim_gdal_can_open", (DL_FUNC) &_xbioclim_gdal_can_open, 1},
+    {"_xbioclim_gdal_info", (DL_FUNC) &_xbioclim_gdal_info, 1},
+    {"_xbioclim_rasterize_mask_cpp", (DL_FUNC) &_xbioclim_rasterize_mask_cpp, 3},
+    {"_xbioclim_apply_mask_cpp", (DL_FUNC) &_xbioclim_apply_mask_cpp, 3},
     {"_rcpp_module_boot_bioclim_mod", (DL_FUNC) &_rcpp_module_boot_bioclim_mod, 0},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_rxbioclim(DllInfo *dll) {
+RcppExport void R_init_xbioclim(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

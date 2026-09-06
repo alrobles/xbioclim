@@ -1,7 +1,7 @@
 #' Error and Warning Message Store
 #'
 #' @description
-#' rxbioclim mirrors the `SpatMessages` pattern from the terra package to
+#' xbioclim mirrors the `SpatMessages` pattern from the terra package to
 #' provide a clean mechanism for propagating error and warning messages across
 #' the C++/R boundary.
 #'
@@ -28,7 +28,7 @@
 #' * `push_warning()` – store a warning message.
 #' * `check_messages()` – raise stored messages as R conditions and clear them.
 #'
-#' @name rxbioclim-messages
+#' @name xbioclim-messages
 NULL
 
 # ---------------------------------------------------------------------------
@@ -38,16 +38,16 @@ NULL
 # A dedicated environment so messages survive calls without polluting the
 # global namespace.  Analogous to a C++ SpatMessages struct kept alive for
 # the duration of an R session.
-.rxbioclim_env <- new.env(parent = emptyenv())
-.rxbioclim_env$errors   <- character(0)
-.rxbioclim_env$warnings <- character(0)
+.xbioclim_env <- new.env(parent = emptyenv())
+.xbioclim_env$errors   <- character(0)
+.xbioclim_env$warnings <- character(0)
 
 # ---------------------------------------------------------------------------
 # Internal push functions  (called by C++ glue code via .Call, or by R
 # helpers that need to record a deferred message)
 # ---------------------------------------------------------------------------
 
-#' Store an error message in the rxbioclim message store
+#' Store an error message in the xbioclim message store
 #'
 #' This function is called by C++ routines (via `.Call`) or internal R helpers
 #' to record an error without immediately throwing an R condition.  Call
@@ -65,11 +65,11 @@ push_error <- function(msg) {
     stop("'msg' must be a single character string, not a vector of length ",
          length(msg), call. = FALSE)
   }
-  .rxbioclim_env$errors <- c(.rxbioclim_env$errors, msg)
+  .xbioclim_env$errors <- c(.xbioclim_env$errors, msg)
   invisible(NULL)
 }
 
-#' Store a warning message in the rxbioclim message store
+#' Store a warning message in the xbioclim message store
 #'
 #' This function is called by C++ routines (via `.Call`) or internal R helpers
 #' to record a warning without immediately issuing an R condition.  Call
@@ -87,7 +87,7 @@ push_warning <- function(msg) {
     stop("'msg' must be a single character string, not a vector of length ",
          length(msg), call. = FALSE)
   }
-  .rxbioclim_env$warnings <- c(.rxbioclim_env$warnings, msg)
+  .xbioclim_env$warnings <- c(.xbioclim_env$warnings, msg)
   invisible(NULL)
 }
 
@@ -110,13 +110,13 @@ push_warning <- function(msg) {
 #' @keywords internal
 check_messages <- function() {
   if (has_warning()) {
-    msgs <- .rxbioclim_env$warnings
-    .rxbioclim_env$warnings <- character(0)
+    msgs <- .xbioclim_env$warnings
+    .xbioclim_env$warnings <- character(0)
     for (msg in msgs) warning(msg, call. = FALSE)
   }
   if (has_error()) {
-    msg <- paste(.rxbioclim_env$errors, collapse = "\n")
-    .rxbioclim_env$errors <- character(0)
+    msg <- paste(.xbioclim_env$errors, collapse = "\n")
+    .xbioclim_env$errors <- character(0)
     stop(msg, call. = FALSE)
   }
   invisible(NULL)
@@ -129,7 +129,7 @@ check_messages <- function() {
 #' Retrieve stored error messages
 #'
 #' Returns the character vector of error messages currently held in the
-#' rxbioclim message store.  Under normal usage the store is automatically
+#' xbioclim message store.  Under normal usage the store is automatically
 #' flushed by [check_messages()] after every C++ call, but you can inspect it
 #' manually before that point if needed.
 #'
@@ -140,13 +140,13 @@ check_messages <- function() {
 #' clear_messages()
 #' bioclim_errors()   # character(0)
 bioclim_errors <- function() {
-  .rxbioclim_env$errors
+  .xbioclim_env$errors
 }
 
 #' Retrieve stored warning messages
 #'
 #' Returns the character vector of warning messages currently held in the
-#' rxbioclim message store.  Under normal usage the store is automatically
+#' xbioclim message store.  Under normal usage the store is automatically
 #' flushed by [check_messages()] after every C++ call, but you can inspect it
 #' manually before that point if needed.
 #'
@@ -157,7 +157,7 @@ bioclim_errors <- function() {
 #' clear_messages()
 #' bioclim_warnings()   # character(0)
 bioclim_warnings <- function() {
-  .rxbioclim_env$warnings
+  .xbioclim_env$warnings
 }
 
 #' Check whether any errors are stored
@@ -170,7 +170,7 @@ bioclim_warnings <- function() {
 #' clear_messages()
 #' has_error()   # FALSE
 has_error <- function() {
-  length(.rxbioclim_env$errors) > 0L
+  length(.xbioclim_env$errors) > 0L
 }
 
 #' Check whether any warnings are stored
@@ -183,12 +183,12 @@ has_error <- function() {
 #' clear_messages()
 #' has_warning()   # FALSE
 has_warning <- function() {
-  length(.rxbioclim_env$warnings) > 0L
+  length(.xbioclim_env$warnings) > 0L
 }
 
 #' Clear all stored messages
 #'
-#' Discards all error and warning messages currently held in the rxbioclim
+#' Discards all error and warning messages currently held in the xbioclim
 #' message store.  This is called automatically by [check_messages()] after
 #' propagating messages to R conditions, but you can call it manually to reset
 #' state between operations.
@@ -201,7 +201,7 @@ has_warning <- function() {
 #' has_error()    # FALSE
 #' has_warning()  # FALSE
 clear_messages <- function() {
-  .rxbioclim_env$errors   <- character(0)
-  .rxbioclim_env$warnings <- character(0)
+  .xbioclim_env$errors   <- character(0)
+  .xbioclim_env$warnings <- character(0)
   invisible(NULL)
 }

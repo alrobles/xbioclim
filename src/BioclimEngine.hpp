@@ -1,4 +1,4 @@
-// BioclimEngine.hpp — tiled bioclimatic-variable engine for rxbioclim.
+// BioclimEngine.hpp — tiled bioclimatic-variable engine for xbioclim.
 //
 // BioclimEngine orchestrates the full pipeline:
 //   open() → set_output() → [set_mask()] → [set_threads()] → compute()
@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-namespace rxbioclim {
+namespace xbioclim {
 
 class BioclimEngine {
 public:
@@ -108,4 +108,4 @@ private:
     std::vector<int> variables_;
 };
 
-}  // namespace rxbioclim
+}  // namespace xbioclim

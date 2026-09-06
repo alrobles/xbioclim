@@ -2,7 +2,7 @@
 #
 # benchmarks/run_benchmarks.R
 #
-# Standalone benchmark script for rxbioclim.
+# Standalone benchmark script for xbioclim.
 #
 # Usage:
 #   Rscript benchmarks/run_benchmarks.R
@@ -22,10 +22,10 @@
 
 stopifnot(
   requireNamespace("terra",     quietly = TRUE),
-  requireNamespace("rxbioclim", quietly = TRUE)
+  requireNamespace("xbioclim", quietly = TRUE)
 )
 
-library(rxbioclim)
+library(xbioclim)
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -200,7 +200,7 @@ bench_bioclim_raster <- function(nrow, ncol, n_iter = 3L) {
 
 # ── Run benchmarks ────────────────────────────────────────────────────────────
 
-cat("=== rxbioclim benchmark suite ===\n\n")
+cat("=== xbioclim benchmark suite ===\n\n")
 
 # Small grid: 100 x 100 = 10,000 pixels
 cat("--- Small grid (100 x 100 = 10,000 pixels) ---\n")

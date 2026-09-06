@@ -1,8 +1,8 @@
 ---
-title: "Getting Started with rxbioclim"
+title: "Getting Started with xbioclim"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Getting Started with rxbioclim}
+  %\VignetteIndexEntry{Getting Started with xbioclim}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 ## Overview
 
-**rxbioclim** computes the 19 standard bioclimatic variables (BIO01–BIO19)
+**xbioclim** computes the 19 standard bioclimatic variables (BIO01–BIO19)
 from monthly climate data, following the
 [WorldClim](https://www.worldclim.org/data/bioclim.html) specification.  It is
 an R implementation of the
@@ -25,7 +25,7 @@ both a *unified* function (`bioclim()`) and *individual* variable functions
 (`bio01()` … `bio19()`).
 
 ```{r setup}
-library(rxbioclim)
+library(xbioclim)
 ```
 
 ## Input data format

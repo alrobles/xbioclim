@@ -9,7 +9,7 @@
 
 #' Check whether the package was built with GDAL support
 #'
-#' Returns \code{TRUE} when rxbioclim was compiled with GDAL and the native
+#' Returns \code{TRUE} when xbioclim was compiled with GDAL and the native
 #' \code{BioclimEngine} tiled pipeline is available, \code{FALSE} otherwise.
 #'
 #' Internally the function calls \code{\link{gdal_can_open}} with a dummy path

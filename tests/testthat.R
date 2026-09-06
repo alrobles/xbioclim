@@ -1,4 +1,4 @@
 library(testthat)
-library(rxbioclim)
+library(xbioclim)
 
-test_check("rxbioclim")
+test_check("xbioclim")

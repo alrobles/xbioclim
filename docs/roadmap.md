@@ -1,4 +1,4 @@
-# rxbioclim Optimisation Roadmap
+# xbioclim Optimisation Roadmap
 
 Structured implementation plan with milestones, phases, and checklists.
 
@@ -16,19 +16,19 @@ Structured implementation plan with milestones, phases, and checklists.
 | **Phase 2** | Native Engine | [#22 (Issue 7)][i22], [#23 (Issue 8)][i23], [#24 (Issue 9)][i24], [#25 (Issue 10)][i25] | ✅ Complete |
 | **Phase 3** | GPU & CI | [#26 (Issue 11)][i26], [#27 (Issue 12)][i27], [#28 (Issue 13)][i28] | ✅ Complete |
 
-[i16]: https://github.com/alrobles/rxbioclim/issues/16
-[i17]: https://github.com/alrobles/rxbioclim/issues/17
-[i18]: https://github.com/alrobles/rxbioclim/issues/18
-[i19]: https://github.com/alrobles/rxbioclim/issues/19
-[i20]: https://github.com/alrobles/rxbioclim/issues/20
-[i21]: https://github.com/alrobles/rxbioclim/issues/21
-[i22]: https://github.com/alrobles/rxbioclim/issues/22
-[i23]: https://github.com/alrobles/rxbioclim/issues/23
-[i24]: https://github.com/alrobles/rxbioclim/issues/24
-[i25]: https://github.com/alrobles/rxbioclim/issues/25
-[i26]: https://github.com/alrobles/rxbioclim/issues/26
-[i27]: https://github.com/alrobles/rxbioclim/issues/27
-[i28]: https://github.com/alrobles/rxbioclim/issues/28
+[i16]: https://github.com/alrobles/xbioclim/issues/16
+[i17]: https://github.com/alrobles/xbioclim/issues/17
+[i18]: https://github.com/alrobles/xbioclim/issues/18
+[i19]: https://github.com/alrobles/xbioclim/issues/19
+[i20]: https://github.com/alrobles/xbioclim/issues/20
+[i21]: https://github.com/alrobles/xbioclim/issues/21
+[i22]: https://github.com/alrobles/xbioclim/issues/22
+[i23]: https://github.com/alrobles/xbioclim/issues/23
+[i24]: https://github.com/alrobles/xbioclim/issues/24
+[i25]: https://github.com/alrobles/xbioclim/issues/25
+[i26]: https://github.com/alrobles/xbioclim/issues/26
+[i27]: https://github.com/alrobles/xbioclim/issues/27
+[i28]: https://github.com/alrobles/xbioclim/issues/28
 
 ---
 

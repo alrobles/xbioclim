@@ -1,4 +1,4 @@
-AC_INIT([rxbioclim], [0.1.0])
+AC_INIT([xbioclim], [0.1.0])
 AC_CONFIG_AUX_DIR([tools])
 
 # --- GDAL detection (optional) ---
@@ -146,7 +146,7 @@ else
       fi
       CUDA_TEST_SRC="${CUDA_TMPDIR}/conftest_cuda_$$.cu"
       CUDA_TEST_OBJ="${CUDA_TMPDIR}/conftest_cuda_$$.o"
-      echo '__global__ void _rxbioclim_check(void) {}' > "${CUDA_TEST_SRC}"
+      echo '__global__ void _xbioclim_check(void) {}' > "${CUDA_TEST_SRC}"
       echo 'int main(void) { return 0; }'             >> "${CUDA_TEST_SRC}"
       if "${NVCC}" -x cu -I"${CUDA_HOME}/include" \
            -Xcompiler -fPIC \

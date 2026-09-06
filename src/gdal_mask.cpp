@@ -1,4 +1,4 @@
-// gdal_mask.cpp — implementation of polygon masking for rxbioclim.
+// gdal_mask.cpp — implementation of polygon masking for xbioclim.
 //
 // All GDAL-dependent code is inside #ifdef HAVE_GDAL blocks.  When GDAL is
 // absent the functions throw std::runtime_error with a clear message.
@@ -21,7 +21,7 @@
 #include <cpl_conv.h>
 #endif
 
-namespace rxbioclim {
+namespace xbioclim {
 
 // ============================================================================
 // rasterize_mask
@@ -132,7 +132,7 @@ void rasterize_mask(const std::string& vector_path,
 #else
     (void)vector_path; (void)ref_raster; (void)output_path;
     throw std::runtime_error(
-        "rasterize_mask: rxbioclim was built without GDAL support. "
+        "rasterize_mask: xbioclim was built without GDAL support. "
         "Install GDAL >= 2.0.1 and reinstall the package.");
 #endif
 }
@@ -196,9 +196,9 @@ void apply_mask(const std::string& input_path,
 #else
     (void)input_path; (void)mask_path; (void)output_path;
     throw std::runtime_error(
-        "apply_mask: rxbioclim was built without GDAL support. "
+        "apply_mask: xbioclim was built without GDAL support. "
         "Install GDAL >= 2.0.1 and reinstall the package.");
 #endif
 }
 
-} // namespace rxbioclim
+} // namespace xbioclim

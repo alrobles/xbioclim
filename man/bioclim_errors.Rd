@@ -11,7 +11,7 @@ A character vector (possibly empty).
 }
 \description{
 Returns the character vector of error messages currently held in the
-rxbioclim message store.  Under normal usage the store is automatically
+xbioclim message store.  Under normal usage the store is automatically
 flushed by \code{\link[=check_messages]{check_messages()}} after every C++ call, but you can inspect it
 manually before that point if needed.
 }

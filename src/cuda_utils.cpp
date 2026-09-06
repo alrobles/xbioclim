@@ -84,5 +84,5 @@ Rcpp::List cuda_device_info() {
 //' @export
 // [[Rcpp::export]]
 void engine_set_device(SEXP xptr, std::string device) {
-    Rcpp::XPtr<rxbioclim::BioclimEngine>(xptr)->set_device(device);
+    Rcpp::XPtr<xbioclim::BioclimEngine>(xptr)->set_device(device);
 }

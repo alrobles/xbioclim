@@ -1,8 +1,8 @@
 ---
-title: "rxbioclim vs terra: Side-by-Side Comparison"
+title: "xbioclim vs terra: Side-by-Side Comparison"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{rxbioclim vs terra: Side-by-Side Comparison}
+  %\VignetteIndexEntry{xbioclim vs terra: Side-by-Side Comparison}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 
 The [terra](https://rspatial.github.io/terra/) package includes
 `terra::bioclim()` which computes bioclimatic variables from a
-`SpatRaster` stack.  **rxbioclim** fills a complementary niche: it works
+`SpatRaster` stack.  **xbioclim** fills a complementary niche: it works
 directly with plain R numeric vectors (and, by extension, matrices and
 data frames), without requiring any spatial infrastructure.
 
@@ -27,7 +27,7 @@ the two packages so you can choose the right tool—or combine both—for your
 workflow.
 
 ```{r setup}
-library(rxbioclim)
+library(xbioclim)
 ```
 
 ## Shared vocabulary
@@ -39,16 +39,16 @@ directly comparable.
 
 ## Input format
 
-| Feature | rxbioclim | terra |
+| Feature | xbioclim | terra |
 |---------|-----------|-------|
 | Input type | Plain numeric vector (length 12) | `SpatRaster` with 12 monthly layers |
 | Spatial awareness | None – pure numeric | Full CRS + extent handling |
 | Multi-pixel | Row-wise `apply()` over a matrix | Operates natively on rasters |
 | Installation | Lightweight (no system libs needed) | Requires GDAL/PROJ |
 
-### rxbioclim: vector inputs
+### xbioclim: vector inputs
 
-```{r rxbioclim-example}
+```{r xbioclim-example}
 # Monthly climate normals for a single location
 tas    <- c(12.0, 13.3, 15.8, 17.0, 17.5, 16.5,
             15.6, 15.6, 15.2, 14.5, 12.9, 12.0)
@@ -79,7 +79,7 @@ library(terra)
 # terra::bioclim() accepts the four stacks and returns a 19-layer SpatRaster
 bio_raster <- terra::bioclim(r_tas, r_tasmax, r_tasmin, r_pr)
 
-# Extract values at a single cell (equivalent to rxbioclim on one pixel)
+# Extract values at a single cell (equivalent to xbioclim on one pixel)
 cell_id <- cellFromXY(bio_raster, cbind(-99.1, 19.4))
 values(bio_raster)[cell_id, ]
 ```
@@ -88,12 +88,12 @@ values(bio_raster)[cell_id, ]
 
 ### Computing a single variable
 
-**rxbioclim** exposes every variable as its own named function, making
+**xbioclim** exposes every variable as its own named function, making
 intent explicit and reducing overhead when only one variable is needed:
 
 ```{r single-var-rx}
-bio04(tas)   # Temperature Seasonality – rxbioclim
-bio15(pr)    # Precipitation Seasonality – rxbioclim
+bio04(tas)   # Temperature Seasonality – xbioclim
+bio15(pr)    # Precipitation Seasonality – xbioclim
 ```
 
 In **terra** you would compute all 19 layers and then subset the desired
@@ -120,10 +120,10 @@ bio_raster <- terra::bioclim(r_tas, r_tasmax, r_tasmin, r_pr)
 names(bio_raster)  # "bio01" ... "bio19"
 ```
 
-## Applying rxbioclim to tabular climate data
+## Applying xbioclim to tabular climate data
 
 A common use-case outside of raster workflows is working with **station data**
-or **point samples** stored in a data frame.  rxbioclim is ideal here:
+or **point samples** stored in a data frame.  xbioclim is ideal here:
 
 ```{r tabular}
 # Simulated station records: 3 stations × 12 months
@@ -176,20 +176,20 @@ print(bio_df[, c("station", "bio01", "bio04", "bio12", "bio15")])
 | Scenario | Recommended package |
 |----------|---------------------|
 | Processing global rasters (NetCDF, GeoTIFF) | **terra** |
-| Computing variables for point/station data | **rxbioclim** |
-| Lightweight scripts with no spatial dependency | **rxbioclim** |
+| Computing variables for point/station data | **xbioclim** |
+| Lightweight scripts with no spatial dependency | **xbioclim** |
 | Integration into existing terra workflows | **terra** (or both) |
-| Custom block processing with non-standard data | **rxbioclim** |
-| SDM workflows that use `terra::extract()` output | **rxbioclim** |
+| Custom block processing with non-standard data | **xbioclim** |
+| SDM workflows that use `terra::extract()` output | **xbioclim** |
 
 ## Bridging both packages
 
 If you extract raster values with terra and want to compute bioclim variables
-with rxbioclim (e.g., for custom weighting or filtering), the workflow is:
+with xbioclim (e.g., for custom weighting or filtering), the workflow is:
 
 ```r
 library(terra)
-library(rxbioclim)
+library(xbioclim)
 
 # 1. Extract monthly values at species occurrence points
 pts <- vect(occurrences, geom = c("lon", "lat"), crs = "EPSG:4326")

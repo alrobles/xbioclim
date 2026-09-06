@@ -44,7 +44,7 @@ support.
 \examples{
 \donttest{
 info <- gdal_info(
-  system.file("extdata", "tiny.tif", package = "rxbioclim")
+  system.file("extdata", "tiny.tif", package = "xbioclim")
 )
 str(info)
 }

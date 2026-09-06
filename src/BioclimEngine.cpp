@@ -3,7 +3,7 @@
 // Structure
 // ---------
 // 1. Member-function bodies that always compile (open, set_*, etc.).
-// 2. An anonymous namespace (inside rxbioclim, guarded by #ifdef HAVE_GDAL)
+// 2. An anonymous namespace (inside xbioclim, guarded by #ifdef HAVE_GDAL)
 //    with per-pixel bioclim helpers and GDAL I/O helpers.
 // 3. BioclimEngine::compute() — thin always-compiled shell that delegates to
 //    the GDAL path or throws a clear error.
@@ -12,12 +12,12 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-#include "rxbioclim_omp.h"
+#include "xbioclim_omp.h"
 #include <Rcpp.h>
 
 #include "BioclimEngine.hpp"
 #include "gdal_io.hpp"
-#include "rxbioclim_omp.h"
+#include "xbioclim_omp.h"
 
 #ifdef HAVE_CUDA
 #include <cuda_runtime.h>
@@ -33,7 +33,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace rxbioclim {
+namespace xbioclim {
 
 // ── Always-compiled member implementations ───────────────────────────────────
 
@@ -56,7 +56,7 @@ void BioclimEngine::set_mask(const std::string& path) {
 }
 
 void BioclimEngine::set_threads(int n) {
-    n_threads_ = rxbioclim_safe_threads(n);
+    n_threads_ = xbioclim_safe_threads(n);
 }
 
 void BioclimEngine::set_tile_size(int tile_size) {
@@ -452,7 +452,7 @@ std::string BioclimEngine::compute() {
 #endif
 }
 
-}  // namespace rxbioclim
+}  // namespace xbioclim
 
 // ── Rcpp XPtr wrappers ────────────────────────────────────────────────────────
 //
@@ -469,8 +469,8 @@ std::string BioclimEngine::compute() {
 //' @seealso \code{\link{engine_open}}, \code{\link{engine_compute}}
 // [[Rcpp::export]]
 SEXP engine_create() {
-    Rcpp::XPtr<rxbioclim::BioclimEngine> ptr(
-        new rxbioclim::BioclimEngine(), true);
+    Rcpp::XPtr<xbioclim::BioclimEngine> ptr(
+        new xbioclim::BioclimEngine(), true);
     return ptr;
 }
 
@@ -493,7 +493,7 @@ void engine_open(SEXP xptr,
                  Rcpp::CharacterVector tasmax_files,
                  Rcpp::CharacterVector tasmin_files,
                  Rcpp::CharacterVector pr_files) {
-    Rcpp::XPtr<rxbioclim::BioclimEngine> eng(xptr);
+    Rcpp::XPtr<xbioclim::BioclimEngine> eng(xptr);
     eng->open(Rcpp::as<std::vector<std::string>>(tas_files),
               Rcpp::as<std::vector<std::string>>(tasmax_files),
               Rcpp::as<std::vector<std::string>>(tasmin_files),
@@ -511,7 +511,7 @@ void engine_open(SEXP xptr,
 //' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 // [[Rcpp::export]]
 void engine_set_output(SEXP xptr, std::string path) {
-    Rcpp::XPtr<rxbioclim::BioclimEngine>(xptr)->set_output(path);
+    Rcpp::XPtr<xbioclim::BioclimEngine>(xptr)->set_output(path);
 }
 
 //' Set an optional mask raster
@@ -525,7 +525,7 @@ void engine_set_output(SEXP xptr, std::string path) {
 //' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 // [[Rcpp::export]]
 void engine_set_mask(SEXP xptr, std::string mask_path) {
-    Rcpp::XPtr<rxbioclim::BioclimEngine>(xptr)->set_mask(mask_path);
+    Rcpp::XPtr<xbioclim::BioclimEngine>(xptr)->set_mask(mask_path);
 }
 
 //' Set the number of OpenMP threads
@@ -539,7 +539,7 @@ void engine_set_mask(SEXP xptr, std::string mask_path) {
 //' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 // [[Rcpp::export]]
 void engine_set_threads(SEXP xptr, int n) {
-    Rcpp::XPtr<rxbioclim::BioclimEngine>(xptr)->set_threads(n);
+    Rcpp::XPtr<xbioclim::BioclimEngine>(xptr)->set_threads(n);
 }
 
 //' Set the tile size used during tiled processing
@@ -555,7 +555,7 @@ void engine_set_threads(SEXP xptr, int n) {
 //' @keywords internal
 // [[Rcpp::export]]
 void engine_set_tile_size(SEXP xptr, int tile_size) {
-    Rcpp::XPtr<rxbioclim::BioclimEngine>(xptr)->set_tile_size(tile_size);
+    Rcpp::XPtr<xbioclim::BioclimEngine>(xptr)->set_tile_size(tile_size);
 }
 
 //' Select which bioclimatic variables to write
@@ -571,7 +571,7 @@ void engine_set_tile_size(SEXP xptr, int tile_size) {
 //' @export
 // [[Rcpp::export]]
 void engine_set_variables(SEXP xptr, Rcpp::IntegerVector variables) {
-    Rcpp::XPtr<rxbioclim::BioclimEngine> eng(xptr);
+    Rcpp::XPtr<xbioclim::BioclimEngine> eng(xptr);
     eng->set_variables(Rcpp::as<std::vector<int>>(variables));
 }
 
@@ -592,6 +592,6 @@ void engine_set_variables(SEXP xptr, Rcpp::IntegerVector variables) {
 //'   \code{\link{has_gdal}}
 // [[Rcpp::export]]
 std::string engine_compute(SEXP xptr) {
-    Rcpp::XPtr<rxbioclim::BioclimEngine> eng(xptr);
+    Rcpp::XPtr<xbioclim::BioclimEngine> eng(xptr);
     return eng->compute();
 }

@@ -65,7 +65,7 @@ bio19(tas, pr, ...)
 bioclim(tas, tasmax, tasmin, pr, ...)
 }
 \arguments{
-\item{tas}{Numeric vector of length 12 \strong{or} \linkS4class{BioclimData}:
+\item{tas}{Numeric vector of length 12 \strong{or} \link[=BioclimData-class]{BioclimData}:
 monthly mean temperature.}
 
 \item{...}{Currently unused; reserved for future extensions.}
@@ -82,9 +82,9 @@ monthly mean temperature.}
 value.
 \item For \code{bioclim()} with plain numeric-vector inputs: a named numeric vector
 of length 19 (names \code{bio01}–\code{bio19}).
-\item For \linkS4class{BioclimData} inputs to \code{bio01}–\code{bio19}: a numeric vector with
+\item For \link[=BioclimData-class]{BioclimData} inputs to \code{bio01}–\code{bio19}: a numeric vector with
 one value per pixel.
-\item For \linkS4class{BioclimData} inputs to \code{bioclim()}: a numeric matrix with one
+\item For \link[=BioclimData-class]{BioclimData} inputs to \code{bioclim()}: a numeric matrix with one
 row per pixel and 19 named columns (\code{bio01}–\code{bio19}).
 }
 }
@@ -118,8 +118,8 @@ The 19 bioclimatic variables are:
 }
 
 All functions accept either plain numeric vectors of length 12 (single
-pixel) or a \linkS4class{BioclimData} object holding a raster block (multiple
-pixels).  When a \linkS4class{BioclimData} object is supplied, computation is
+pixel) or a \link[=BioclimData-class]{BioclimData} object holding a raster block (multiple
+pixels).  When a \link[=BioclimData-class]{BioclimData} object is supplied, computation is
 delegated to the compiled C++ backend (xbioclim) and a numeric vector
 (one value per pixel) is returned.
 }

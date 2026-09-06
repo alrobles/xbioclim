@@ -1,6 +1,6 @@
-# rxbioclim Benchmarks
+# xbioclim Benchmarks
 
-Standardised benchmark suite for tracking `rxbioclim` performance across
+Standardised benchmark suite for tracking `xbioclim` performance across
 changes.
 
 ---

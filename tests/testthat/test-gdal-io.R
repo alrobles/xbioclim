@@ -10,7 +10,7 @@
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 library(testthat)
-# Return TRUE if rxbioclim was compiled with GDAL support.
+# Return TRUE if xbioclim was compiled with GDAL support.
 .has_gdal <- function() {
   tryCatch({
     # gdal_can_open() stops() when GDAL is absent.
@@ -34,7 +34,7 @@ skip_without_gdal <- function() {
 }
 
 tiny_tif <- function() {
-  system.file("extdata", "tiny.tif", package = "rxbioclim")
+  system.file("extdata", "tiny.tif", package = "xbioclim")
 }
 
 # ── gdal_can_open ────────────────────────────────────────────────────────────
@@ -66,7 +66,7 @@ test_that("gdal_info stops with clear message when GDAL is absent", {
     testthat::skip("GDAL is present — testing absence path not applicable")
   }
   expect_error(gdal_info("anything.tif"),
-               regexp = "requires GDAL but rxbioclim was built without it")
+               regexp = "requires GDAL but xbioclim was built without it")
 })
 
 test_that("gdal_info returns list with expected names for tiny.tif", {

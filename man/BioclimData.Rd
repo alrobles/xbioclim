@@ -20,10 +20,10 @@ monthly minimum temperature.}
 monthly precipitation.}
 }
 \value{
-A \linkS4class{BioclimData} object.
+A \link[=BioclimData-class]{BioclimData} object.
 }
 \description{
-Constructs a \linkS4class{BioclimData} object from monthly climate data.
+Constructs a \link[=BioclimData-class]{BioclimData} object from monthly climate data.
 Plain numeric vectors of length 12 are automatically coerced to 1-row
 matrices so that single-pixel and raster-block inputs are handled uniformly.
 }

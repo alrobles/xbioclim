@@ -10,7 +10,7 @@ clear_messages()
 Invisible \code{NULL}.
 }
 \description{
-Discards all error and warning messages currently held in the rxbioclim
+Discards all error and warning messages currently held in the xbioclim
 message store.  This is called automatically by \code{\link[=check_messages]{check_messages()}} after
 propagating messages to R conditions, but you can call it manually to reset
 state between operations.

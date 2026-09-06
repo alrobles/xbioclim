@@ -8,7 +8,7 @@
 //
 // Usage from R (after the package is loaded):
 //
-//   library(rxbioclim)
+//   library(xbioclim)
 //   # Single-pixel (1 × 12 matrices)
 //   tas    <- matrix(c(5,7,10,14,18,22,25,24,20,15,10,6), nrow=1)
 //   tasmax <- matrix(c(8,10,14,18,23,28,32,31,26,19,13,9), nrow=1)

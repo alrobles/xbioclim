@@ -2,7 +2,7 @@
 % Please edit documentation in R/messages.R
 \name{push_error}
 \alias{push_error}
-\title{Store an error message in the rxbioclim message store}
+\title{Store an error message in the xbioclim message store}
 \usage{
 push_error(msg)
 }

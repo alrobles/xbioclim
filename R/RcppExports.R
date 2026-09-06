@@ -10,7 +10,7 @@
 #' @return An \code{externalptr} to a new \code{BioclimEngine} object.
 #' @seealso \code{\link{engine_open}}, \code{\link{engine_compute}}
 engine_create <- function() {
-    .Call(`_rxbioclim_engine_create`)
+    .Call(`_xbioclim_engine_create`)
 }
 
 #' Configure monthly climate input files
@@ -27,7 +27,7 @@ engine_create <- function() {
 #' @return \code{NULL} invisibly.
 #' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 engine_open <- function(xptr, tas_files, tasmax_files, tasmin_files, pr_files) {
-    invisible(.Call(`_rxbioclim_engine_open`, xptr, tas_files, tasmax_files, tasmin_files, pr_files))
+    invisible(.Call(`_xbioclim_engine_open`, xptr, tas_files, tasmax_files, tasmin_files, pr_files))
 }
 
 #' Set the output raster path
@@ -40,7 +40,7 @@ engine_open <- function(xptr, tas_files, tasmax_files, tasmin_files, pr_files) {
 #' @return \code{NULL} invisibly.
 #' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 engine_set_output <- function(xptr, path) {
-    invisible(.Call(`_rxbioclim_engine_set_output`, xptr, path))
+    invisible(.Call(`_xbioclim_engine_set_output`, xptr, path))
 }
 
 #' Set an optional mask raster
@@ -53,7 +53,7 @@ engine_set_output <- function(xptr, path) {
 #' @return \code{NULL} invisibly.
 #' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 engine_set_mask <- function(xptr, mask_path) {
-    invisible(.Call(`_rxbioclim_engine_set_mask`, xptr, mask_path))
+    invisible(.Call(`_xbioclim_engine_set_mask`, xptr, mask_path))
 }
 
 #' Set the number of OpenMP threads
@@ -66,7 +66,7 @@ engine_set_mask <- function(xptr, mask_path) {
 #' @return \code{NULL} invisibly.
 #' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 engine_set_threads <- function(xptr, n) {
-    invisible(.Call(`_rxbioclim_engine_set_threads`, xptr, n))
+    invisible(.Call(`_xbioclim_engine_set_threads`, xptr, n))
 }
 
 #' Set the tile size used during tiled processing
@@ -81,7 +81,7 @@ engine_set_threads <- function(xptr, n) {
 #' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 #' @keywords internal
 engine_set_tile_size <- function(xptr, tile_size) {
-    invisible(.Call(`_rxbioclim_engine_set_tile_size`, xptr, tile_size))
+    invisible(.Call(`_xbioclim_engine_set_tile_size`, xptr, tile_size))
 }
 
 #' Select which bioclimatic variables to write
@@ -96,7 +96,7 @@ engine_set_tile_size <- function(xptr, tile_size) {
 #' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 #' @export
 engine_set_variables <- function(xptr, variables) {
-    invisible(.Call(`_rxbioclim_engine_set_variables`, xptr, variables))
+    invisible(.Call(`_xbioclim_engine_set_variables`, xptr, variables))
 }
 
 #' Run the bioclimatic-variable computation pipeline
@@ -115,7 +115,7 @@ engine_set_variables <- function(xptr, variables) {
 #' @seealso \code{\link{engine_create}}, \code{\link{engine_set_output}},
 #'   \code{\link{has_gdal}}
 engine_compute <- function(xptr) {
-    .Call(`_rxbioclim_engine_compute`, xptr)
+    .Call(`_xbioclim_engine_compute`, xptr)
 }
 
 #' Compute BIO01 (Mean Annual Temperature) for a raster block
@@ -124,7 +124,7 @@ engine_compute <- function(xptr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio01_cpp <- function(tas) {
-    .Call(`_rxbioclim_bio01_cpp`, tas)
+    .Call(`_xbioclim_bio01_cpp`, tas)
 }
 
 #' Compute BIO02 (Mean Diurnal Range) for a raster block
@@ -134,7 +134,7 @@ bio01_cpp <- function(tas) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio02_cpp <- function(tasmax, tasmin) {
-    .Call(`_rxbioclim_bio02_cpp`, tasmax, tasmin)
+    .Call(`_xbioclim_bio02_cpp`, tasmax, tasmin)
 }
 
 #' Compute BIO03 (Isothermality) for a raster block
@@ -144,7 +144,7 @@ bio02_cpp <- function(tasmax, tasmin) {
 #' @return Numeric vector with one value per pixel (NaN where BIO07 == 0).
 #' @keywords internal
 bio03_cpp <- function(tasmax, tasmin) {
-    .Call(`_rxbioclim_bio03_cpp`, tasmax, tasmin)
+    .Call(`_xbioclim_bio03_cpp`, tasmax, tasmin)
 }
 
 #' Compute BIO04 (Temperature Seasonality) for a raster block
@@ -153,7 +153,7 @@ bio03_cpp <- function(tasmax, tasmin) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio04_cpp <- function(tas) {
-    .Call(`_rxbioclim_bio04_cpp`, tas)
+    .Call(`_xbioclim_bio04_cpp`, tas)
 }
 
 #' Compute BIO05 (Max Temperature of Warmest Month) for a raster block
@@ -162,7 +162,7 @@ bio04_cpp <- function(tas) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio05_cpp <- function(tasmax) {
-    .Call(`_rxbioclim_bio05_cpp`, tasmax)
+    .Call(`_xbioclim_bio05_cpp`, tasmax)
 }
 
 #' Compute BIO06 (Min Temperature of Coldest Month) for a raster block
@@ -171,7 +171,7 @@ bio05_cpp <- function(tasmax) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio06_cpp <- function(tasmin) {
-    .Call(`_rxbioclim_bio06_cpp`, tasmin)
+    .Call(`_xbioclim_bio06_cpp`, tasmin)
 }
 
 #' Compute BIO07 (Temperature Annual Range) for a raster block
@@ -181,7 +181,7 @@ bio06_cpp <- function(tasmin) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio07_cpp <- function(tasmax, tasmin) {
-    .Call(`_rxbioclim_bio07_cpp`, tasmax, tasmin)
+    .Call(`_xbioclim_bio07_cpp`, tasmax, tasmin)
 }
 
 #' Compute BIO08 (Mean Temperature of Wettest Quarter) for a raster block
@@ -191,7 +191,7 @@ bio07_cpp <- function(tasmax, tasmin) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio08_cpp <- function(tas, pr) {
-    .Call(`_rxbioclim_bio08_cpp`, tas, pr)
+    .Call(`_xbioclim_bio08_cpp`, tas, pr)
 }
 
 #' Compute BIO09 (Mean Temperature of Driest Quarter) for a raster block
@@ -201,7 +201,7 @@ bio08_cpp <- function(tas, pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio09_cpp <- function(tas, pr) {
-    .Call(`_rxbioclim_bio09_cpp`, tas, pr)
+    .Call(`_xbioclim_bio09_cpp`, tas, pr)
 }
 
 #' Compute BIO10 (Mean Temperature of Warmest Quarter) for a raster block
@@ -210,7 +210,7 @@ bio09_cpp <- function(tas, pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio10_cpp <- function(tas) {
-    .Call(`_rxbioclim_bio10_cpp`, tas)
+    .Call(`_xbioclim_bio10_cpp`, tas)
 }
 
 #' Compute BIO11 (Mean Temperature of Coldest Quarter) for a raster block
@@ -219,7 +219,7 @@ bio10_cpp <- function(tas) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio11_cpp <- function(tas) {
-    .Call(`_rxbioclim_bio11_cpp`, tas)
+    .Call(`_xbioclim_bio11_cpp`, tas)
 }
 
 #' Compute BIO12 (Annual Precipitation) for a raster block
@@ -228,7 +228,7 @@ bio11_cpp <- function(tas) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio12_cpp <- function(pr) {
-    .Call(`_rxbioclim_bio12_cpp`, pr)
+    .Call(`_xbioclim_bio12_cpp`, pr)
 }
 
 #' Compute BIO13 (Precipitation of Wettest Month) for a raster block
@@ -237,7 +237,7 @@ bio12_cpp <- function(pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio13_cpp <- function(pr) {
-    .Call(`_rxbioclim_bio13_cpp`, pr)
+    .Call(`_xbioclim_bio13_cpp`, pr)
 }
 
 #' Compute BIO14 (Precipitation of Driest Month) for a raster block
@@ -246,7 +246,7 @@ bio13_cpp <- function(pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio14_cpp <- function(pr) {
-    .Call(`_rxbioclim_bio14_cpp`, pr)
+    .Call(`_xbioclim_bio14_cpp`, pr)
 }
 
 #' Compute BIO15 (Precipitation Seasonality) for a raster block
@@ -255,7 +255,7 @@ bio14_cpp <- function(pr) {
 #' @return Numeric vector with one value per pixel (NaN where mean precip == 0).
 #' @keywords internal
 bio15_cpp <- function(pr) {
-    .Call(`_rxbioclim_bio15_cpp`, pr)
+    .Call(`_xbioclim_bio15_cpp`, pr)
 }
 
 #' Compute BIO16 (Precipitation of Wettest Quarter) for a raster block
@@ -264,7 +264,7 @@ bio15_cpp <- function(pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio16_cpp <- function(pr) {
-    .Call(`_rxbioclim_bio16_cpp`, pr)
+    .Call(`_xbioclim_bio16_cpp`, pr)
 }
 
 #' Compute BIO17 (Precipitation of Driest Quarter) for a raster block
@@ -273,7 +273,7 @@ bio16_cpp <- function(pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio17_cpp <- function(pr) {
-    .Call(`_rxbioclim_bio17_cpp`, pr)
+    .Call(`_xbioclim_bio17_cpp`, pr)
 }
 
 #' Compute BIO18 (Precipitation of Warmest Quarter) for a raster block
@@ -283,7 +283,7 @@ bio17_cpp <- function(pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio18_cpp <- function(tas, pr) {
-    .Call(`_rxbioclim_bio18_cpp`, tas, pr)
+    .Call(`_xbioclim_bio18_cpp`, tas, pr)
 }
 
 #' Compute BIO19 (Precipitation of Coldest Quarter) for a raster block
@@ -293,7 +293,7 @@ bio18_cpp <- function(tas, pr) {
 #' @return Numeric vector with one value per pixel.
 #' @keywords internal
 bio19_cpp <- function(tas, pr) {
-    .Call(`_rxbioclim_bio19_cpp`, tas, pr)
+    .Call(`_xbioclim_bio19_cpp`, tas, pr)
 }
 
 #' Compute all 19 bioclimatic variables for a raster block
@@ -308,7 +308,7 @@ bio19_cpp <- function(tas, pr) {
 #'   as all-NA.
 #' @keywords internal
 bioclim_cpp <- function(tas, tasmax, tasmin, pr, ncores = 1L) {
-    .Call(`_rxbioclim_bioclim_cpp`, tas, tasmax, tasmin, pr, ncores)
+    .Call(`_xbioclim_bioclim_cpp`, tas, tasmax, tasmin, pr, ncores)
 }
 
 #' Create a new C++ BioclimModel and return an external pointer
@@ -320,7 +320,7 @@ bioclim_cpp <- function(tas, tasmax, tasmin, pr, ncores = 1L) {
 #' @return An external pointer wrapping a \code{BioclimModel} C++ object.
 #' @keywords internal
 bioclim_model_new <- function(tas, tasmax, tasmin, pr) {
-    .Call(`_rxbioclim_bioclim_model_new`, tas, tasmax, tasmin, pr)
+    .Call(`_xbioclim_bioclim_model_new`, tas, tasmax, tasmin, pr)
 }
 
 #' Test whether the C++ pointer is null
@@ -328,102 +328,102 @@ bioclim_model_new <- function(tas, tasmax, tasmin, pr) {
 #' @return Logical scalar.
 #' @keywords internal
 bioclim_model_is_null <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_is_null`, ptr)
+    .Call(`_xbioclim_bioclim_model_is_null`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio01 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio01`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio01`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio02 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio02`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio02`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio03 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio03`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio03`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio04 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio04`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio04`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio05 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio05`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio05`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio06 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio06`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio06`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio07 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio07`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio07`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio08 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio08`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio08`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio09 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio09`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio09`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio10 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio10`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio10`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio11 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio11`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio11`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio12 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio12`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio12`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio13 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio13`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio13`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio14 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio14`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio14`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio15 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio15`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio15`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio16 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio16`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio16`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio17 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio17`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio17`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio18 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio18`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio18`, ptr)
 }
 
 #' @keywords internal
 bioclim_model_bio19 <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_bio19`, ptr)
+    .Call(`_xbioclim_bioclim_model_bio19`, ptr)
 }
 
 #' Compute all 19 bioclimatic variables from the C++ object
@@ -431,7 +431,7 @@ bioclim_model_bio19 <- function(ptr) {
 #' @return Named numeric vector of length 19.
 #' @keywords internal
 bioclim_model_compute <- function(ptr) {
-    .Call(`_rxbioclim_bioclim_model_compute`, ptr)
+    .Call(`_xbioclim_bioclim_model_compute`, ptr)
 }
 
 #' Compute all 19 bioclimatic variables (vectorized, zero-copy bridge)
@@ -450,7 +450,7 @@ bioclim_model_compute <- function(ptr) {
 #'   as all-NA.
 #' @keywords internal
 bioclim_xt <- function(tas, tasmax, tasmin, pr, ncores = 1L) {
-    .Call(`_rxbioclim_bioclim_xt`, tas, tasmax, tasmin, pr, ncores)
+    .Call(`_xbioclim_bioclim_xt`, tas, tasmax, tasmin, pr, ncores)
 }
 
 #' Count available CUDA GPU devices
@@ -463,7 +463,7 @@ bioclim_xt <- function(tas, tasmax, tasmin, pr, ncores = 1L) {
 #' @seealso \code{\link{has_cuda}}, \code{\link{cuda_device_info}}
 #' @export
 cuda_device_count <- function() {
-    .Call(`_rxbioclim_cuda_device_count`)
+    .Call(`_xbioclim_cuda_device_count`)
 }
 
 #' Query properties of the first CUDA GPU device
@@ -482,7 +482,7 @@ cuda_device_count <- function() {
 #' @seealso \code{\link{has_cuda}}, \code{\link{cuda_device_count}}
 #' @export
 cuda_device_info <- function() {
-    .Call(`_rxbioclim_cuda_device_info`)
+    .Call(`_xbioclim_cuda_device_info`)
 }
 
 #' Set the compute device for a BioclimEngine instance
@@ -500,7 +500,7 @@ cuda_device_info <- function() {
 #'   \code{\link{bioclim_engine}}
 #' @export
 engine_set_device <- function(xptr, device) {
-    invisible(.Call(`_rxbioclim_engine_set_device`, xptr, device))
+    invisible(.Call(`_xbioclim_engine_set_device`, xptr, device))
 }
 
 #' Check whether GDAL can open a raster file
@@ -516,11 +516,11 @@ engine_set_device <- function(xptr, device) {
 #' @examples
 #' \donttest{
 #' # Works only when GDAL is available:
-#' gdal_can_open(system.file("extdata", "tiny.tif", package = "rxbioclim"))
+#' gdal_can_open(system.file("extdata", "tiny.tif", package = "xbioclim"))
 #' }
 #' @export
 gdal_can_open <- function(path) {
-    .Call(`_rxbioclim_gdal_can_open`, path)
+    .Call(`_xbioclim_gdal_can_open`, path)
 }
 
 #' Return metadata about a GDAL-readable raster
@@ -557,13 +557,13 @@ gdal_can_open <- function(path) {
 #' @examples
 #' \donttest{
 #' info <- gdal_info(
-#'   system.file("extdata", "tiny.tif", package = "rxbioclim")
+#'   system.file("extdata", "tiny.tif", package = "xbioclim")
 #' )
 #' str(info)
 #' }
 #' @export
 gdal_info <- function(path) {
-    .Call(`_rxbioclim_gdal_info`, path)
+    .Call(`_xbioclim_gdal_info`, path)
 }
 
 #' Rasterize a vector polygon layer to a binary mask raster
@@ -591,7 +591,7 @@ gdal_info <- function(path) {
 #' @examples
 #' \donttest{
 #' # Requires GDAL support at build time.
-#' ref  <- system.file("extdata", "tiny.tif", package = "rxbioclim")
+#' ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
 #' poly <- tempfile(fileext = ".geojson")
 #' mask <- tempfile(fileext = ".tif")
 #' writeLines(
@@ -603,7 +603,7 @@ gdal_info <- function(path) {
 #' }
 #' @export
 rasterize_mask_cpp <- function(vector_path, ref_raster_path, output_mask_path) {
-    .Call(`_rxbioclim_rasterize_mask_cpp`, vector_path, ref_raster_path, output_mask_path)
+    .Call(`_xbioclim_rasterize_mask_cpp`, vector_path, ref_raster_path, output_mask_path)
 }
 
 #' Apply a binary mask raster to an input raster
@@ -631,7 +631,7 @@ rasterize_mask_cpp <- function(vector_path, ref_raster_path, output_mask_path) {
 #' @examples
 #' \donttest{
 #' # Requires GDAL support at build time.
-#' ref    <- system.file("extdata", "tiny.tif", package = "rxbioclim")
+#' ref    <- system.file("extdata", "tiny.tif", package = "xbioclim")
 #' poly   <- tempfile(fileext = ".geojson")
 #' mask   <- tempfile(fileext = ".tif")
 #' output <- tempfile(fileext = ".tif")
@@ -645,6 +645,6 @@ rasterize_mask_cpp <- function(vector_path, ref_raster_path, output_mask_path) {
 #' }
 #' @export
 apply_mask_cpp <- function(input_path, mask_path, output_path) {
-    .Call(`_rxbioclim_apply_mask_cpp`, input_path, mask_path, output_path)
+    .Call(`_xbioclim_apply_mask_cpp`, input_path, mask_path, output_path)
 }
 

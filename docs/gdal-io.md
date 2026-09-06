@@ -1,13 +1,13 @@
 # GDAL Tiled I/O Layer
 
 This document describes the GDAL tiled I/O integration added in **Phase 2 /
-Issue #22** of the rxbioclim roadmap.
+Issue #22** of the xbioclim roadmap.
 
 ---
 
 ## Overview
 
-`rxbioclim` can optionally use GDAL for reading and writing raster files
+`xbioclim` can optionally use GDAL for reading and writing raster files
 without loading entire datasets into R memory.  When GDAL is detected at build
 time, the package gains two diagnostic R functions and a C++ API for tiled
 processing.
@@ -34,12 +34,12 @@ All GDAL-dependent C++ code is guarded by `#ifdef HAVE_GDAL`.
 
 ## C++ API
 
-### `rxbioclim::GdalReader` (`src/gdal_io.hpp` / `src/gdal_io.cpp`)
+### `xbioclim::GdalReader` (`src/gdal_io.hpp` / `src/gdal_io.cpp`)
 
 Opens a raster for **read-only** tiled access.
 
 ```cpp
-rxbioclim::GdalReader reader("/path/to/raster.tif");
+xbioclim::GdalReader reader("/path/to/raster.tif");
 
 int rows  = reader.nrows();
 int cols  = reader.ncols();
@@ -61,13 +61,13 @@ reader.read_window(0, 0, 256, 256, 1, buf);
 Only the pixels in the requested window are read into memory; the rest of
 the raster stays on disk.
 
-### `rxbioclim::GdalWriter` (`src/gdal_io.hpp` / `src/gdal_io.cpp`)
+### `xbioclim::GdalWriter` (`src/gdal_io.hpp` / `src/gdal_io.cpp`)
 
 Creates a new GTiff for **write-only** tiled output.
 
 ```cpp
 std::vector<double> gt = {-180.0, 0.5, 0.0, 90.0, 0.0, -0.5};
-rxbioclim::GdalWriter writer(
+xbioclim::GdalWriter writer(
     "/path/to/output.tif",
     nrows, ncols, nbands,
     gt,               // 6-element geotransform (may be empty)
@@ -107,7 +107,7 @@ Returns `TRUE` if GDAL can open the file at `path`, `FALSE` otherwise.
 Stops with `"built without GDAL"` if the package was compiled without GDAL.
 
 ```r
-gdal_can_open(system.file("extdata", "tiny.tif", package = "rxbioclim"))
+gdal_can_open(system.file("extdata", "tiny.tif", package = "xbioclim"))
 #> [1] TRUE
 ```
 

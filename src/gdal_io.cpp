@@ -14,7 +14,7 @@
 #include <ogr_spatialref.h>
 #endif
 
-namespace rxbioclim {
+namespace xbioclim {
 
 // ============================================================================
 // GdalReader implementation
@@ -35,7 +35,7 @@ GdalReader::GdalReader(const std::string& path)
 #else
     (void)path;
     throw std::runtime_error(
-        "GdalReader: rxbioclim was built without GDAL support. "
+        "GdalReader: xbioclim was built without GDAL support. "
         "Install GDAL >= 2.0.1 and reinstall the package."
     );
 #endif
@@ -166,7 +166,7 @@ void GdalReader::read_window(int xoff, int yoff,
     (void)xoff; (void)yoff; (void)xsize; (void)ysize; (void)band;
     buf.clear();
     throw std::runtime_error(
-        "GdalReader::read_window: rxbioclim was built without GDAL support."
+        "GdalReader::read_window: xbioclim was built without GDAL support."
     );
 #endif
 }
@@ -225,7 +225,7 @@ GdalWriter::GdalWriter(const std::string& path,
     (void)path; (void)nrows; (void)ncols; (void)nbands;
     (void)geotransform; (void)crs; (void)cog_compatible;
     throw std::runtime_error(
-        "GdalWriter: rxbioclim was built without GDAL support. "
+        "GdalWriter: xbioclim was built without GDAL support. "
         "Install GDAL >= 2.0.1 and reinstall the package."
     );
 #endif
@@ -275,7 +275,7 @@ void GdalWriter::write_window(int xoff, int yoff,
 #else
     (void)xoff; (void)yoff; (void)xsize; (void)ysize; (void)band; (void)buf;
     throw std::runtime_error(
-        "GdalWriter::write_window: rxbioclim was built without GDAL support."
+        "GdalWriter::write_window: xbioclim was built without GDAL support."
     );
 #endif
 }
@@ -292,4 +292,4 @@ void GdalWriter::close() {
 #endif
 }
 
-} // namespace rxbioclim
+} // namespace xbioclim

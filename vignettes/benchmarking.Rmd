@@ -31,7 +31,7 @@ We benchmark four approaches:
 4. **`vapply()` loop** – call `bioclim()` via `vapply()`.
 
 ```{r setup}
-library(rxbioclim)
+library(xbioclim)
 ```
 
 ## Generating synthetic climate data
@@ -212,7 +212,7 @@ consider:
 2. **Parallel processing** – wrap the block loop with `parallel::mclapply()`
    or `foreach` + `doParallel` to use multiple cores.
 3. **Streaming I/O** – read blocks from disk with `terra::readValues()` or
-   `stars::read_stars()`, process with rxbioclim, and write results back
+   `stars::read_stars()`, process with xbioclim, and write results back
    with `terra::writeValues()`.
 
 A sketch of a parallel block loop:

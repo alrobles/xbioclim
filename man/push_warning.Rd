@@ -2,7 +2,7 @@
 % Please edit documentation in R/messages.R
 \name{push_warning}
 \alias{push_warning}
-\title{Store a warning message in the rxbioclim message store}
+\title{Store a warning message in the xbioclim message store}
 \usage{
 push_warning(msg)
 }

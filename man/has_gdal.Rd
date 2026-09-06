@@ -11,7 +11,7 @@ Logical scalar: \code{TRUE} if GDAL is available, \code{FALSE}
 otherwise.
 }
 \description{
-Returns \code{TRUE} when rxbioclim was compiled with GDAL and the native
+Returns \code{TRUE} when xbioclim was compiled with GDAL and the native
 \code{BioclimEngine} tiled pipeline is available, \code{FALSE} otherwise.
 }
 \details{

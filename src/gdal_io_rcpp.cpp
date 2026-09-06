@@ -25,14 +25,14 @@ using namespace Rcpp;
 //' @examples
 //' \donttest{
 //' # Works only when GDAL is available:
-//' gdal_can_open(system.file("extdata", "tiny.tif", package = "rxbioclim"))
+//' gdal_can_open(system.file("extdata", "tiny.tif", package = "xbioclim"))
 //' }
 //' @export
 // [[Rcpp::export]]
 bool gdal_can_open(const std::string& path) {  // NOLINT
 #ifdef HAVE_GDAL
     try {
-        rxbioclim::GdalReader reader(path);
+        xbioclim::GdalReader reader(path);
         (void)reader;  // success — suppress unused-variable warning
         return true;
     } catch (const std::exception&) {
@@ -41,7 +41,7 @@ bool gdal_can_open(const std::string& path) {  // NOLINT
 #else
     (void)path;
     Rcpp::stop(
-        "gdal_can_open(): rxbioclim was built without GDAL support. "
+        "gdal_can_open(): xbioclim was built without GDAL support. "
         "Install GDAL >= 2.0.1 and reinstall the package."
     );
     return false;  // unreachable, but silences compiler warnings
@@ -82,7 +82,7 @@ bool gdal_can_open(const std::string& path) {  // NOLINT
 //' @examples
 //' \donttest{
 //' info <- gdal_info(
-//'   system.file("extdata", "tiny.tif", package = "rxbioclim")
+//'   system.file("extdata", "tiny.tif", package = "xbioclim")
 //' )
 //' str(info)
 //' }
@@ -90,7 +90,7 @@ bool gdal_can_open(const std::string& path) {  // NOLINT
 // [[Rcpp::export]]
 Rcpp::List gdal_info(const std::string& path) {
 #ifdef HAVE_GDAL
-    rxbioclim::GdalReader reader(path);
+    xbioclim::GdalReader reader(path);
 
     const int nb = reader.nbands();
 
@@ -114,7 +114,7 @@ Rcpp::List gdal_info(const std::string& path) {
 #else
     (void)path;
     Rcpp::stop(
-        "gdal_info() requires GDAL but rxbioclim was built without it. "
+        "gdal_info() requires GDAL but xbioclim was built without it. "
         "Install GDAL >= 2.0.1 and reinstall the package."
     );
     return Rcpp::List();  // unreachable

@@ -1,5 +1,5 @@
 # ============================================================================
-# Comprehensive Integration Test Suite for rxbioclim
+# Comprehensive Integration Test Suite for xbioclim
 # ============================================================================
 #
 # This script exercises every layer of the package:
@@ -592,7 +592,7 @@ test_that("L9: bioclim_engine() overwrite behavior", {
 test_that("L10: create_mask with character path", {
   skip_without_gdal()
 
-  ref <- system.file("extdata", "tiny.tif", package = "rxbioclim")
+  ref <- system.file("extdata", "tiny.tif", package = "xbioclim")
   if (!nzchar(ref)) skip("tiny.tif not found in inst/extdata")
 
   poly <- tempfile(fileext = ".geojson")

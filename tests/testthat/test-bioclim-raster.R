@@ -45,7 +45,7 @@ test_that(".compute_bioclim_block returns a 19-column matrix", {
   m_tasmin <- matrix(rep(0:11, 3), nrow = 3, byrow = TRUE)
   m_pr     <- matrix(rep(1:12, 3), nrow = 3, byrow = TRUE)
 
-  result <- rxbioclim:::.compute_bioclim_block(m_tas, m_tasmax, m_tasmin, m_pr)
+  result <- xbioclim:::.compute_bioclim_block(m_tas, m_tasmax, m_tasmin, m_pr)
   expect_true(is.matrix(result))
   expect_equal(nrow(result), 3L)
   expect_equal(ncol(result), 19L)
@@ -57,7 +57,7 @@ test_that(".compute_bioclim_block matches bioclim() for each row", {
   m_tasmin <- matrix(rep(0:11, 5), nrow = 5, byrow = TRUE)
   m_pr     <- matrix(rep(1:12, 5), nrow = 5, byrow = TRUE)
 
-  result <- rxbioclim:::.compute_bioclim_block(m_tas, m_tasmax, m_tasmin, m_pr)
+  result <- xbioclim:::.compute_bioclim_block(m_tas, m_tasmax, m_tasmin, m_pr)
   for (i in seq_len(5)) {
     expect_equal(result[i, ], unname(ref_bioclim), tolerance = 1e-6)
   }
@@ -72,7 +72,7 @@ test_that(".compute_bioclim_block returns NA row when any input has NA", {
   # Insert NA into the second cell's tas values
   m_tas[2, 1] <- NA
 
-  result <- rxbioclim:::.compute_bioclim_block(m_tas, m_tasmax, m_tasmin, m_pr)
+  result <- xbioclim:::.compute_bioclim_block(m_tas, m_tasmax, m_tasmin, m_pr)
   expect_false(anyNA(result[1, ]))
   expect_true(all(is.na(result[2, ])))
   expect_false(anyNA(result[3, ]))
@@ -82,26 +82,26 @@ test_that(".compute_bioclim_block returns NA row when any input has NA", {
 
 test_that("validate_spatraster errors on non-SpatRaster input", {
   skip_if_no_terra()
-  expect_error(rxbioclim:::validate_spatraster(matrix(1:12, 1, 12), "x"), "must be a SpatRaster")
+  expect_error(xbioclim:::validate_spatraster(matrix(1:12, 1, 12), "x"), "must be a SpatRaster")
 })
 
 test_that("validate_spatraster errors on wrong number of layers", {
   skip_if_no_terra()
   r_wrong <- terra::rast(nrows = 2, ncols = 2, nlyr = 6L)
-  expect_error(rxbioclim:::validate_spatraster(r_wrong, "tas"), "must have 12 layers")
+  expect_error(xbioclim:::validate_spatraster(r_wrong, "tas"), "must have 12 layers")
 })
 
 test_that("validate_spatraster passes for valid 12-layer SpatRaster", {
   skip_if_no_terra()
   r_ok <- terra::rast(nrows = 2, ncols = 2, nlyr = 12L)
-  expect_invisible(rxbioclim:::validate_spatraster(r_ok, "tas"))
+  expect_invisible(xbioclim:::validate_spatraster(r_ok, "tas"))
 })
 
 # ── bioclim_raster() ─────────────────────────────────────────────────────────
 
 test_that("bioclim_raster is an exported function in the package namespace", {
   expect_true(is.function(bioclim_raster))
-  expect_true("bioclim_raster" %in% getNamespaceExports("rxbioclim"))
+  expect_true("bioclim_raster" %in% getNamespaceExports("xbioclim"))
 })
 
 test_that("bioclim_raster returns SpatRaster with 19 layers", {

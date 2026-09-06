@@ -1,7 +1,7 @@
-# rxbioclim Performance Architecture
+# xbioclim Performance Architecture
 
 This document captures the full performance analysis and optimization vision for
-the `rxbioclim` package. It serves as the authoritative reference the team
+the `xbioclim` package. It serves as the authoritative reference the team
 consults throughout the project.
 
 ---
@@ -43,12 +43,12 @@ the **R** `bioclim()` generic in a `for` loop instead.
 
 ### 1.3 The Disconnect with xbioclim
 
-`rxbioclim` ships a **self-contained** `src/xbioclim.h` header that reimplements
+`xbioclim` ships a **self-contained** `src/xbioclim.h` header that reimplements
 the algorithm core using `std::vector<double>`. The parent C++ project
 [alrobles/xbioclim](https://github.com/alrobles/xbioclim) uses a fundamentally
 different technology stack:
 
-| Feature | `rxbioclim/src/xbioclim.h` | `alrobles/xbioclim` (C++ library) |
+| Feature | `xbioclim/src/xbioclim.h` | `alrobles/xbioclim` (C++ library) |
 |---------|---------------------------|-----------------------------------|
 | Data type | `std::vector<double>` | `xt::xtensor<float, 2>` |
 | File I/O | None (R / terra handles it) | GDAL via `gdal_io.cpp` |
@@ -57,8 +57,8 @@ different technology stack:
 | GPU | None | CUDA kernels (`bioclim_cuda.cu`) |
 | Memory layout | Row-major std::vector | Configurable xtensor layout |
 
-The real xbioclim library already solves every performance problem rxbioclim
-has — rxbioclim just doesn't use any of it.
+The real xbioclim library already solves every performance problem xbioclim
+has — xbioclim just doesn't use any of it.
 
 ---
 
@@ -97,7 +97,7 @@ R becomes a **pure declarative layer**. No pixel data ever enters R's heap.
 
 ### 2.2 Comparison Table
 
-| Metric | Current rxbioclim | fastbioclim_check | Proposed engine |
+| Metric | Current xbioclim | fastbioclim_check | Proposed engine |
 |--------|-------------------|-------------------|-----------------|
 | Data path | Disk → Terra → R → Rcpp → R → Terra → Disk | Disk → Terra → R → Rfast → R → Terra → Disk | Disk → GDAL → xtensor → GDAL → Disk |
 | R-side copies | 4+ full-raster copies | 2 full-raster copies | **Zero** |
@@ -145,9 +145,9 @@ Header-only C++ tensor library providing:
 ### 3.3 alrobles/sf `configure.ac`
 
 Reference implementation for detecting and linking GDAL from an R package's
-build system. The pattern can be adapted for rxbioclim's `configure.ac`.
+build system. The pattern can be adapted for xbioclim's `configure.ac`.
 
-### 3.4 rxbioclim (this package)
+### 3.4 xbioclim (this package)
 
 | File | Purpose | Notes |
 |------|---------|-------|

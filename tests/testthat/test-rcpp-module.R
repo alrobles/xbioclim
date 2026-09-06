@@ -1,6 +1,6 @@
 # Tests for the Rcpp bioclim_mod module (ClimateBlock class)
 #
-# The module is loaded automatically when rxbioclim is attached.
+# The module is loaded automatically when xbioclim is attached.
 # These tests exercise the C++ path and verify numerical equivalence
 # with the pure-R bioclim() function.
 
