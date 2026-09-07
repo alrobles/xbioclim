@@ -303,12 +303,14 @@ bio19_cpp <- function(tas, pr) {
 #' @param tasmin Numeric matrix (pixels x 12): monthly min temperature.
 #' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
 #' @param ncores Integer: number of OpenMP threads (default 1).
+#' @param na_rm  Logical: if TRUE, treat NA as missing and compute each BIO
+#'   from the available months (quarters need >=1 valid month). If FALSE,
+#'   a single NA in any input for a pixel gives an all-NA row (default).
 #' @return Numeric matrix (pixels x 19) with one column per variable
-#'   (bio01..bio19), named accordingly. Rows with any NA input are returned
-#'   as all-NA.
+#'   (bio01..bio19), named accordingly.
 #' @keywords internal
-bioclim_cpp <- function(tas, tasmax, tasmin, pr, ncores = 1L) {
-    .Call(`_xbioclim_bioclim_cpp`, tas, tasmax, tasmin, pr, ncores)
+bioclim_cpp <- function(tas, tasmax, tasmin, pr, ncores = 1L, na_rm = FALSE) {
+    .Call(`_xbioclim_bioclim_cpp`, tas, tasmax, tasmin, pr, ncores, na_rm)
 }
 
 #' Create a new C++ BioclimModel and return an external pointer

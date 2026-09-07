@@ -8,9 +8,9 @@
 
 namespace xbioclim_core {
 
-static constexpr float NODATA_FLOAT = std::numeric_limits<float>::quiet_NaN();
+static constexpr value_type NODATA = std::numeric_limits<value_type>::quiet_NaN();
 
-BioBlock compute_bioclim(const ClimateBlock& data) {
+BioBlock compute_bioclim(const ClimateBlock& data, bool na_rm) {
     BioBlock bio;
 
     // --- Validate ClimateBlock invariants ---
@@ -32,51 +32,81 @@ BioBlock compute_bioclim(const ClimateBlock& data) {
     // --- Diurnal range: [N_pixels, 12] ---
     Array2D diurnal = data.tasmax - data.tasmin;
 
-    // --- Simple statistics ---
-    bio.bio01 = row_mean(data.tas);
-    bio.bio02 = row_mean(diurnal);
-    bio.bio05 = row_max(data.tasmax);
-    bio.bio06 = row_min(data.tasmin);
-    bio.bio07 = bio.bio05 - bio.bio06;
+    if (!na_rm) {
+        // Classic / conservative path: NaN propagates (wrapper can enforce all-NA).
+        bio.bio01 = row_mean(data.tas);
+        bio.bio02 = row_mean(diurnal);
+        bio.bio05 = row_max(data.tasmax);
+        bio.bio06 = row_min(data.tasmin);
+        bio.bio07 = bio.bio05 - bio.bio06;
 
-    // BIO03: guard against division by zero (BIO07 == 0)
-    bio.bio03 = xt::where(xt::not_equal(bio.bio07, 0.0f),
-                          100.0f * bio.bio02 / bio.bio07,
-                          NODATA_FLOAT);
+        bio.bio03 = xt::where(xt::not_equal(bio.bio07, value_type(0)),
+                              value_type(100) * bio.bio02 / bio.bio07,
+                              NODATA);
 
-    bio.bio04 = 100.0f * row_std(data.tas);
-    bio.bio12 = row_sum(data.pr);
-    bio.bio13 = row_max(data.pr);
-    bio.bio14 = row_min(data.pr);
+        bio.bio04 = value_type(100) * row_std(data.tas);
+        bio.bio12 = row_sum(data.pr);
+        bio.bio13 = row_max(data.pr);
+        bio.bio14 = row_min(data.pr);
 
-    // BIO15: precipitation CV; guard against mean(pr) == 0
-    Array1D pr_mean = row_mean(data.pr);
-    Array1D pr_std  = row_std(data.pr);
-    bio.bio15 = xt::where(pr_mean > 0.0f,
-                          100.0f * pr_std / pr_mean,
-                          NODATA_FLOAT);
+        Array1D pr_mean = row_mean(data.pr);
+        Array1D pr_std  = row_std(data.pr);
+        bio.bio15 = xt::where(pr_mean > value_type(0),
+                              value_type(100) * pr_std / pr_mean,
+                              NODATA);
 
-    // --- Rolling quarter indices ---
-    IndexArray wet_q  = rolling_quarter_argmax(data.pr);
-    IndexArray dry_q  = rolling_quarter_argmin(data.pr);
-    IndexArray warm_q = rolling_quarter_argmax(data.tas);
-    IndexArray cold_q = rolling_quarter_argmin(data.tas);
+        IndexArray wet_q  = rolling_quarter_argmax(data.pr);
+        IndexArray dry_q  = rolling_quarter_argmin(data.pr);
+        IndexArray warm_q = rolling_quarter_argmax(data.tas);
+        IndexArray cold_q = rolling_quarter_argmin(data.tas);
 
-    // --- BIO08/09: mean temperature of wettest/driest quarter ---
-    bio.bio08 = quarter_mean(data.tas, wet_q);
-    bio.bio09 = quarter_mean(data.tas, dry_q);
+        bio.bio08 = quarter_mean(data.tas, wet_q);
+        bio.bio09 = quarter_mean(data.tas, dry_q);
+        bio.bio10 = quarter_mean(data.tas, warm_q);
+        bio.bio11 = quarter_mean(data.tas, cold_q);
 
-    // --- BIO10/11: mean temperature of warmest/coldest quarter ---
-    bio.bio10 = quarter_mean(data.tas, warm_q);
-    bio.bio11 = quarter_mean(data.tas, cold_q);
+        bio.bio16 = quarter_sum(data.pr, wet_q);
+        bio.bio17 = quarter_sum(data.pr, dry_q);
+        bio.bio18 = quarter_sum(data.pr, warm_q);
+        bio.bio19 = quarter_sum(data.pr, cold_q);
+    } else {
+        // na.rm = TRUE: skip NaNs; a quarter is valid if it has >= 1 valid month.
+        bio.bio01 = row_nanmean(data.tas);
+        bio.bio02 = row_nanmean(diurnal);
+        bio.bio05 = row_nanmax(data.tasmax);
+        bio.bio06 = row_nanmin(data.tasmin);
+        bio.bio07 = bio.bio05 - bio.bio06;
 
-    // --- BIO16/17: sum of precipitation of wettest/driest quarter ---
-    bio.bio16 = quarter_sum(data.pr, wet_q);
-    bio.bio17 = quarter_sum(data.pr, dry_q);
+        bio.bio03 = xt::where(xt::not_equal(bio.bio07, value_type(0)),
+                              value_type(100) * bio.bio02 / bio.bio07,
+                              NODATA);
 
-    // --- BIO18/19: sum of precipitation of warmest/coldest quarter ---
-    bio.bio18 = quarter_sum(data.pr, warm_q);
-    bio.bio19 = quarter_sum(data.pr, cold_q);
+        bio.bio04 = value_type(100) * row_nanstd(data.tas);
+        bio.bio12 = row_nansum(data.pr);
+        bio.bio13 = row_nanmax(data.pr);
+        bio.bio14 = row_nanmin(data.pr);
+
+        Array1D pr_mean = row_nanmean(data.pr);
+        Array1D pr_std  = row_nanstd(data.pr);
+        bio.bio15 = xt::where(pr_mean > value_type(0),
+                              value_type(100) * pr_std / pr_mean,
+                              NODATA);
+
+        IndexArray wet_q  = nan_rolling_quarter_argmax(data.pr);
+        IndexArray dry_q  = nan_rolling_quarter_argmin(data.pr);
+        IndexArray warm_q = nan_rolling_quarter_argmax(data.tas);
+        IndexArray cold_q = nan_rolling_quarter_argmin(data.tas);
+
+        bio.bio08 = nan_quarter_mean(data.tas, wet_q);
+        bio.bio09 = nan_quarter_mean(data.tas, dry_q);
+        bio.bio10 = nan_quarter_mean(data.tas, warm_q);
+        bio.bio11 = nan_quarter_mean(data.tas, cold_q);
+
+        bio.bio16 = nan_quarter_sum(data.pr, wet_q);
+        bio.bio17 = nan_quarter_sum(data.pr, dry_q);
+        bio.bio18 = nan_quarter_sum(data.pr, warm_q);
+        bio.bio19 = nan_quarter_sum(data.pr, cold_q);
+    }
 
     return bio;
 }

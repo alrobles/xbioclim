@@ -40,7 +40,11 @@
 #' @param tasmax Numeric vector of length 12: monthly maximum temperature.
 #' @param tasmin Numeric vector of length 12: monthly minimum temperature.
 #' @param pr     Numeric vector of length 12: monthly precipitation.
-#' @param ...    Currently unused; reserved for future extensions.
+#' @param ...    Additional arguments. For [BioclimData-class] inputs the
+#'   argument `na.rm` is accepted: if `TRUE`, missing months are omitted and
+#'   each BIO is computed from the available months (a quarter needs at least
+#'   one valid month). The default `na.rm = FALSE` makes a pixel all-`NA` if
+#'   any input month is `NA`.
 #'
 #' @return
 #' * For `bio01`–`bio19` with plain numeric-vector inputs: a single numeric

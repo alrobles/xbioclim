@@ -371,5 +371,7 @@ setMethod("bio19",   signature("BioclimData", "missing"),
 
 setMethod("bioclim", signature("BioclimData", "missing", "missing", "missing"),
   function(tas, tasmax, tasmin, pr, ...) {
-    bioclim_cpp(tas@tas, tas@tasmax, tas@tasmin, tas@pr)
+    args <- list(...)
+    na.rm <- if (!is.null(args$na.rm)) as.logical(args$na.rm)[1L] else FALSE
+    bioclim_cpp(tas@tas, tas@tasmax, tas@tasmin, tas@pr, na_rm = na.rm)
   })

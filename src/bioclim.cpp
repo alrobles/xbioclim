@@ -454,16 +454,19 @@ NumericVector bio19_cpp(NumericMatrix tas, NumericMatrix pr) {
 //' @param tasmin Numeric matrix (pixels x 12): monthly min temperature.
 //' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
 //' @param ncores Integer: number of OpenMP threads (default 1).
+//' @param na_rm  Logical: if TRUE, treat NA as missing and compute each BIO
+//'   from the available months (quarters need >=1 valid month). If FALSE,
+//'   a single NA in any input for a pixel gives an all-NA row (default).
 //' @return Numeric matrix (pixels x 19) with one column per variable
-//'   (bio01..bio19), named accordingly. Rows with any NA input are returned
-//'   as all-NA.
+//'   (bio01..bio19), named accordingly.
 //' @keywords internal
 // [[Rcpp::export]]
 NumericMatrix bioclim_cpp(NumericMatrix tas,
                           NumericMatrix tasmax,
                           NumericMatrix tasmin,
                           NumericMatrix pr,
-                          int ncores = 1) {
+                          int ncores = 1,
+                          bool na_rm = false) {
   int n = tas.nrow();
   NumericMatrix result(n, 19);
 
@@ -489,48 +492,68 @@ NumericMatrix bioclim_cpp(NumericMatrix tas,
       double tmx = tasmax(i, m);
       double tmn = tasmin(i, m);
       double p   = pr(i, m);
-      if (ISNA(t) || ISNA(tmx) || ISNA(tmn) || ISNA(p)) {
+      bool any_na = ISNA(t) || ISNA(tmx) || ISNA(tmn) || ISNA(p);
+      if (any_na) {
         has_na = true;
-        data.tas(i, m)    = 0.0f;
-        data.tasmax(i, m) = 0.0f;
-        data.tasmin(i, m) = 0.0f;
-        data.pr(i, m)     = 0.0f;
+      }
+      if (!na_rm) {
+        if (any_na) {
+          data.tas(i, m)    = 0.0;
+          data.tasmax(i, m) = 0.0;
+          data.tasmin(i, m) = 0.0;
+          data.pr(i, m)     = 0.0;
+        } else {
+          data.tas(i, m)    = static_cast<xbioclim_core::value_type>(t);
+          data.tasmax(i, m) = static_cast<xbioclim_core::value_type>(tmx);
+          data.tasmin(i, m) = static_cast<xbioclim_core::value_type>(tmn);
+          data.pr(i, m)     = static_cast<xbioclim_core::value_type>(p);
+        }
       } else {
-        data.tas(i, m)    = static_cast<xbioclim_core::value_type>(t);
-        data.tasmax(i, m) = static_cast<xbioclim_core::value_type>(tmx);
-        data.tasmin(i, m) = static_cast<xbioclim_core::value_type>(tmn);
-        data.pr(i, m)     = static_cast<xbioclim_core::value_type>(p);
+        data.tas(i, m)    = ISNA(t)   ? std::numeric_limits<xbioclim_core::value_type>::quiet_NaN()
+                                      : static_cast<xbioclim_core::value_type>(t);
+        data.tasmax(i, m) = ISNA(tmx) ? std::numeric_limits<xbioclim_core::value_type>::quiet_NaN()
+                                      : static_cast<xbioclim_core::value_type>(tmx);
+        data.tasmin(i, m) = ISNA(tmn) ? std::numeric_limits<xbioclim_core::value_type>::quiet_NaN()
+                                      : static_cast<xbioclim_core::value_type>(tmn);
+        data.pr(i, m)     = ISNA(p)   ? std::numeric_limits<xbioclim_core::value_type>::quiet_NaN()
+                                      : static_cast<xbioclim_core::value_type>(p);
       }
     }
-    if (has_na) na_rows[i] = 1;
+    if (has_na && !na_rm) na_rows[i] = 1;
   }
 
-  xbioclim_core::BioBlock bio = xbioclim_core::compute_bioclim(data);
+  xbioclim_core::BioBlock bio = xbioclim_core::compute_bioclim(data, na_rm);
 
   for (int i = 0; i < n; i++) {
-    if (na_rows[i]) {
+    if (!na_rm && na_rows[i]) {
       for (int j = 0; j < 19; j++) result(i, j) = NA_REAL;
       continue;
     }
-    result(i,  0) = static_cast<double>(bio.bio01(i));
-    result(i,  1) = static_cast<double>(bio.bio02(i));
-    result(i,  2) = static_cast<double>(bio.bio03(i));
-    result(i,  3) = static_cast<double>(bio.bio04(i));
-    result(i,  4) = static_cast<double>(bio.bio05(i));
-    result(i,  5) = static_cast<double>(bio.bio06(i));
-    result(i,  6) = static_cast<double>(bio.bio07(i));
-    result(i,  7) = static_cast<double>(bio.bio08(i));
-    result(i,  8) = static_cast<double>(bio.bio09(i));
-    result(i,  9) = static_cast<double>(bio.bio10(i));
-    result(i, 10) = static_cast<double>(bio.bio11(i));
-    result(i, 11) = static_cast<double>(bio.bio12(i));
-    result(i, 12) = static_cast<double>(bio.bio13(i));
-    result(i, 13) = static_cast<double>(bio.bio14(i));
-    result(i, 14) = static_cast<double>(bio.bio15(i));
-    result(i, 15) = static_cast<double>(bio.bio16(i));
-    result(i, 16) = static_cast<double>(bio.bio17(i));
-    result(i, 17) = static_cast<double>(bio.bio18(i));
-    result(i, 18) = static_cast<double>(bio.bio19(i));
+    for (int j = 0; j < 19; j++) {
+      double v = 0.0;
+      switch (j) {
+        case  0: v = static_cast<double>(bio.bio01(i)); break;
+        case  1: v = static_cast<double>(bio.bio02(i)); break;
+        case  2: v = static_cast<double>(bio.bio03(i)); break;
+        case  3: v = static_cast<double>(bio.bio04(i)); break;
+        case  4: v = static_cast<double>(bio.bio05(i)); break;
+        case  5: v = static_cast<double>(bio.bio06(i)); break;
+        case  6: v = static_cast<double>(bio.bio07(i)); break;
+        case  7: v = static_cast<double>(bio.bio08(i)); break;
+        case  8: v = static_cast<double>(bio.bio09(i)); break;
+        case  9: v = static_cast<double>(bio.bio10(i)); break;
+        case 10: v = static_cast<double>(bio.bio11(i)); break;
+        case 11: v = static_cast<double>(bio.bio12(i)); break;
+        case 12: v = static_cast<double>(bio.bio13(i)); break;
+        case 13: v = static_cast<double>(bio.bio14(i)); break;
+        case 14: v = static_cast<double>(bio.bio15(i)); break;
+        case 15: v = static_cast<double>(bio.bio16(i)); break;
+        case 16: v = static_cast<double>(bio.bio17(i)); break;
+        case 17: v = static_cast<double>(bio.bio18(i)); break;
+        case 18: v = static_cast<double>(bio.bio19(i)); break;
+      }
+      result(i, j) = std::isnan(v) ? NA_REAL : v;
+    }
   }
 
   return result;
