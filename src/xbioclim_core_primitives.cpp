@@ -200,7 +200,7 @@ IndexArray rolling_quarter_argmin(const Array2D& A) {
 
 Array1D quarter_mean(const Array2D& A, const IndexArray& starts) {
     const std::size_t N = A.shape(0);
-    Array1D result = xt::zeros<float>({N});
+    Array1D result = xt::zeros<value_type>({N});
     static constexpr std::size_t SENTINEL = std::numeric_limits<std::size_t>::max();
 
 #if defined(XBIOCLIM_USE_OPENMP_OFFLOAD)
@@ -252,7 +252,7 @@ Array1D quarter_mean(const Array2D& A, const IndexArray& starts) {
 
 Array1D quarter_sum(const Array2D& A, const IndexArray& starts) {
     const std::size_t N = A.shape(0);
-    Array1D result = xt::zeros<float>({N});
+    Array1D result = xt::zeros<value_type>({N});
     static constexpr std::size_t SENTINEL = std::numeric_limits<std::size_t>::max();
 
 #if defined(XBIOCLIM_USE_OPENMP_OFFLOAD)

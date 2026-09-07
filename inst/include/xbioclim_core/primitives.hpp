@@ -10,11 +10,14 @@
 
 namespace xbioclim_core {
 
+/// Default element type for the xbioclim_core R core (double for R compatibility).
+using value_type = double;
+
 /// 2-D array: shape [N_pixels, 12]
-using Array2D = xt::xarray<float>;
+using Array2D = xt::xarray<value_type>;
 
 /// 1-D array: shape [N_pixels]
-using Array1D = xt::xarray<float>;
+using Array1D = xt::xarray<value_type>;
 
 /// Integer index array: shape [N_pixels]
 using IndexArray = xt::xarray<std::size_t>;
