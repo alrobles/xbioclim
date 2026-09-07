@@ -1,7 +1,7 @@
 Package: xbioclim
 Type: Package
 Title: Bioclimatic Variables from Monthly Climate Data
-Version: 0.1.0
+Version: 1.0.0
 Authors@R: person("Angel Luis", "Robles Fernandez", 
                    email = "a.l.robles.fernandez@gmail.com",
                    role = c("aut", "cre"))
