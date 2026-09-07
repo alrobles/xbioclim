@@ -7,3 +7,9 @@
 ^docs$
 ^benchmarks$
 ^tools$
+^config\.log$
+^config\.status$
+^autom4te\.cache$
+^cran-comments\.md$
+^src/Makevars$
+^src/.*\.(o|so|dll)$
