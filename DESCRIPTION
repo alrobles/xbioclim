@@ -17,6 +17,7 @@ SystemRequirements: GNU make, C++17;
     optionally GDAL (>= 2.0.1) with gdal-config,
     CUDA toolkit (>= 11.0) with nvcc for GPU acceleration
 Encoding: UTF-8
+Language: en-US
 Roxygen: list(markdown = TRUE)
 Imports:
     methods,
