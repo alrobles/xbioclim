@@ -1,6 +1,6 @@
 #pragma once
 
-#include <xtensor/xtensor.hpp>
+#include <xtensor/xarray.hpp>
 #include <xtensor/xview.hpp>
 #include <xtensor/xmath.hpp>
 #include <xtensor/xsort.hpp>
@@ -11,13 +11,13 @@
 namespace xbioclim_core {
 
 /// 2-D array: shape [N_pixels, 12]
-using Array2D = xt::xtensor<float, 2>;
+using Array2D = xt::xarray<float>;
 
 /// 1-D array: shape [N_pixels]
-using Array1D = xt::xtensor<float, 1>;
+using Array1D = xt::xarray<float>;
 
 /// Integer index array: shape [N_pixels]
-using IndexArray = xt::xtensor<std::size_t, 1>;
+using IndexArray = xt::xarray<std::size_t>;
 
 /// Bundle of four input variable blocks
 struct ClimateBlock {
