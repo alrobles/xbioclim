@@ -3,14 +3,9 @@
 \name{BioclimModel-methods}
 \alias{BioclimModel-methods}
 \alias{bio01,BioclimModel-method}
-\alias{bio02,BioclimModel,missing-method}
-\alias{bio03,BioclimModel,missing-method}
 \alias{bio04,BioclimModel-method}
 \alias{bio05,BioclimModel-method}
 \alias{bio06,BioclimModel-method}
-\alias{bio07,BioclimModel,missing-method}
-\alias{bio08,BioclimModel,missing-method}
-\alias{bio09,BioclimModel,missing-method}
 \alias{bio10,BioclimModel-method}
 \alias{bio11,BioclimModel-method}
 \alias{bio12,BioclimModel-method}
@@ -19,9 +14,14 @@
 \alias{bio15,BioclimModel-method}
 \alias{bio16,BioclimModel-method}
 \alias{bio17,BioclimModel-method}
+\alias{bio02,BioclimModel,missing-method}
+\alias{bio03,BioclimModel,missing-method}
+\alias{bio07,BioclimModel,missing-method}
+\alias{bio08,BioclimModel,missing-method}
+\alias{bio09,BioclimModel,missing-method}
 \alias{bio18,BioclimModel,missing-method}
 \alias{bio19,BioclimModel,missing-method}
-\alias{bioclim,BioclimModel-method}
+\alias{bioclim,BioclimModel,ANY,ANY,ANY-method}
 \title{S4 Methods for BioclimModel Objects}
 \description{
 S4 method implementations for all 19 bioclimatic variable functions and

@@ -53,7 +53,26 @@
 #'   row per pixel and 19 named columns (`bio01`–`bio19`).
 #'
 #' @name bioclim-variables
-#' @aliases bio01 bio02 bio03 bio04 bio05 bio06 bio07 bio08 bio09 bio10
-#'          bio11 bio12 bio13 bio14 bio15 bio16 bio17 bio18 bio19 bioclim
+#' @aliases bio01 bio02 bio03 bio04 bio05 bio06 bio07 bio08 bio09 bio10 bio11 bio12 bio13 bio14 bio15 bio16 bio17 bio18 bio19 bioclim
+#' @aliases bio01,ANY-method bio01,BioclimData-method
+#' @aliases bio02,ANY,ANY-method bio02,BioclimData,missing-method
+#' @aliases bio03,ANY,ANY-method bio03,BioclimData,missing-method
+#' @aliases bio04,ANY-method bio04,BioclimData-method
+#' @aliases bio05,ANY-method bio05,BioclimData-method
+#' @aliases bio06,ANY-method bio06,BioclimData-method
+#' @aliases bio07,ANY,ANY-method bio07,BioclimData,missing-method
+#' @aliases bio08,ANY,ANY-method bio08,BioclimData,missing-method
+#' @aliases bio09,ANY,ANY-method bio09,BioclimData,missing-method
+#' @aliases bio10,ANY-method bio10,BioclimData-method
+#' @aliases bio11,ANY-method bio11,BioclimData-method
+#' @aliases bio12,ANY-method bio12,BioclimData-method
+#' @aliases bio13,ANY-method bio13,BioclimData-method
+#' @aliases bio14,ANY-method bio14,BioclimData-method
+#' @aliases bio15,ANY-method bio15,BioclimData-method
+#' @aliases bio16,ANY-method bio16,BioclimData-method
+#' @aliases bio17,ANY-method bio17,BioclimData-method
+#' @aliases bio18,ANY,ANY-method bio18,BioclimData,missing-method
+#' @aliases bio19,ANY,ANY-method bio19,BioclimData,missing-method
+#' @aliases bioclim,ANY,ANY,ANY,ANY-method bioclim,BioclimData,missing,missing,missing-method
 NULL
 

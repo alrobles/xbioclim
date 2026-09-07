@@ -80,28 +80,16 @@ setMethod("show", "BioclimModel", function(object) {
 #' \code{bioclim} that dispatch to the underlying C++ object via Rcpp when
 #' the first argument is a \code{\link{BioclimModel-class}} instance.
 #'
-#' @aliases
-#'   bio01,BioclimModel-method
-#'   bio02,BioclimModel,missing-method
-#'   bio03,BioclimModel,missing-method
-#'   bio04,BioclimModel-method
-#'   bio05,BioclimModel-method
-#'   bio06,BioclimModel-method
-#'   bio07,BioclimModel,missing-method
-#'   bio08,BioclimModel,missing-method
-#'   bio09,BioclimModel,missing-method
-#'   bio10,BioclimModel-method
-#'   bio11,BioclimModel-method
-#'   bio12,BioclimModel-method
-#'   bio13,BioclimModel-method
-#'   bio14,BioclimModel-method
-#'   bio15,BioclimModel-method
-#'   bio16,BioclimModel-method
-#'   bio17,BioclimModel-method
-#'   bio18,BioclimModel,missing-method
-#'   bio19,BioclimModel,missing-method
-#'   bioclim,BioclimModel-method
 #' @name BioclimModel-methods
+#' @aliases bio01,BioclimModel-method bio04,BioclimModel-method bio05,BioclimModel-method
+#' @aliases bio06,BioclimModel-method bio10,BioclimModel-method bio11,BioclimModel-method
+#' @aliases bio12,BioclimModel-method bio13,BioclimModel-method bio14,BioclimModel-method
+#' @aliases bio15,BioclimModel-method bio16,BioclimModel-method bio17,BioclimModel-method
+#' @aliases bio02,BioclimModel,missing-method bio03,BioclimModel,missing-method
+#' @aliases bio07,BioclimModel,missing-method bio08,BioclimModel,missing-method
+#' @aliases bio09,BioclimModel,missing-method bio18,BioclimModel,missing-method
+#' @aliases bio19,BioclimModel,missing-method
+#' @aliases bioclim,BioclimModel,ANY,ANY,ANY-method
 NULL
 
 # ── Single-argument BioclimModel methods ──────────────────────────────────────

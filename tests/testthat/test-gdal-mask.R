@@ -31,12 +31,12 @@ tiny_tif <- function() {
 
 # A GeoJSON polygon that covers the full extent of tiny.tif.
 # tiny.tif has the default identity geotransform, so pixel coordinates are
-# the spatial coordinates.  We cover [0,3] x [0,-3] in GDAL convention.
+# the spatial coordinates.  We cover [0,3] x [0,3] in GDAL convention.
 write_covering_geojson <- function(path) {
   geojson <- paste0(
     '{"type":"FeatureCollection","features":[{"type":"Feature",',
     '"geometry":{"type":"Polygon",',
-    '"coordinates":[[[0,0],[3,0],[3,-3],[0,-3],[0,0]]]},',
+    '"coordinates":[[[0,0],[3,0],[3,3],[0,3],[0,0]]]},',
     '"properties":{}}]}'
   )
   writeLines(geojson, path)
@@ -190,11 +190,11 @@ test_that("apply_mask_cpp sets pixels to NA where mask == 0", {
   output <- tempfile(fileext = ".tif")
   on.exit(unlink(c(poly, mask, output)), add = TRUE)
 
-  # A polygon that covers only the top-left pixel (roughly).
+  # A polygon that covers only the bottom-left pixel (roughly).
   geojson <- paste0(
     '{"type":"FeatureCollection","features":[{"type":"Feature",',
     '"geometry":{"type":"Polygon",',
-    '"coordinates":[[[0,0],[1,0],[1,-1],[0,-1],[0,0]]]},',
+    '"coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]},',
     '"properties":{}}]}'
   )
   writeLines(geojson, poly)
@@ -275,7 +275,7 @@ test_that("create_mask accepts an sf polygon object", {
 
   poly_sf <- sf::st_sfc(
     sf::st_polygon(list(matrix(
-      c(0, 0, 3, 0, 3, -3, 0, -3, 0, 0),
+      c(0, 0, 3, 0, 3, 3, 0, 3, 0, 0),
       ncol = 2, byrow = TRUE
     )))
   )
