@@ -10,11 +10,14 @@
 
 namespace xbioclim_core {
 
+/// Default element type for the xbioclim_core R core (double for R compatibility).
+using value_type = double;
+
 /// 2-D array: shape [N_pixels, 12]
-using Array2D = xt::xarray<float>;
+using Array2D = xt::xarray<value_type>;
 
 /// 1-D array: shape [N_pixels]
-using Array1D = xt::xarray<float>;
+using Array1D = xt::xarray<value_type>;
 
 /// Integer index array: shape [N_pixels]
 using IndexArray = xt::xarray<std::size_t>;
@@ -76,5 +79,22 @@ Array1D quarter_mean(const Array2D& A, const IndexArray& starts);
 
 /// Sum of the circular 3-month window starting at each pixel's start index
 Array1D quarter_sum(const Array2D& A, const IndexArray& starts);
+
+// ---------------------------------------------------------------------------
+// NaN-aware variants (na.rm = TRUE). Missing values are skipped.
+// Quarters are valid with at least one non-NaN month (min_periods = 1).
+// ---------------------------------------------------------------------------
+
+Array1D row_nanmean(const Array2D& A);
+Array1D row_nansum(const Array2D& A);
+Array1D row_nanmax(const Array2D& A);
+Array1D row_nanmin(const Array2D& A);
+Array1D row_nanstd(const Array2D& A);
+
+IndexArray nan_rolling_quarter_argmax(const Array2D& A, std::size_t min_periods = 1);
+IndexArray nan_rolling_quarter_argmin(const Array2D& A, std::size_t min_periods = 1);
+
+Array1D nan_quarter_mean(const Array2D& A, const IndexArray& starts);
+Array1D nan_quarter_sum(const Array2D& A, const IndexArray& starts);
 
 } // namespace xbioclim_core

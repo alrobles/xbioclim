@@ -4,6 +4,7 @@
 #include "xbioclim_omp.h"
 #include <Rcpp.h>
 #include "xbioclim_omp.h"
+#include "xbioclim_core/bioclim.hpp"
 using namespace Rcpp;
 
 // ── Primitive helpers (NumericVector) ────────────────────────────────────────
@@ -453,16 +454,19 @@ NumericVector bio19_cpp(NumericMatrix tas, NumericMatrix pr) {
 //' @param tasmin Numeric matrix (pixels x 12): monthly min temperature.
 //' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
 //' @param ncores Integer: number of OpenMP threads (default 1).
+//' @param na_rm  Logical: if TRUE, treat NA as missing and compute each BIO
+//'   from the available months (quarters need >=1 valid month). If FALSE,
+//'   a single NA in any input for a pixel gives an all-NA row (default).
 //' @return Numeric matrix (pixels x 19) with one column per variable
-//'   (bio01..bio19), named accordingly. Rows with any NA input are returned
-//'   as all-NA.
+//'   (bio01..bio19), named accordingly.
 //' @keywords internal
 // [[Rcpp::export]]
 NumericMatrix bioclim_cpp(NumericMatrix tas,
                           NumericMatrix tasmax,
                           NumericMatrix tasmin,
                           NumericMatrix pr,
-                          int ncores = 1) {
+                          int ncores = 1,
+                          bool na_rm = false) {
   int n = tas.nrow();
   NumericMatrix result(n, 19);
 
@@ -474,128 +478,83 @@ NumericMatrix bioclim_cpp(NumericMatrix tas,
   );
   colnames(result) = cnames;
 
-#ifdef _OPENMP
-  int prev_threads = omp_get_max_threads();
-  omp_set_num_threads(xbioclim_safe_threads(ncores));
-#endif
+  xbioclim_core::ClimateBlock data;
+  data.tas    = xbioclim_core::Array2D::from_shape({static_cast<std::size_t>(n), std::size_t(12)});
+  data.tasmax = xbioclim_core::Array2D::from_shape({static_cast<std::size_t>(n), std::size_t(12)});
+  data.tasmin = xbioclim_core::Array2D::from_shape({static_cast<std::size_t>(n), std::size_t(12)});
+  data.pr     = xbioclim_core::Array2D::from_shape({static_cast<std::size_t>(n), std::size_t(12)});
 
-  // Use raw REAL() pointers instead of Rcpp proxy objects for OpenMP safety:
-  // Rcpp proxy classes are not thread-safe; raw pointers allow concurrent
-  // reads from input matrices and non-overlapping writes to the output matrix.
-  // Column-major layout: element [i, m] is at ptr[i + m * n].
-  const double* tas_ptr    = REAL(tas);
-  const double* tasmax_ptr = REAL(tasmax);
-  const double* tasmin_ptr = REAL(tasmin);
-  const double* pr_ptr     = REAL(pr);
-  double*       res_ptr    = REAL(result);
-
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static)
-#endif
+  std::vector<int> na_rows(n, 0);
   for (int i = 0; i < n; i++) {
-    // Copy row i into local stack buffers (private per thread)
-    double t[12], tmx[12], tmn[12], p[12];
-    for (int m = 0; m < 12; m++) {
-      t[m]   = tas_ptr[i   + m * n];
-      tmx[m] = tasmax_ptr[i + m * n];
-      tmn[m] = tasmin_ptr[i + m * n];
-      p[m]   = pr_ptr[i    + m * n];
-    }
-
-    // NA check: if any of the 48 input values is NA, write NA row and skip
     bool has_na = false;
     for (int m = 0; m < 12; m++) {
-      if (ISNA(t[m]) || ISNA(tmx[m]) || ISNA(tmn[m]) || ISNA(p[m])) {
+      double t   = tas(i, m);
+      double tmx = tasmax(i, m);
+      double tmn = tasmin(i, m);
+      double p   = pr(i, m);
+      bool any_na = ISNA(t) || ISNA(tmx) || ISNA(tmn) || ISNA(p);
+      if (any_na) {
         has_na = true;
-        break;
+      }
+      if (!na_rm) {
+        if (any_na) {
+          data.tas(i, m)    = 0.0;
+          data.tasmax(i, m) = 0.0;
+          data.tasmin(i, m) = 0.0;
+          data.pr(i, m)     = 0.0;
+        } else {
+          data.tas(i, m)    = static_cast<xbioclim_core::value_type>(t);
+          data.tasmax(i, m) = static_cast<xbioclim_core::value_type>(tmx);
+          data.tasmin(i, m) = static_cast<xbioclim_core::value_type>(tmn);
+          data.pr(i, m)     = static_cast<xbioclim_core::value_type>(p);
+        }
+      } else {
+        data.tas(i, m)    = ISNA(t)   ? std::numeric_limits<xbioclim_core::value_type>::quiet_NaN()
+                                      : static_cast<xbioclim_core::value_type>(t);
+        data.tasmax(i, m) = ISNA(tmx) ? std::numeric_limits<xbioclim_core::value_type>::quiet_NaN()
+                                      : static_cast<xbioclim_core::value_type>(tmx);
+        data.tasmin(i, m) = ISNA(tmn) ? std::numeric_limits<xbioclim_core::value_type>::quiet_NaN()
+                                      : static_cast<xbioclim_core::value_type>(tmn);
+        data.pr(i, m)     = ISNA(p)   ? std::numeric_limits<xbioclim_core::value_type>::quiet_NaN()
+                                      : static_cast<xbioclim_core::value_type>(p);
       }
     }
-    if (has_na) {
-      for (int j = 0; j < 19; j++) res_ptr[i + j * n] = NA_REAL;
-      continue;
-    }
-
-    // Temperature basics
-    double t_sum = 0.0, t_sumsq = 0.0;
-    double tmx_max = tmx[0], tmn_min = tmn[0];
-    double diurnal_sum = 0.0;
-    for (int m = 0; m < 12; m++) {
-      t_sum      += t[m];
-      t_sumsq    += t[m] * t[m];
-      if (tmx[m] > tmx_max) tmx_max = tmx[m];
-      if (tmn[m] < tmn_min) tmn_min = tmn[m];
-      diurnal_sum += tmx[m] - tmn[m];
-    }
-    double b01     = t_sum / 12.0;
-    double b02     = diurnal_sum / 12.0;
-    double b05     = tmx_max;
-    double b06     = tmn_min;
-    double b07     = b05 - b06;
-    double b03     = (b07 == 0.0) ? R_NaN : 100.0 * b02 / b07;
-    double t_sd    = std::sqrt(t_sumsq / 12.0 - b01 * b01);
-    double b04     = 100.0 * t_sd;
-
-    // Quarter indices (temperature)
-    int warm_start = quarter_argmax_ptr(t);
-    int cold_start = quarter_argmin_ptr(t);
-
-    // Quarter indices (precipitation)
-    int wet_start  = quarter_argmax_ptr(p);
-    int dry_start  = quarter_argmin_ptr(p);
-
-    // Temperature quarter means
-    double b08 = quarter_mean_ptr(t, wet_start);
-    double b09 = quarter_mean_ptr(t, dry_start);
-    double b10 = quarter_mean_ptr(t, warm_start);
-    double b11 = quarter_mean_ptr(t, cold_start);
-
-    // Precipitation basics
-    double p_sum = 0.0, p_sumsq = 0.0;
-    double p_max = p[0], p_min = p[0];
-    for (int m = 0; m < 12; m++) {
-      p_sum   += p[m];
-      p_sumsq += p[m] * p[m];
-      if (p[m] > p_max) p_max = p[m];
-      if (p[m] < p_min) p_min = p[m];
-    }
-    double b12     = p_sum;
-    double b13     = p_max;
-    double b14     = p_min;
-    double pr_mean = p_sum / 12.0;
-    double p_sd    = std::sqrt(p_sumsq / 12.0 - pr_mean * pr_mean);
-    double b15     = (pr_mean == 0.0) ? R_NaN : 100.0 * p_sd / pr_mean;
-
-    // Precipitation quarter sums
-    double b16 = quarter_sum_ptr(p, wet_start);
-    double b17 = quarter_sum_ptr(p, dry_start);
-    double b18 = quarter_sum_ptr(p, warm_start);
-    double b19 = quarter_sum_ptr(p, cold_start);
-
-    // Write results (column-major: result[i, j] == res_ptr[i + j * n])
-    res_ptr[i +  0 * n] = b01;
-    res_ptr[i +  1 * n] = b02;
-    res_ptr[i +  2 * n] = b03;
-    res_ptr[i +  3 * n] = b04;
-    res_ptr[i +  4 * n] = b05;
-    res_ptr[i +  5 * n] = b06;
-    res_ptr[i +  6 * n] = b07;
-    res_ptr[i +  7 * n] = b08;
-    res_ptr[i +  8 * n] = b09;
-    res_ptr[i +  9 * n] = b10;
-    res_ptr[i + 10 * n] = b11;
-    res_ptr[i + 11 * n] = b12;
-    res_ptr[i + 12 * n] = b13;
-    res_ptr[i + 13 * n] = b14;
-    res_ptr[i + 14 * n] = b15;
-    res_ptr[i + 15 * n] = b16;
-    res_ptr[i + 16 * n] = b17;
-    res_ptr[i + 17 * n] = b18;
-    res_ptr[i + 18 * n] = b19;
+    if (has_na && !na_rm) na_rows[i] = 1;
   }
 
-#ifdef _OPENMP
-  omp_set_num_threads(prev_threads);
-#endif
+  xbioclim_core::BioBlock bio = xbioclim_core::compute_bioclim(data, na_rm);
+
+  for (int i = 0; i < n; i++) {
+    if (!na_rm && na_rows[i]) {
+      for (int j = 0; j < 19; j++) result(i, j) = NA_REAL;
+      continue;
+    }
+    for (int j = 0; j < 19; j++) {
+      double v = 0.0;
+      switch (j) {
+        case  0: v = static_cast<double>(bio.bio01(i)); break;
+        case  1: v = static_cast<double>(bio.bio02(i)); break;
+        case  2: v = static_cast<double>(bio.bio03(i)); break;
+        case  3: v = static_cast<double>(bio.bio04(i)); break;
+        case  4: v = static_cast<double>(bio.bio05(i)); break;
+        case  5: v = static_cast<double>(bio.bio06(i)); break;
+        case  6: v = static_cast<double>(bio.bio07(i)); break;
+        case  7: v = static_cast<double>(bio.bio08(i)); break;
+        case  8: v = static_cast<double>(bio.bio09(i)); break;
+        case  9: v = static_cast<double>(bio.bio10(i)); break;
+        case 10: v = static_cast<double>(bio.bio11(i)); break;
+        case 11: v = static_cast<double>(bio.bio12(i)); break;
+        case 12: v = static_cast<double>(bio.bio13(i)); break;
+        case 13: v = static_cast<double>(bio.bio14(i)); break;
+        case 14: v = static_cast<double>(bio.bio15(i)); break;
+        case 15: v = static_cast<double>(bio.bio16(i)); break;
+        case 16: v = static_cast<double>(bio.bio17(i)); break;
+        case 17: v = static_cast<double>(bio.bio18(i)); break;
+        case 18: v = static_cast<double>(bio.bio19(i)); break;
+      }
+      result(i, j) = std::isnan(v) ? NA_REAL : v;
+    }
+  }
 
   return result;
 }

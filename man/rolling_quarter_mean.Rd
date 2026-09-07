@@ -4,10 +4,12 @@
 \alias{rolling_quarter_mean}
 \title{Compute rolling quarter means with circular wrapping}
 \usage{
-rolling_quarter_mean(x)
+rolling_quarter_mean(x, na.rm = FALSE)
 }
 \arguments{
 \item{x}{A numeric vector of length 12 (monthly values).}
+
+\item{na.rm}{Logical. If \code{TRUE}, missing values are skipped.}
 }
 \value{
 A numeric vector of length 12 with rolling quarter means.

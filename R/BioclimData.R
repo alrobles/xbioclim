@@ -274,34 +274,51 @@ setMethod("bioclim", signature("ANY", "ANY", "ANY", "ANY"),
     validate_monthly(tasmin, "tasmin")
     validate_monthly(pr, "pr")
 
-    b01 <- mean(tas)
-    b02 <- mean(tasmax - tasmin)
-    b05 <- max(tasmax)
-    b06 <- min(tasmin)
+    args <- list(...)
+    na.rm <- if (!is.null(args$na.rm)) as.logical(args$na.rm)[1L] else FALSE
+
+    mean0 <- function(x) if (all(is.na(x))) NaN else mean(x, na.rm = na.rm)
+    max0  <- function(x) if (all(is.na(x))) NaN else max(x, na.rm = na.rm)
+    min0  <- function(x) if (all(is.na(x))) NaN else min(x, na.rm = na.rm)
+    sum0  <- function(x) if (all(is.na(x))) NaN else sum(x, na.rm = na.rm)
+
+    b01 <- mean0(tas)
+    b02 <- mean0(tasmax - tasmin)
+    b05 <- max0(tasmax)
+    b06 <- min0(tasmin)
     b07 <- b05 - b06
-    b03 <- if (b07 == 0) NaN else 100 * b02 / b07
-    b04 <- 100 * sd_pop(tas)
+    b03 <- if (is.na(b07) || b07 == 0) NaN else 100 * b02 / b07
+    b04 <- 100 * sd_pop(tas, na.rm = na.rm)
 
-    wet_start  <- quarter_argmax(pr)
-    dry_start  <- quarter_argmin(pr)
-    warm_start <- quarter_argmax(tas)
-    cold_start <- quarter_argmin(tas)
+    wet_start  <- quarter_argmax(pr,  na.rm = na.rm)
+    dry_start  <- quarter_argmin(pr,  na.rm = na.rm)
+    warm_start <- quarter_argmax(tas, na.rm = na.rm)
+    cold_start <- quarter_argmin(tas, na.rm = na.rm)
 
-    b08 <- mean(quarter_values(tas, wet_start))
-    b09 <- mean(quarter_values(tas, dry_start))
-    b10 <- mean(quarter_values(tas, warm_start))
-    b11 <- mean(quarter_values(tas, cold_start))
+    qmean <- function(x, start) {
+      if (all(is.na(x))) return(NaN)
+      mean(quarter_values(x, start), na.rm = na.rm)
+    }
+    qsum <- function(x, start) {
+      if (all(is.na(x))) return(NaN)
+      sum(quarter_values(x, start), na.rm = na.rm)
+    }
 
-    b12 <- sum(pr)
-    b13 <- max(pr)
-    b14 <- min(pr)
-    pr_mean <- mean(pr)
-    b15 <- if (pr_mean == 0) NaN else 100 * sd_pop(pr) / pr_mean
+    b08 <- qmean(tas, wet_start)
+    b09 <- qmean(tas, dry_start)
+    b10 <- qmean(tas, warm_start)
+    b11 <- qmean(tas, cold_start)
 
-    b16 <- sum(quarter_values(pr, wet_start))
-    b17 <- sum(quarter_values(pr, dry_start))
-    b18 <- sum(quarter_values(pr, warm_start))
-    b19 <- sum(quarter_values(pr, cold_start))
+    b12 <- sum0(pr)
+    b13 <- max0(pr)
+    b14 <- min0(pr)
+    pr_mean <- mean0(pr)
+    b15 <- if (is.na(pr_mean) || pr_mean <= 0) NaN else 100 * sd_pop(pr, na.rm = na.rm) / pr_mean
+
+    b16 <- qsum(pr, wet_start)
+    b17 <- qsum(pr, dry_start)
+    b18 <- qsum(pr, warm_start)
+    b19 <- qsum(pr, cold_start)
 
     c(bio01 = b01, bio02 = b02, bio03 = b03, bio04 = b04,
       bio05 = b05, bio06 = b06, bio07 = b07,
@@ -371,5 +388,7 @@ setMethod("bio19",   signature("BioclimData", "missing"),
 
 setMethod("bioclim", signature("BioclimData", "missing", "missing", "missing"),
   function(tas, tasmax, tasmin, pr, ...) {
-    bioclim_cpp(tas@tas, tas@tasmax, tas@tasmin, tas@pr)
+    args <- list(...)
+    na.rm <- if (!is.null(args$na.rm)) as.logical(args$na.rm)[1L] else FALSE
+    bioclim_cpp(tas@tas, tas@tasmax, tas@tasmin, tas@pr, na_rm = na.rm)
   })

@@ -200,7 +200,7 @@ IndexArray rolling_quarter_argmin(const Array2D& A) {
 
 Array1D quarter_mean(const Array2D& A, const IndexArray& starts) {
     const std::size_t N = A.shape(0);
-    Array1D result = xt::zeros<float>({N});
+    Array1D result = xt::zeros<value_type>({N});
     static constexpr std::size_t SENTINEL = std::numeric_limits<std::size_t>::max();
 
 #if defined(XBIOCLIM_USE_OPENMP_OFFLOAD)
@@ -252,7 +252,7 @@ Array1D quarter_mean(const Array2D& A, const IndexArray& starts) {
 
 Array1D quarter_sum(const Array2D& A, const IndexArray& starts) {
     const std::size_t N = A.shape(0);
-    Array1D result = xt::zeros<float>({N});
+    Array1D result = xt::zeros<value_type>({N});
     static constexpr std::size_t SENTINEL = std::numeric_limits<std::size_t>::max();
 
 #if defined(XBIOCLIM_USE_OPENMP_OFFLOAD)
@@ -299,6 +299,233 @@ Array1D quarter_sum(const Array2D& A, const IndexArray& starts) {
         }
     }
 #endif
+    return result;
+}
+
+// ---------------------------------------------------------------------------
+// NaN-aware variants (na.rm = TRUE)
+// ---------------------------------------------------------------------------
+
+Array1D row_nanmean(const Array2D& A) {
+    const std::size_t N = A.shape(0);
+    Array1D result = xt::xarray<value_type>::from_shape({N});
+    for (std::size_t p = 0; p < N; ++p) {
+        value_type s = 0;
+        std::size_t c = 0;
+        for (std::size_t m = 0; m < 12; ++m) {
+            value_type v = A(p, m);
+            if (!std::isnan(v)) {
+                s += v;
+                ++c;
+            }
+        }
+        result(p) = (c > 0) ? (s / static_cast<value_type>(c))
+                            : std::numeric_limits<value_type>::quiet_NaN();
+    }
+    return result;
+}
+
+Array1D row_nansum(const Array2D& A) {
+    const std::size_t N = A.shape(0);
+    Array1D result = xt::xarray<value_type>::from_shape({N});
+    for (std::size_t p = 0; p < N; ++p) {
+        value_type s = 0;
+        std::size_t c = 0;
+        for (std::size_t m = 0; m < 12; ++m) {
+            value_type v = A(p, m);
+            if (!std::isnan(v)) {
+                s += v;
+                ++c;
+            }
+        }
+        result(p) = (c > 0) ? s
+                            : std::numeric_limits<value_type>::quiet_NaN();
+    }
+    return result;
+}
+
+Array1D row_nanmax(const Array2D& A) {
+    const std::size_t N = A.shape(0);
+    Array1D result = xt::xarray<value_type>::from_shape({N});
+    for (std::size_t p = 0; p < N; ++p) {
+        value_type best = -std::numeric_limits<value_type>::infinity();
+        std::size_t c = 0;
+        for (std::size_t m = 0; m < 12; ++m) {
+            value_type v = A(p, m);
+            if (!std::isnan(v)) {
+                if (v > best) best = v;
+                ++c;
+            }
+        }
+        result(p) = (c > 0) ? best
+                            : std::numeric_limits<value_type>::quiet_NaN();
+    }
+    return result;
+}
+
+Array1D row_nanmin(const Array2D& A) {
+    const std::size_t N = A.shape(0);
+    Array1D result = xt::xarray<value_type>::from_shape({N});
+    for (std::size_t p = 0; p < N; ++p) {
+        value_type best = std::numeric_limits<value_type>::infinity();
+        std::size_t c = 0;
+        for (std::size_t m = 0; m < 12; ++m) {
+            value_type v = A(p, m);
+            if (!std::isnan(v)) {
+                if (v < best) best = v;
+                ++c;
+            }
+        }
+        result(p) = (c > 0) ? best
+                            : std::numeric_limits<value_type>::quiet_NaN();
+    }
+    return result;
+}
+
+Array1D row_nanstd(const Array2D& A) {
+    const std::size_t N = A.shape(0);
+    Array1D result = xt::xarray<value_type>::from_shape({N});
+    for (std::size_t p = 0; p < N; ++p) {
+        value_type s = 0;
+        std::size_t c = 0;
+        for (std::size_t m = 0; m < 12; ++m) {
+            value_type v = A(p, m);
+            if (!std::isnan(v)) {
+                s += v;
+                ++c;
+            }
+        }
+        if (c == 0) {
+            result(p) = std::numeric_limits<value_type>::quiet_NaN();
+            continue;
+        }
+        value_type mean = s / static_cast<value_type>(c);
+        value_type sq = 0;
+        for (std::size_t m = 0; m < 12; ++m) {
+            value_type v = A(p, m);
+            if (!std::isnan(v)) {
+                value_type d = v - mean;
+                sq += d * d;
+            }
+        }
+        result(p) = std::sqrt(sq / static_cast<value_type>(c));
+    }
+    return result;
+}
+
+IndexArray nan_rolling_quarter_argmax(const Array2D& A, std::size_t min_periods) {
+    const std::size_t N = A.shape(0);
+    IndexArray result = xt::zeros<std::size_t>({N});
+    static constexpr std::size_t SENTINEL = std::numeric_limits<std::size_t>::max();
+
+    for (std::size_t p = 0; p < N; ++p) {
+        value_type best = -std::numeric_limits<value_type>::infinity();
+        std::size_t bi = SENTINEL;
+        bool has_valid = false;
+        for (std::size_t i = 0; i < 12; ++i) {
+            value_type s = 0;
+            std::size_t c = 0;
+            for (std::size_t k = 0; k < 3; ++k) {
+                value_type v = A(p, (i + k) % 12);
+                if (!std::isnan(v)) {
+                    s += v;
+                    ++c;
+                }
+            }
+            if (c >= min_periods) {
+                if (!has_valid || s > best) {
+                    best = s;
+                    bi = i;
+                    has_valid = true;
+                }
+            }
+        }
+        result(p) = has_valid ? bi : SENTINEL;
+    }
+    return result;
+}
+
+IndexArray nan_rolling_quarter_argmin(const Array2D& A, std::size_t min_periods) {
+    const std::size_t N = A.shape(0);
+    IndexArray result = xt::zeros<std::size_t>({N});
+    static constexpr std::size_t SENTINEL = std::numeric_limits<std::size_t>::max();
+
+    for (std::size_t p = 0; p < N; ++p) {
+        value_type best = std::numeric_limits<value_type>::infinity();
+        std::size_t bi = SENTINEL;
+        bool has_valid = false;
+        for (std::size_t i = 0; i < 12; ++i) {
+            value_type s = 0;
+            std::size_t c = 0;
+            for (std::size_t k = 0; k < 3; ++k) {
+                value_type v = A(p, (i + k) % 12);
+                if (!std::isnan(v)) {
+                    s += v;
+                    ++c;
+                }
+            }
+            if (c >= min_periods) {
+                if (!has_valid || s < best) {
+                    best = s;
+                    bi = i;
+                    has_valid = true;
+                }
+            }
+        }
+        result(p) = has_valid ? bi : SENTINEL;
+    }
+    return result;
+}
+
+Array1D nan_quarter_mean(const Array2D& A, const IndexArray& starts) {
+    const std::size_t N = A.shape(0);
+    Array1D result = xt::zeros<value_type>({N});
+    static constexpr std::size_t SENTINEL = std::numeric_limits<std::size_t>::max();
+
+    for (std::size_t p = 0; p < N; ++p) {
+        const std::size_t i = starts(p);
+        if (i == SENTINEL) {
+            result(p) = std::numeric_limits<value_type>::quiet_NaN();
+        } else {
+            value_type s = 0;
+            std::size_t c = 0;
+            for (std::size_t k = 0; k < 3; ++k) {
+                value_type v = A(p, (i + k) % 12);
+                if (!std::isnan(v)) {
+                    s += v;
+                    ++c;
+                }
+            }
+            result(p) = (c > 0) ? (s / static_cast<value_type>(c))
+                                : std::numeric_limits<value_type>::quiet_NaN();
+        }
+    }
+    return result;
+}
+
+Array1D nan_quarter_sum(const Array2D& A, const IndexArray& starts) {
+    const std::size_t N = A.shape(0);
+    Array1D result = xt::zeros<value_type>({N});
+    static constexpr std::size_t SENTINEL = std::numeric_limits<std::size_t>::max();
+
+    for (std::size_t p = 0; p < N; ++p) {
+        const std::size_t i = starts(p);
+        if (i == SENTINEL) {
+            result(p) = std::numeric_limits<value_type>::quiet_NaN();
+        } else {
+            value_type s = 0;
+            std::size_t c = 0;
+            for (std::size_t k = 0; k < 3; ++k) {
+                value_type v = A(p, (i + k) % 12);
+                if (!std::isnan(v)) {
+                    s += v;
+                    ++c;
+                }
+            }
+            result(p) = (c > 0) ? s
+                                : std::numeric_limits<value_type>::quiet_NaN();
+        }
+    }
     return result;
 }
 

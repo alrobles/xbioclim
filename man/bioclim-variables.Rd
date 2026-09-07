@@ -108,7 +108,11 @@ bioclim(tas, tasmax, tasmin, pr, ...)
 \item{tas}{Numeric vector of length 12 \strong{or} \link[=BioclimData-class]{BioclimData}:
 monthly mean temperature.}
 
-\item{...}{Currently unused; reserved for future extensions.}
+\item{...}{Additional arguments. For \link[=BioclimData-class]{BioclimData} inputs the
+argument \code{na.rm} is accepted: if \code{TRUE}, missing months are omitted and
+each BIO is computed from the available months (a quarter needs at least
+one valid month). The default \code{na.rm = FALSE} makes a pixel all-\code{NA} if
+any input month is \code{NA}.}
 
 \item{tasmax}{Numeric vector of length 12: monthly maximum temperature.}
 

@@ -4,7 +4,7 @@
 \alias{bioclim_cpp}
 \title{Compute all 19 bioclimatic variables for a raster block}
 \usage{
-bioclim_cpp(tas, tasmax, tasmin, pr, ncores = 1L)
+bioclim_cpp(tas, tasmax, tasmin, pr, ncores = 1L, na_rm = FALSE)
 }
 \arguments{
 \item{tas}{Numeric matrix (pixels x 12): monthly mean temperature.}
@@ -16,11 +16,14 @@ bioclim_cpp(tas, tasmax, tasmin, pr, ncores = 1L)
 \item{pr}{Numeric matrix (pixels x 12): monthly precipitation.}
 
 \item{ncores}{Integer: number of OpenMP threads (default 1).}
+
+\item{na_rm}{Logical: if TRUE, treat NA as missing and compute each BIO
+from the available months (quarters need >=1 valid month). If FALSE,
+a single NA in any input for a pixel gives an all-NA row (default).}
 }
 \value{
 Numeric matrix (pixels x 19) with one column per variable
-(bio01..bio19), named accordingly. Rows with any NA input are returned
-as all-NA.
+(bio01..bio19), named accordingly.
 }
 \description{
 Compute all 19 bioclimatic variables for a raster block
