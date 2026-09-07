@@ -4,10 +4,12 @@
 \alias{sd_pop}
 \title{Population standard deviation}
 \usage{
-sd_pop(x)
+sd_pop(x, na.rm = FALSE)
 }
 \arguments{
 \item{x}{A numeric vector.}
+
+\item{na.rm}{Logical. If \code{TRUE}, missing values are skipped.}
 }
 \value{
 A single numeric value.

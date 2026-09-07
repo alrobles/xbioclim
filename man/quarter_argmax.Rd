@@ -4,10 +4,13 @@
 \alias{quarter_argmax}
 \title{Find the starting month of the quarter with the maximum sum}
 \usage{
-quarter_argmax(x)
+quarter_argmax(x, na.rm = FALSE)
 }
 \arguments{
 \item{x}{A numeric vector of length 12 (monthly values).}
+
+\item{na.rm}{Logical. If \code{TRUE}, missing values are skipped; a quarter needs
+at least one non-missing value to be considered.}
 }
 \value{
 An integer (1-12) indicating the starting month.

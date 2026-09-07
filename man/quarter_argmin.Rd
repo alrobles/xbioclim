@@ -4,10 +4,13 @@
 \alias{quarter_argmin}
 \title{Find the starting month of the quarter with the minimum sum}
 \usage{
-quarter_argmin(x)
+quarter_argmin(x, na.rm = FALSE)
 }
 \arguments{
 \item{x}{A numeric vector of length 12 (monthly values).}
+
+\item{na.rm}{Logical. If \code{TRUE}, missing values are skipped; a quarter needs
+at least one non-missing value to be considered.}
 }
 \value{
 An integer (1-12) indicating the starting month.

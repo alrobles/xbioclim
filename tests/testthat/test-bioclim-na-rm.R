@@ -32,6 +32,22 @@ test_that("na.rm = TRUE skips missing precipitation but keeps temperature", {
   expect_true(all(is.na(res_strict)))
 })
 
+test_that("na.rm works for single-pixel vector bioclim()", {
+  tas  <- as.numeric(1:12)
+  tmax <- tas + 1
+  tmin <- tas - 1
+  pr   <- as.numeric(c(2, 5, 3, 8, 15, 30, 60, 45, 20, 10, 5, 1))
+
+  pr_na <- pr
+  pr_na[7] <- NA
+
+  res <- bioclim(tas, tmax, tmin, pr_na, na.rm = TRUE)
+
+  expect_equal(res[["bio01"]], mean(tas), tolerance = 1e-10)
+  expect_equal(res[["bio12"]], sum(pr_na, na.rm = TRUE), tolerance = 1e-10)
+  expect_equal(res[["bio13"]], max(pr_na, na.rm = TRUE), tolerance = 1e-10)
+})
+
 test_that("na.rm = TRUE handles missing temperature as well", {
   tas  <- as.numeric(1:12)
   tmax <- tas + 1

@@ -13,9 +13,11 @@ NULL
 #' matching the xbioclim convention.
 #'
 #' @param x A numeric vector.
+#' @param na.rm Logical. If `TRUE`, missing values are skipped.
 #' @return A single numeric value.
 #' @keywords internal
-sd_pop <- function(x) {
+sd_pop <- function(x, na.rm = FALSE) {
+  if (na.rm) x <- x[!is.na(x)]
   n <- length(x)
   if (n == 0L) return(NaN)
   sqrt(sum((x - mean(x))^2) / n)
@@ -27,11 +29,12 @@ sd_pop <- function(x) {
 #' with circular wrapping (month 13 = month 1, month 14 = month 2).
 #'
 #' @param x A numeric vector of length 12 (monthly values).
+#' @param na.rm Logical. If `TRUE`, missing values are skipped.
 #' @return A numeric vector of length 12 with rolling quarter sums.
 #' @keywords internal
-rolling_quarter_sum <- function(x) {
+rolling_quarter_sum <- function(x, na.rm = FALSE) {
   x_ext <- c(x, x[1:2])
-  vapply(seq_len(12), function(i) sum(x_ext[i:(i + 2L)]), numeric(1))
+  vapply(seq_len(12), function(i) sum(x_ext[i:(i + 2L)], na.rm = na.rm), numeric(1))
 }
 
 #' Compute rolling quarter means with circular wrapping
@@ -40,30 +43,45 @@ rolling_quarter_sum <- function(x) {
 #' with circular wrapping (month 13 = month 1, month 14 = month 2).
 #'
 #' @param x A numeric vector of length 12 (monthly values).
+#' @param na.rm Logical. If `TRUE`, missing values are skipped.
 #' @return A numeric vector of length 12 with rolling quarter means.
 #' @keywords internal
-rolling_quarter_mean <- function(x) {
+rolling_quarter_mean <- function(x, na.rm = FALSE) {
   x_ext <- c(x, x[1:2])
-  vapply(seq_len(12), function(i) mean(x_ext[i:(i + 2L)]), numeric(1))
+  vapply(seq_len(12), function(i) mean(x_ext[i:(i + 2L)], na.rm = na.rm), numeric(1))
 }
 
 #' Find the starting month of the quarter with the maximum sum
 #'
 #' @param x A numeric vector of length 12 (monthly values).
+#' @param na.rm Logical. If `TRUE`, missing values are skipped; a quarter needs
+#'   at least one non-missing value to be considered.
 #' @return An integer (1-12) indicating the starting month.
 #' @keywords internal
-quarter_argmax <- function(x) {
-  qsums <- rolling_quarter_sum(x)
+quarter_argmax <- function(x, na.rm = FALSE) {
+  qsums <- rolling_quarter_sum(x, na.rm = na.rm)
+  if (na.rm) {
+    x_ext <- c(x, x[1:2])
+    n_valid <- vapply(seq_len(12), function(i) sum(!is.na(x_ext[i:(i + 2L)])), integer(1))
+    qsums[n_valid == 0L] <- -Inf
+  }
   which.max(qsums)
 }
 
 #' Find the starting month of the quarter with the minimum sum
 #'
 #' @param x A numeric vector of length 12 (monthly values).
+#' @param na.rm Logical. If `TRUE`, missing values are skipped; a quarter needs
+#'   at least one non-missing value to be considered.
 #' @return An integer (1-12) indicating the starting month.
 #' @keywords internal
-quarter_argmin <- function(x) {
-  qsums <- rolling_quarter_sum(x)
+quarter_argmin <- function(x, na.rm = FALSE) {
+  qsums <- rolling_quarter_sum(x, na.rm = na.rm)
+  if (na.rm) {
+    x_ext <- c(x, x[1:2])
+    n_valid <- vapply(seq_len(12), function(i) sum(!is.na(x_ext[i:(i + 2L)])), integer(1))
+    qsums[n_valid == 0L] <- Inf
+  }
   which.min(qsums)
 }
 
