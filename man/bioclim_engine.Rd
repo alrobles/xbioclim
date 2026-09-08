@@ -15,7 +15,8 @@ bioclim_engine(
   threads = 1L,
   tile_size = 256L,
   overwrite = FALSE,
-  device = c("auto", "cpu", "gpu")
+  device = c("auto", "cpu", "gpu"),
+  dtype = c("Float64", "Float32")
 )
 }
 \arguments{
@@ -29,14 +30,15 @@ temperature.}
 
 \item{pr}{Like \code{tas} but for monthly precipitation.}
 
-\item{output}{Character string: path to the output directory where
-individual GeoTIFF files will be written (one per variable, named
-\code{bio01.tif} … \code{bio19.tif}).  The directory is created
-automatically if it does not exist.  Defaults to a temporary directory.}
+\item{output}{Character string: path to the output directory where the
+multi-band GeoTIFF \code{bio.tif} will be written.  The directory is
+created automatically if it does not exist.  Defaults to a temporary
+directory.}
 
 \item{variables}{Integer vector of variable numbers to compute, with
 values in \code{1:19}.  Default is \code{1:19} (all 19 variables).
-For example, \code{c(1, 12)} writes only BIO01 and BIO12.}
+For example, \code{c(1, 12)} returns only BIO01 and BIO12 from the
+19-band output.}
 
 \item{mask}{Optional mask: a character file path, an \code{sf} object
 (polygon), or a \code{terra::SpatRaster}.  \code{NULL} (default) means
@@ -48,8 +50,8 @@ is \code{1L}.}
 \item{tile_size}{Positive integer: tile dimension (pixels) for tiled I/O.
 Default is \code{256L}.}
 
-\item{overwrite}{Logical: whether to overwrite existing output files inside
-\code{output}.  Default is \code{FALSE}.}
+\item{overwrite}{Logical: whether to overwrite an existing \code{bio.tif}
+inside \code{output}.  Default is \code{FALSE}.}
 
 \item{device}{Character scalar: compute device to use.  One of
 \code{"auto"} (default), \code{"cpu"}, or \code{"gpu"}.  \code{"auto"}
@@ -59,20 +61,23 @@ back to the CPU.  When \code{device = "gpu"} and \code{tile_size} is left
 at its default, the tile size is automatically scaled to match the
 detected GPU memory (4096 for high-memory GPUs such as the A100, 1024
 otherwise).}
+
+\item{dtype}{Character scalar: output data type, one of \code{"Float64"}
+(default) or \code{"Float32"}.}
 }
 \value{
 If \pkg{terra} is installed, a \code{terra::SpatRaster} with one
 layer per selected variable (named \code{bio01} … \code{bio19}).
-Otherwise a character vector of the output file paths.
+Otherwise a character scalar: the path to \code{bio.tif}.
 }
 \description{
 High-level R interface to the \code{BioclimEngine} C++ tiled computation
 pipeline.  Reads four sets of monthly climate rasters (mean temperature,
 maximum temperature, minimum temperature, and precipitation) from disk,
-computes the requested bioclimatic variables, and writes each variable to
-a separate single-band GeoTIFF inside a directory — one tile at a time so
-that peak memory is proportional to \code{tile_size}, not the full raster
-extent.
+computes the requested bioclimatic variables, and writes all 19 variables
+to a single multi-band GeoTIFF named \code{bio.tif} inside the output
+directory — one tile at a time so that peak memory is proportional to
+\code{tile_size}, not the full raster extent.
 }
 \details{
 \strong{GDAL requirement.} This function requires the package to have been
@@ -80,17 +85,15 @@ compiled with GDAL support (see \code{\link{has_gdal}}).  If GDAL is not
 available an informative error is raised immediately.
 
 \strong{Variable selection.} By default all 19 standard bioclimatic variables
-(BIO01–BIO19) are computed and written.
-Pass \code{variables} as an integer vector (e.g. \code{c(1, 12, 15)}) to
-restrict the output to a subset.
-The engine always computes all 19 internally (they share intermediate
-values), but only the selected ones are written to disk, reducing I/O and
-file size.
+(BIO01–BIO19) are returned.  Pass \code{variables} as an integer vector
+(e.g. \code{c(1, 12, 15)}) to restrict the returned
+\code{terra::SpatRaster} to a subset.  The engine always computes all 19
+internally and writes a full 19-band \code{bio.tif}; the subsetting is
+applied when constructing the returned object.
 
-\strong{Separate output files.} Each selected variable is written to its own
-single-band GeoTIFF named \code{bio01.tif} … \code{bio19.tif} inside the
-\code{output} directory.  This keeps individual files small and allows
-downstream tools to load only the variables they need.
+\strong{Single multi-band output.} The output directory contains one file,
+\code{bio.tif}, with 19 bands (BIO01–BIO19).  This reduces GDAL I/O call
+overhead compared with the previous one-file-per-variable layout.
 
 \strong{Tiled processing.} The engine reads and writes rasters in square tiles of
 \code{tile_size} × \code{tile_size} pixels.  Choosing a large tile improves
@@ -112,9 +115,14 @@ computation to a specific region.  Pixels outside the mask are written as
 \item \code{terra::SpatRaster} — written to a temporary GeoTIFF.
 }
 
+\strong{Output data type.} Use \code{dtype = "Float32"} to halve the output file
+size.  Values are rounded from double-precision internal arithmetic to
+single precision on write; numerical differences are typically below
+\code{1e-5}.
+
 \strong{Output.} If \pkg{terra} is installed the function returns a
 \code{terra::SpatRaster} whose layers correspond to the selected variables.
-Otherwise it returns a character vector of the output file paths.
+Otherwise it returns the path to the output \code{bio.tif} file.
 }
 \examples{
 \donttest{
@@ -140,7 +148,7 @@ if (has_gdal() && requireNamespace("terra", quietly = TRUE)) {
   pr_file     <- make_rast(c(60,55,48,35,28,22,18,20,35,55,65,68),
                             file.path(tmp, "pr.tif"))
 
-  # Compute all 19 variables (one file each in a directory)
+  # Compute all 19 variables (single multi-band output file)
   out_dir <- file.path(tmp, "bioclim_out")
   result <- bioclim_engine(tas_file, tasmax_file, tasmin_file, pr_file,
                             output = out_dir, overwrite = TRUE)

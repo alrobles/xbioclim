@@ -9,14 +9,15 @@ engine_set_output(xptr, path)
 \arguments{
 \item{xptr}{External pointer returned by \code{\link{engine_create}}.}
 
-\item{path}{Character scalar: output file path.}
+\item{path}{Character scalar: output directory path.}
 }
 \value{
 \code{NULL} invisibly.
 }
 \description{
-The engine will create (or overwrite) a Float64 GeoTIFF with 19 bands at
-this path when \code{\link{engine_compute}} is called.
+The engine will create (or overwrite) a multi-band GeoTIFF named
+\code{bio.tif} inside this directory when \code{\link{engine_compute}} is
+called.
 }
 \seealso{
 \code{\link{engine_create}}, \code{\link{engine_compute}}

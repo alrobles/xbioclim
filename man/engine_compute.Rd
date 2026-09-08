@@ -15,9 +15,10 @@ passed to \code{\link{engine_set_output}}).
 }
 \description{
 Reads all monthly climate input rasters tile by tile, computes the
-bioclimatic variables for every pixel, and writes each selected variable
-to a separate single-band GeoTIFF inside the output directory.  Peak
-memory is proportional to the tile size, not the full raster size.
+bioclimatic variables for every pixel, and writes all 19 variables to a
+single multi-band GeoTIFF named \code{bio.tif} inside the output
+directory.  Peak memory is proportional to the tile size, not the full
+raster size.
 }
 \details{
 Requires GDAL support.  Stops with an informative error when the package

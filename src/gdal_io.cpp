@@ -5,13 +5,13 @@
 
 #include "gdal_io.hpp"
 
+#include <algorithm>
 #include <sstream>
 #include <stdexcept>
 
 #ifdef HAVE_GDAL
 #include <gdal_priv.h>
 #include <cpl_conv.h>
-#include <ogr_spatialref.h>
 #endif
 
 namespace xbioclim {
@@ -124,6 +124,15 @@ void GdalReader::read_window(int xoff, int yoff,
                              int xsize, int ysize,
                              int band,
                              std::vector<double>& buf) const {
+    const std::size_t n = static_cast<std::size_t>(xsize) * ysize;
+    buf.resize(n);
+    read_window(xoff, yoff, xsize, ysize, band, buf.data());
+}
+
+void GdalReader::read_window(int xoff, int yoff,
+                             int xsize, int ysize,
+                             int band,
+                             double* out) const {
 #ifdef HAVE_GDAL
     GDALRasterBand* b = ds_->GetRasterBand(band);
     if (b == nullptr) {
@@ -133,11 +142,10 @@ void GdalReader::read_window(int xoff, int yoff,
     }
 
     const int n = xsize * ysize;
-    buf.resize(static_cast<std::size_t>(n));
 
     CPLErr err = b->RasterIO(GF_Read,
                              xoff, yoff, xsize, ysize,
-                             buf.data(),
+                             out,
                              xsize, ysize,
                              GDT_Float64,
                              0, 0);
@@ -158,15 +166,82 @@ void GdalReader::read_window(int xoff, int yoff,
         if (!has_scale)  sc = 1.0;
         if (!has_offset) of = 0.0;
         for (int i = 0; i < n; ++i) {
-            buf[static_cast<std::size_t>(i)] =
-                buf[static_cast<std::size_t>(i)] * sc + of;
+            out[i] = out[i] * sc + of;
         }
     }
 #else
-    (void)xoff; (void)yoff; (void)xsize; (void)ysize; (void)band;
-    buf.clear();
+    (void)xoff; (void)yoff; (void)xsize; (void)ysize; (void)band; (void)out;
     throw std::runtime_error(
         "GdalReader::read_window: xbioclim was built without GDAL support."
+    );
+#endif
+}
+
+void GdalReader::read_bands_window(int xoff, int yoff,
+                                   int xsize, int ysize,
+                                   const std::vector<int>& bands,
+                                   std::vector<double>& buf) const {
+    const std::size_t n = static_cast<std::size_t>(xsize) * ysize;
+    buf.resize(n * bands.size());
+    read_bands_window(xoff, yoff, xsize, ysize, bands, buf.data());
+}
+
+void GdalReader::read_bands_window(int xoff, int yoff,
+                                   int xsize, int ysize,
+                                   const std::vector<int>& bands,
+                                   double* out) const {
+#ifdef HAVE_GDAL
+    const std::size_t n = static_cast<std::size_t>(xsize) * ysize;
+
+    CPLErr err = ds_->RasterIO(
+        GF_Read,
+        xoff, yoff, xsize, ysize,
+        out,
+        xsize, ysize,
+        GDT_Float64,
+        static_cast<int>(bands.size()),
+        const_cast<int*>(bands.data()),
+        static_cast<GIntBig>(sizeof(double)),
+        0,
+        static_cast<GIntBig>(n * sizeof(double)),
+        nullptr
+    );
+
+    if (err != CE_None) {
+        std::ostringstream oss;
+        oss << "GdalReader::read_bands_window: RasterIO failed: "
+            << CPLGetLastErrorMsg();
+        throw std::runtime_error(oss.str());
+    }
+
+    // Apply scale / offset per band.
+    for (std::size_t bi = 0; bi < bands.size(); ++bi) {
+        GDALRasterBand* b = ds_->GetRasterBand(bands[bi]);
+        if (b == nullptr) {
+            std::ostringstream oss;
+            oss << "GdalReader::read_bands_window: invalid band " << bands[bi];
+            throw std::runtime_error(oss.str());
+        }
+
+        int has_scale  = 0;
+        int has_offset = 0;
+        double sc = b->GetScale(&has_scale);
+        double of = b->GetOffset(&has_offset);
+
+        if (has_scale || has_offset) {
+            if (!has_scale)  sc = 1.0;
+            if (!has_offset) of = 0.0;
+            double* band_ptr = out + bi * n;
+            for (std::size_t i = 0; i < n; ++i) {
+                band_ptr[i] = band_ptr[i] * sc + of;
+            }
+        }
+    }
+#else
+    (void)xoff; (void)yoff; (void)xsize; (void)ysize;
+    (void)bands; (void)out;
+    throw std::runtime_error(
+        "GdalReader::read_bands_window: xbioclim was built without GDAL support."
     );
 #endif
 }
@@ -179,8 +254,9 @@ GdalWriter::GdalWriter(const std::string& path,
                        int nrows, int ncols, int nbands,
                        const std::vector<double>& geotransform,
                        const std::string& crs,
-                       bool cog_compatible)
-    : closed_(false)
+                       bool cog_compatible,
+                       GDALDataType dtype)
+    : dtype_(dtype), closed_(false)
 {
 #ifdef HAVE_GDAL
     GDALAllRegister();
@@ -201,7 +277,7 @@ GdalWriter::GdalWriter(const std::string& path,
     }
 
     ds_ = driver->Create(path.c_str(), ncols, nrows, nbands,
-                         GDT_Float64, opts);
+                         dtype, opts);
     CSLDestroy(opts);
 
     if (ds_ == nullptr) {
@@ -211,8 +287,10 @@ GdalWriter::GdalWriter(const std::string& path,
         throw std::runtime_error(oss.str());
     }
 
-    // Set geotransform (6 elements required).
-    if (geotransform.size() == 6) {
+    // Set geotransform only if it is a valid, non-zero transform.
+    if (geotransform.size() == 6 &&
+        !std::all_of(geotransform.begin(), geotransform.end(),
+                     [](double v) { return v == 0.0; })) {
         std::vector<double> gt_copy(geotransform);
         ds_->SetGeoTransform(gt_copy.data());
     }
@@ -223,7 +301,7 @@ GdalWriter::GdalWriter(const std::string& path,
     }
 #else
     (void)path; (void)nrows; (void)ncols; (void)nbands;
-    (void)geotransform; (void)crs; (void)cog_compatible;
+    (void)geotransform; (void)crs; (void)cog_compatible; (void)dtype;
     throw std::runtime_error(
         "GdalWriter: xbioclim was built without GDAL support. "
         "Install GDAL >= 2.0.1 and reinstall the package."
@@ -239,6 +317,14 @@ void GdalWriter::write_window(int xoff, int yoff,
                               int xsize, int ysize,
                               int band,
                               const std::vector<double>& buf) {
+    write_window(xoff, yoff, xsize, ysize, band, buf, dtype_);
+}
+
+void GdalWriter::write_window(int xoff, int yoff,
+                              int xsize, int ysize,
+                              int band,
+                              const std::vector<double>& buf,
+                              GDALDataType dtype) {
 #ifdef HAVE_GDAL
     if (closed_) {
         throw std::runtime_error(
@@ -260,12 +346,27 @@ void GdalWriter::write_window(int xoff, int yoff,
         throw std::runtime_error(oss.str());
     }
 
-    CPLErr err = b->RasterIO(GF_Write,
-                             xoff, yoff, xsize, ysize,
-                             const_cast<double*>(buf.data()),
-                             xsize, ysize,
-                             GDT_Float64,
-                             0, 0);
+    CPLErr err;
+    if (dtype == GDT_Float32) {
+        std::vector<float> fbuf(static_cast<std::size_t>(n));
+        for (int i = 0; i < n; ++i) {
+            fbuf[static_cast<std::size_t>(i)] = static_cast<float>(buf[i]);
+        }
+        err = b->RasterIO(GF_Write,
+                          xoff, yoff, xsize, ysize,
+                          fbuf.data(),
+                          xsize, ysize,
+                          GDT_Float32,
+                          0, 0);
+    } else {
+        err = b->RasterIO(GF_Write,
+                          xoff, yoff, xsize, ysize,
+                          const_cast<double*>(buf.data()),
+                          xsize, ysize,
+                          GDT_Float64,
+                          0, 0);
+    }
+
     if (err != CE_None) {
         std::ostringstream oss;
         oss << "GdalWriter::write_window: RasterIO failed for band " << band
@@ -273,9 +374,84 @@ void GdalWriter::write_window(int xoff, int yoff,
         throw std::runtime_error(oss.str());
     }
 #else
-    (void)xoff; (void)yoff; (void)xsize; (void)ysize; (void)band; (void)buf;
+    (void)xoff; (void)yoff; (void)xsize; (void)ysize; (void)band;
+    (void)buf; (void)dtype;
     throw std::runtime_error(
         "GdalWriter::write_window: xbioclim was built without GDAL support."
+    );
+#endif
+}
+
+void GdalWriter::write_bands_window(int xoff, int yoff,
+                                    int xsize, int ysize,
+                                    const std::vector<int>& bands,
+                                    const std::vector<double>& buf) {
+    write_bands_window(xoff, yoff, xsize, ysize, bands, buf, dtype_);
+}
+
+void GdalWriter::write_bands_window(int xoff, int yoff,
+                                    int xsize, int ysize,
+                                    const std::vector<int>& bands,
+                                    const std::vector<double>& buf,
+                                    GDALDataType dtype) {
+#ifdef HAVE_GDAL
+    if (closed_) {
+        throw std::runtime_error(
+            "GdalWriter::write_bands_window: dataset is already closed.");
+    }
+
+    const std::size_t n = static_cast<std::size_t>(xsize) * ysize;
+    const std::size_t needed = n * bands.size();
+    if (buf.size() < needed) {
+        std::ostringstream oss;
+        oss << "GdalWriter::write_bands_window: buffer too small ("
+            << buf.size() << " < " << needed << ")";
+        throw std::runtime_error(oss.str());
+    }
+
+    CPLErr err;
+    if (dtype == GDT_Float32) {
+        std::vector<float> fbuf(buf.begin(), buf.begin() + needed);
+        err = ds_->RasterIO(
+            GF_Write,
+            xoff, yoff, xsize, ysize,
+            fbuf.data(),
+            xsize, ysize,
+            GDT_Float32,
+            static_cast<int>(bands.size()),
+            const_cast<int*>(bands.data()),
+            static_cast<GIntBig>(sizeof(float)),
+            0,
+            static_cast<GIntBig>(n * sizeof(float)),
+            nullptr
+        );
+    } else {
+        err = ds_->RasterIO(
+            GF_Write,
+            xoff, yoff, xsize, ysize,
+            const_cast<double*>(buf.data()),
+            xsize, ysize,
+            GDT_Float64,
+            static_cast<int>(bands.size()),
+            const_cast<int*>(bands.data()),
+            static_cast<GIntBig>(sizeof(double)),
+            0,
+            static_cast<GIntBig>(n * sizeof(double)),
+            nullptr
+        );
+    }
+
+    if (err != CE_None) {
+        std::ostringstream oss;
+        oss << "GdalWriter::write_bands_window: RasterIO failed: "
+            << CPLGetLastErrorMsg();
+        throw std::runtime_error(oss.str());
+    }
+#else
+    (void)xoff; (void)yoff; (void)xsize; (void)ysize;
+    (void)bands; (void)buf; (void)dtype;
+    throw std::runtime_error(
+        "GdalWriter::write_bands_window: xbioclim was built without GDAL support."
     );
 #endif
 }

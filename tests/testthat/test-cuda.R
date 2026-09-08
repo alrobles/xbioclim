@@ -110,6 +110,7 @@ test_that("bioclim_engine device='cpu' always works", {
     overwrite = TRUE
   )
   expect_true(dir.exists(out))
+  expect_true(file.exists(file.path(out, "bio.tif")))
   if (inherits(result, "SpatRaster")) {
     expect_equal(terra::nlyr(result), 19L)
   } else {
@@ -183,7 +184,7 @@ test_that("BIO15 is NaN for zero precipitation (CPU path)", {
     device   = "cpu",
     overwrite = TRUE
   )
-  result <- terra::rast(file.path(out, "bio15.tif"))
+  result <- terra::rast(file.path(out, "bio.tif"))[[15L]]
   bio15_vals <- as.numeric(terra::values(result))
   expect_true(all(is.nan(bio15_vals) | is.na(bio15_vals)))
 })
@@ -206,8 +207,8 @@ test_that("BIO15 GPU and CPU produce identical values (nonzero precipitation)", 
   bioclim_engine(tas, tasmax, tasmin, pr, output = out_gpu,
                  device = "gpu", overwrite = TRUE)
 
-  bio15_cpu <- as.numeric(terra::values(terra::rast(file.path(out_cpu, "bio15.tif"))))
-  bio15_gpu <- as.numeric(terra::values(terra::rast(file.path(out_gpu, "bio15.tif"))))
+  bio15_cpu <- as.numeric(terra::values(terra::rast(file.path(out_cpu, "bio.tif"))[[15L]]))
+  bio15_gpu <- as.numeric(terra::values(terra::rast(file.path(out_gpu, "bio.tif"))[[15L]]))
   expect_equal(bio15_cpu, bio15_gpu, tolerance = 1e-9)
 })
 
@@ -229,7 +230,7 @@ test_that("BIO15 GPU returns NaN for zero precipitation", {
     device   = "gpu",
     overwrite = TRUE
   )
-  result <- terra::rast(file.path(out, "bio15.tif"))
+  result <- terra::rast(file.path(out, "bio.tif"))[[15L]]
   bio15_vals <- as.numeric(terra::values(result))
   expect_true(all(is.nan(bio15_vals) | is.na(bio15_vals)))
 })

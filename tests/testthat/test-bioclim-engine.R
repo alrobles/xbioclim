@@ -240,7 +240,7 @@ test_that("bioclim_engine() stops when output files exist and overwrite = FALSE"
 
   out <- file.path(tmpdir, "out_dir")
   dir.create(out)
-  writeLines("dummy", file.path(out, "bio01.tif"))
+  writeLines("dummy", file.path(out, "bio.tif"))
 
   expect_error(
     bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f, output = out,
@@ -264,13 +264,13 @@ test_that("bioclim_engine() overwrites existing files when overwrite = TRUE", {
 
   out <- file.path(tmpdir, "out_dir")
   dir.create(out)
-  writeLines("dummy", file.path(out, "bio01.tif"))
+  writeLines("dummy", file.path(out, "bio.tif"))
 
   expect_no_error(
     bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f,
                    output = out, overwrite = TRUE, tile_size = 2L)
   )
-  expect_true(file.exists(file.path(out, "bio01.tif")))
+  expect_true(file.exists(file.path(out, "bio.tif")))
 })
 
 # ── 3. Full round-trip (GDAL + terra required) ────────────────────────────────
@@ -297,9 +297,9 @@ test_that("bioclim_engine() returns SpatRaster with 19 layers (12 monthly files)
   expect_equal(terra::nrow(result), 3L)
   expect_equal(terra::ncol(result), 3L)
 
-  # Each variable should be a separate file
+  # Output is a single multi-band GeoTIFF
   tif_files <- list.files(out, pattern = "\\.tif$")
-  expect_equal(length(tif_files), 19L)
+  expect_equal(tif_files, "bio.tif")
 })
 
 test_that("bioclim_engine() BIO01 is finite and BIO12 approx sum(pr)", {
@@ -398,9 +398,9 @@ test_that("bioclim_engine() writes only requested variables", {
   expect_equal(terra::nlyr(result), 3L)
   expect_equal(names(result), c("bio01", "bio12", "bio15"))
 
-  # Only 3 files should exist
+  # Output is a single multi-band GeoTIFF
   tif_files <- list.files(out, pattern = "\\.tif$")
-  expect_equal(sort(tif_files), c("bio01.tif", "bio12.tif", "bio15.tif"))
+  expect_equal(tif_files, "bio.tif")
 })
 
 test_that("bioclim_engine() single variable produces 1-layer result", {
@@ -425,9 +425,9 @@ test_that("bioclim_engine() single variable produces 1-layer result", {
   expect_equal(terra::nlyr(result), 1L)
   expect_equal(names(result), "bio12")
 
-  # Only 1 file should exist
+  # Output is a single multi-band GeoTIFF
   tif_files <- list.files(out, pattern = "\\.tif$")
-  expect_equal(tif_files, "bio12.tif")
+  expect_equal(tif_files, "bio.tif")
 
   # Value check: BIO12 = sum of precipitation
   bio12_vals <- as.numeric(terra::values(result))

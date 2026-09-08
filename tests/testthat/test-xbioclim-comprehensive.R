@@ -452,7 +452,7 @@ test_that("L8: engine round-trip with tiny rasters", {
   result_path <- engine_compute(ptr)
 
   expect_true(dir.exists(result_path))
-  bio_files <- file.path(result_path, sprintf("bio%02d.tif", 1:19))
+  bio_files <- file.path(result_path, "bio.tif")
   out_r <- terra::rast(bio_files)
   expect_equal(terra::nlyr(out_r), 19L)
 

@@ -15,6 +15,8 @@
 
 #pragma once
 
+#include "gdal_io.hpp"
+
 #include <string>
 #include <vector>
 
@@ -48,8 +50,8 @@ public:
 
     // ── Output ─────────────────────────────────────────────────────────────
 
-    // Set the output GeoTIFF path.  The file is created (or overwritten) by
-    // compute() with 19 Float64 bands (BIO01–BIO19).
+    // Set the output directory.  compute() creates (or overwrites) a single
+    // 19-band GeoTIFF named bio.tif inside this directory.
     void set_output(const std::string& path);
 
     // ── Optional settings ──────────────────────────────────────────────────
@@ -72,15 +74,20 @@ public:
     // without a visible device silently falls back to CPU.
     void set_device(const std::string& device);
 
-    // Select which bioclimatic variables to write.  Each element must be in
-    // [1, 19].  An empty vector (the default) means "write all 19".
+    // Set the output GDAL data type.  Accepted values: "Float64", "Float32".
+    // Default is "Float64".
+    void set_dtype(const std::string& dtype);
+
+    // Select which bioclimatic variables to return.  Each element must be in
+    // [1, 19].  An empty vector (the default) means "all 19".
     // The engine always computes all 19 internally (they share intermediate
-    // values), but only the selected ones are written to disk.
+    // values), and writes a single 19-band output file; the R wrapper
+    // subsets the returned SpatRaster when a selection is requested.
     void set_variables(const std::vector<int>& variables);
 
     // ── Execution ──────────────────────────────────────────────────────────
 
-    // Run the tiled pipeline and return the output file path.
+    // Run the tiled pipeline and return the output directory path.
     //
     // Throws std::runtime_error when:
     //   * GDAL is not compiled in
@@ -104,7 +111,12 @@ private:
     enum class Device { Auto, CPU, GPU };
     Device device_ = Device::Auto;
 
-    // 1-based indices of variables to write; empty = all 19.
+    // GDAL band data type for the output file (Float64 by default).
+    GDALDataType output_dtype_ = GDT_Float64;
+
+    // 1-based indices of variables selected by the R wrapper; empty = all 19.
+    // compute() always writes all 19 bands, so this only affects the
+    // post-processing done by bioclim_engine().
     std::vector<int> variables_;
 };
 

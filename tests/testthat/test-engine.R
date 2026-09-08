@@ -128,13 +128,13 @@ test_that("engine_compute produces a 19-band GeoTIFF (GDAL + terra)", {
 
   result_path <- engine_compute(ptr)
 
-  # Output directory must exist and contain bio01.tif … bio19.tif.
+  # Output directory must exist and contain a single bio.tif.
   expect_equal(result_path, output_dir)
   expect_true(dir.exists(output_dir))
-  expect_true(file.exists(file.path(output_dir, "bio01.tif")))
+  expect_true(file.exists(file.path(output_dir, "bio.tif")))
 
-  # Load all 19 variable files and check dimensions.
-  bio_files <- file.path(output_dir, sprintf("bio%02d.tif", 1:19))
+  # Load the multi-band output and check dimensions.
+  bio_files <- file.path(output_dir, "bio.tif")
   out_rast <- terra::rast(bio_files)
   expect_equal(terra::nlyr(out_rast), 19L)
 
@@ -196,7 +196,7 @@ test_that("engine_compute handles 1-multi-band-file input (GDAL + terra)", {
   result_path <- engine_compute(ptr)
 
   expect_true(dir.exists(result_path))
-  bio_files <- file.path(result_path, sprintf("bio%02d.tif", 1:19))
+  bio_files <- file.path(result_path, "bio.tif")
   out_rast <- terra::rast(bio_files)
   expect_equal(terra::nlyr(out_rast), 19L)
 })

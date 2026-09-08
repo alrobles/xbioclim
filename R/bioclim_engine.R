@@ -4,10 +4,10 @@
 #' High-level R interface to the \code{BioclimEngine} C++ tiled computation
 #' pipeline.  Reads four sets of monthly climate rasters (mean temperature,
 #' maximum temperature, minimum temperature, and precipitation) from disk,
-#' computes the requested bioclimatic variables, and writes each variable to
-#' a separate single-band GeoTIFF inside a directory — one tile at a time so
-#' that peak memory is proportional to \code{tile_size}, not the full raster
-#' extent.
+#' computes the requested bioclimatic variables, and writes all 19 variables
+#' to a single multi-band GeoTIFF named \code{bio.tif} inside the output
+#' directory — one tile at a time so that peak memory is proportional to
+#' \code{tile_size}, not the full raster extent.
 #'
 #' @details
 #' **GDAL requirement.** This function requires the package to have been
@@ -15,17 +15,15 @@
 #' available an informative error is raised immediately.
 #'
 #' **Variable selection.** By default all 19 standard bioclimatic variables
-#' (BIO01–BIO19) are computed and written.
-#' Pass \code{variables} as an integer vector (e.g. \code{c(1, 12, 15)}) to
-#' restrict the output to a subset.
-#' The engine always computes all 19 internally (they share intermediate
-#' values), but only the selected ones are written to disk, reducing I/O and
-#' file size.
+#' (BIO01–BIO19) are returned.  Pass \code{variables} as an integer vector
+#' (e.g. \code{c(1, 12, 15)}) to restrict the returned
+#' \code{terra::SpatRaster} to a subset.  The engine always computes all 19
+#' internally and writes a full 19-band \code{bio.tif}; the subsetting is
+#' applied when constructing the returned object.
 #'
-#' **Separate output files.** Each selected variable is written to its own
-#' single-band GeoTIFF named \code{bio01.tif} … \code{bio19.tif} inside the
-#' \code{output} directory.  This keeps individual files small and allows
-#' downstream tools to load only the variables they need.
+#' **Single multi-band output.** The output directory contains one file,
+#' \code{bio.tif}, with 19 bands (BIO01–BIO19).  This reduces GDAL I/O call
+#' overhead compared with the previous one-file-per-variable layout.
 #'
 #' **Tiled processing.** The engine reads and writes rasters in square tiles of
 #' \code{tile_size} × \code{tile_size} pixels.  Choosing a large tile improves
@@ -47,9 +45,14 @@
 #'   \item \code{terra::SpatRaster} — written to a temporary GeoTIFF.
 #' }
 #'
+#' **Output data type.** Use \code{dtype = "Float32"} to halve the output file
+#' size.  Values are rounded from double-precision internal arithmetic to
+#' single precision on write; numerical differences are typically below
+#' \code{1e-5}.
+#'
 #' **Output.** If \pkg{terra} is installed the function returns a
 #' \code{terra::SpatRaster} whose layers correspond to the selected variables.
-#' Otherwise it returns a character vector of the output file paths.
+#' Otherwise it returns the path to the output \code{bio.tif} file.
 #'
 #' @param tas Character vector of length 1 (12-band file) or 12 (one file per
 #'   month), or a \code{terra::SpatRaster} with 12 layers: monthly mean
@@ -57,13 +60,14 @@
 #' @param tasmax Like \code{tas} but for monthly maximum temperature.
 #' @param tasmin Like \code{tas} but for monthly minimum temperature.
 #' @param pr Like \code{tas} but for monthly precipitation.
-#' @param output Character string: path to the output directory where
-#'   individual GeoTIFF files will be written (one per variable, named
-#'   \code{bio01.tif} … \code{bio19.tif}).  The directory is created
-#'   automatically if it does not exist.  Defaults to a temporary directory.
+#' @param output Character string: path to the output directory where the
+#'   multi-band GeoTIFF \code{bio.tif} will be written.  The directory is
+#'   created automatically if it does not exist.  Defaults to a temporary
+#'   directory.
 #' @param variables Integer vector of variable numbers to compute, with
 #'   values in \code{1:19}.  Default is \code{1:19} (all 19 variables).
-#'   For example, \code{c(1, 12)} writes only BIO01 and BIO12.
+#'   For example, \code{c(1, 12)} returns only BIO01 and BIO12 from the
+#'   19-band output.
 #' @param mask Optional mask: a character file path, an \code{sf} object
 #'   (polygon), or a \code{terra::SpatRaster}.  \code{NULL} (default) means
 #'   no masking.
@@ -71,8 +75,8 @@
 #'   is \code{1L}.
 #' @param tile_size Positive integer: tile dimension (pixels) for tiled I/O.
 #'   Default is \code{256L}.
-#' @param overwrite Logical: whether to overwrite existing output files inside
-#'   \code{output}.  Default is \code{FALSE}.
+#' @param overwrite Logical: whether to overwrite an existing \code{bio.tif}
+#'   inside \code{output}.  Default is \code{FALSE}.
 #' @param device Character scalar: compute device to use.  One of
 #'   \code{"auto"} (default), \code{"cpu"}, or \code{"gpu"}.  \code{"auto"}
 #'   selects the GPU when a CUDA device is available, otherwise falls back to
@@ -81,10 +85,12 @@
 #'   at its default, the tile size is automatically scaled to match the
 #'   detected GPU memory (4096 for high-memory GPUs such as the A100, 1024
 #'   otherwise).
+#' @param dtype Character scalar: output data type, one of \code{"Float64"}
+#'   (default) or \code{"Float32"}.
 #'
 #' @return If \pkg{terra} is installed, a \code{terra::SpatRaster} with one
 #'   layer per selected variable (named \code{bio01} … \code{bio19}).
-#'   Otherwise a character vector of the output file paths.
+#'   Otherwise a character scalar: the path to \code{bio.tif}.
 #'
 #' @seealso \code{\link{bioclim_raster}} for the in-memory R/terra path,
 #'   \code{\link{has_gdal}} to check GDAL availability,
@@ -115,7 +121,7 @@
 #'   pr_file     <- make_rast(c(60,55,48,35,28,22,18,20,35,55,65,68),
 #'                             file.path(tmp, "pr.tif"))
 #'
-#'   # Compute all 19 variables (one file each in a directory)
+#'   # Compute all 19 variables (single multi-band output file)
 #'   out_dir <- file.path(tmp, "bioclim_out")
 #'   result <- bioclim_engine(tas_file, tasmax_file, tasmin_file, pr_file,
 #'                             output = out_dir, overwrite = TRUE)
@@ -142,10 +148,12 @@ bioclim_engine <- function(
     threads    = 1L,
     tile_size  = 256L,
     overwrite  = FALSE,
-    device     = c("auto", "cpu", "gpu")
+    device     = c("auto", "cpu", "gpu"),
+    dtype      = c("Float64", "Float32")
 ) {
 
   device <- match.arg(device)
+  dtype  <- match.arg(dtype)
 
   # Auto-detect: use GPU if available, otherwise CPU.
   if (device == "auto") {
@@ -231,13 +239,12 @@ bioclim_engine <- function(
   }
   dir.create(output, recursive = TRUE, showWarnings = FALSE)
 
-  # Check for existing output files when overwrite = FALSE
-  expected_files <- sprintf("bio%02d.tif", variables)
-  existing <- expected_files[file.exists(file.path(output, expected_files))]
-  if (length(existing) > 0L && !isTRUE(overwrite)) {
+  # Check for existing output file when overwrite = FALSE
+  expected_file <- "bio.tif"
+  existing <- file.path(output, expected_file)
+  if (file.exists(existing) && !isTRUE(overwrite)) {
     stop(
-      "Output files already exist in '", output, "':\n  ",
-      paste(existing, collapse = ", "), "\n",
+      "Output file already exists in '", output, "': ", expected_file, "\n",
       "Set overwrite = TRUE to allow overwriting.",
       call. = FALSE
     )
@@ -268,6 +275,7 @@ bioclim_engine <- function(
   engine_open(eng, tas_files, tasmax_files, tasmin_files, pr_files)
   engine_set_output(eng, output)
   engine_set_variables(eng, as.integer(variables))
+  engine_set_dtype(eng, dtype)
   if (nzchar(mask_path)) engine_set_mask(eng, mask_path)
   engine_set_threads(eng, threads)
   engine_set_tile_size(eng, tile_size)
@@ -275,15 +283,17 @@ bioclim_engine <- function(
   engine_compute(eng)
 
   # -- 6. Return result -------------------------------------------------------
-  out_files <- file.path(output, sprintf("bio%02d.tif", variables))
+  out_file <- file.path(output, "bio.tif")
 
   if (requireNamespace("terra", quietly = TRUE)) {
-    layers <- lapply(out_files, terra::rast)
-    result <- terra::rast(layers)
-    names(result) <- sprintf("bio%02d", variables)
+    result <- terra::rast(out_file)
+    names(result) <- sprintf("bio%02d", 1:19)
+    if (!identical(sort(variables), 1:19)) {
+      result <- result[[variables]]
+    }
     result
   } else {
-    out_files
+    out_file
   }
 }
 

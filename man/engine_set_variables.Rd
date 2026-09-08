@@ -17,7 +17,9 @@ engine_set_variables(xptr, variables)
 \description{
 Restricts the output to a subset of the 19 standard bioclimatic variables.
 The engine always computes all 19 internally (they share intermediate
-values), but only the selected ones are written to disk.
+values).  With the multi-band output file, all 19 bands are written and
+the \code{\link{bioclim_engine}} R wrapper subsets the returned
+\code{SpatRaster}.
 }
 \seealso{
 \code{\link{engine_create}}, \code{\link{engine_compute}}

@@ -78,6 +78,17 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// engine_set_dtype
+void engine_set_dtype(SEXP xptr, std::string dtype);
+RcppExport SEXP _xbioclim_engine_set_dtype(SEXP xptrSEXP, SEXP dtypeSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type xptr(xptrSEXP);
+    Rcpp::traits::input_parameter< std::string >::type dtype(dtypeSEXP);
+    engine_set_dtype(xptr, dtype);
+    return R_NilValue;
+END_RCPP
+}
 // engine_set_variables
 void engine_set_variables(SEXP xptr, Rcpp::IntegerVector variables);
 RcppExport SEXP _xbioclim_engine_set_variables(SEXP xptrSEXP, SEXP variablesSEXP) {
@@ -681,6 +692,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_xbioclim_engine_set_mask", (DL_FUNC) &_xbioclim_engine_set_mask, 2},
     {"_xbioclim_engine_set_threads", (DL_FUNC) &_xbioclim_engine_set_threads, 2},
     {"_xbioclim_engine_set_tile_size", (DL_FUNC) &_xbioclim_engine_set_tile_size, 2},
+    {"_xbioclim_engine_set_dtype", (DL_FUNC) &_xbioclim_engine_set_dtype, 2},
     {"_xbioclim_engine_set_variables", (DL_FUNC) &_xbioclim_engine_set_variables, 2},
     {"_xbioclim_engine_compute", (DL_FUNC) &_xbioclim_engine_compute, 1},
     {"_xbioclim_bio01_cpp", (DL_FUNC) &_xbioclim_bio01_cpp, 1},

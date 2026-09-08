@@ -29,6 +29,7 @@
 #include <iomanip>
 #include <limits>
 #include <memory>
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -74,6 +75,18 @@ void BioclimEngine::set_device(const std::string& device) {
         throw std::runtime_error(
             "BioclimEngine::set_device: unknown device '" + device +
             "'. Use \"auto\", \"cpu\", or \"gpu\".");
+    }
+}
+
+void BioclimEngine::set_dtype(const std::string& dtype) {
+    if (dtype == "Float64" || dtype == "float64") {
+        output_dtype_ = GDT_Float64;
+    } else if (dtype == "Float32" || dtype == "float32") {
+        output_dtype_ = GDT_Float32;
+    } else {
+        throw std::runtime_error(
+            "BioclimEngine::set_dtype: unsupported dtype '" + dtype +
+            "'. Use \"Float64\" or \"Float32\".");
     }
 }
 
@@ -247,22 +260,6 @@ open_readers(const std::vector<std::string>& files) {
     return readers;
 }
 
-// Read one month's tile window.
-// multi_band == true  → readers[0], band = month + 1
-// multi_band == false → readers[month], band = 1
-void read_month_window(
-        const std::vector<std::unique_ptr<GdalReader>>& readers,
-        bool multi_band, int month,
-        int xoff, int yoff, int xsize, int ysize,
-        std::vector<double>& buf) {
-    if (multi_band) {
-        readers[0]->read_window(xoff, yoff, xsize, ysize, month + 1, buf);
-    } else {
-        readers[static_cast<std::size_t>(month)]->read_window(
-            xoff, yoff, xsize, ysize, 1, buf);
-    }
-}
-
 }  // anonymous namespace
 
 #endif  // HAVE_GDAL
@@ -309,22 +306,25 @@ std::string BioclimEngine::compute() {
     if (!mask_path_.empty())
         mask_reader = std::make_unique<GdalReader>(mask_path_);
 
-    // ── Create one output dataset per selected variable ─────────────────────
-    // output_path_ is a directory; each variable is written to a separate
-    // single-band GeoTIFF named bio01.tif … bio19.tif.
-    std::vector<std::unique_ptr<GdalWriter>> writers;
-    writers.reserve(eff_vars.size());
-    for (int v : eff_vars) {
-        std::ostringstream fname;
-        fname << output_path_ << "/bio"
-              << std::setw(2) << std::setfill('0') << v << ".tif";
-        writers.push_back(
-            std::make_unique<GdalWriter>(fname.str(), nrows, ncols, 1, gt, crs));
-    }
+    // ── Create one 19-band output GeoTIFF ───────────────────────────────────
+    // output_path_ is a directory; all variables are written to a single
+    // multi-band GeoTIFF named bio.tif.
+    std::ostringstream out_fname;
+    out_fname << output_path_ << "/bio.tif";
+    GdalWriter writer(out_fname.str(), nrows, ncols, 19, gt, crs,
+                      false, output_dtype_);
+
+    // Band map for writing all 19 bands in one call (1-based).
+    std::vector<int> write_bands(19);
+    std::iota(write_bands.begin(), write_bands.end(), 1);
+
+    // Input band map for multi-band reads (1..12).
+    std::vector<int> input_bands(12);
+    std::iota(input_bands.begin(), input_bands.end(), 1);
 
     // ── Determine compute device ────────────────────────────────────────────
-    bool use_gpu = false;
 #ifdef HAVE_CUDA
+    bool use_gpu = false;
     if (device_ != Device::CPU) {
         int gpu_count = 0;
         cudaError_t cuda_err = cudaGetDeviceCount(&gpu_count);
@@ -333,9 +333,6 @@ std::string BioclimEngine::compute() {
         }
     }
 #endif
-
-    // Scratch buffer reused across tiles and bands.
-    std::vector<double> band_buf;
 
     // ── Tiled processing loop ───────────────────────────────────────────────
     const int ts = tile_size_;
@@ -353,26 +350,48 @@ std::string BioclimEngine::compute() {
             std::vector<double> tasmin_tile(static_cast<std::size_t>(12 * n_pix));
             std::vector<double> pr_tile(    static_cast<std::size_t>(12 * n_pix));
 
-            for (int m = 0; m < 12; ++m) {
-                read_month_window(tas_readers, tas_multi, m,
-                                  xoff, yoff, xsize, ysize, band_buf);
-                std::copy(band_buf.begin(), band_buf.end(),
-                          tas_tile.begin() + m * n_pix);
+            if (tas_multi) {
+                tas_readers[0]->read_bands_window(
+                    xoff, yoff, xsize, ysize, input_bands, tas_tile);
+            } else {
+                for (int m = 0; m < 12; ++m) {
+                    tas_readers[static_cast<std::size_t>(m)]->read_window(
+                        xoff, yoff, xsize, ysize, 1,
+                        tas_tile.data() + static_cast<std::size_t>(m) * n_pix);
+                }
+            }
 
-                read_month_window(tasmax_readers, tasmax_multi, m,
-                                  xoff, yoff, xsize, ysize, band_buf);
-                std::copy(band_buf.begin(), band_buf.end(),
-                          tasmax_tile.begin() + m * n_pix);
+            if (tasmax_multi) {
+                tasmax_readers[0]->read_bands_window(
+                    xoff, yoff, xsize, ysize, input_bands, tasmax_tile);
+            } else {
+                for (int m = 0; m < 12; ++m) {
+                    tasmax_readers[static_cast<std::size_t>(m)]->read_window(
+                        xoff, yoff, xsize, ysize, 1,
+                        tasmax_tile.data() + static_cast<std::size_t>(m) * n_pix);
+                }
+            }
 
-                read_month_window(tasmin_readers, tasmin_multi, m,
-                                  xoff, yoff, xsize, ysize, band_buf);
-                std::copy(band_buf.begin(), band_buf.end(),
-                          tasmin_tile.begin() + m * n_pix);
+            if (tasmin_multi) {
+                tasmin_readers[0]->read_bands_window(
+                    xoff, yoff, xsize, ysize, input_bands, tasmin_tile);
+            } else {
+                for (int m = 0; m < 12; ++m) {
+                    tasmin_readers[static_cast<std::size_t>(m)]->read_window(
+                        xoff, yoff, xsize, ysize, 1,
+                        tasmin_tile.data() + static_cast<std::size_t>(m) * n_pix);
+                }
+            }
 
-                read_month_window(pr_readers, pr_multi, m,
-                                  xoff, yoff, xsize, ysize, band_buf);
-                std::copy(band_buf.begin(), band_buf.end(),
-                          pr_tile.begin() + m * n_pix);
+            if (pr_multi) {
+                pr_readers[0]->read_bands_window(
+                    xoff, yoff, xsize, ysize, input_bands, pr_tile);
+            } else {
+                for (int m = 0; m < 12; ++m) {
+                    pr_readers[static_cast<std::size_t>(m)]->read_window(
+                        xoff, yoff, xsize, ysize, 1,
+                        pr_tile.data() + static_cast<std::size_t>(m) * n_pix);
+                }
             }
 
             // ── Read mask tile (optional) ────────────────────────────────────
@@ -428,19 +447,13 @@ std::string BioclimEngine::compute() {
             }
             }  // end CPU branch
 
-            // ── Write selected output bands (one file per variable) ──────────
-            std::vector<double> out_band(static_cast<std::size_t>(n_pix));
-            for (std::size_t wi = 0; wi < eff_vars.size(); ++wi) {
-                const int j = eff_vars[wi] - 1;  // 0-based index
-                for (int i = 0; i < n_pix; ++i)
-                    out_band[static_cast<std::size_t>(i)] =
-                        bio_tile[static_cast<std::size_t>(j * n_pix + i)];
-                writers[wi]->write_window(xoff, yoff, xsize, ysize, 1, out_band);
-            }
+            // ── Write all 19 output bands in one multi-band call ─────────────
+            writer.write_bands_window(xoff, yoff, xsize, ysize,
+                                      write_bands, bio_tile, output_dtype_);
         }
     }
 
-    for (auto& w : writers) w->close();
+    writer.close();
     return output_path_;
 
 #else
@@ -502,11 +515,12 @@ void engine_open(SEXP xptr,
 
 //' Set the output raster path
 //'
-//' The engine will create (or overwrite) a Float64 GeoTIFF with 19 bands at
-//' this path when \code{\link{engine_compute}} is called.
+//' The engine will create (or overwrite) a multi-band GeoTIFF named
+//' \code{bio.tif} inside this directory when \code{\link{engine_compute}} is
+//' called.
 //'
 //' @param xptr External pointer returned by \code{\link{engine_create}}.
-//' @param path Character scalar: output file path.
+//' @param path Character scalar: output directory path.
 //' @return \code{NULL} invisibly.
 //' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 // [[Rcpp::export]]
@@ -558,11 +572,32 @@ void engine_set_tile_size(SEXP xptr, int tile_size) {
     Rcpp::XPtr<xbioclim::BioclimEngine>(xptr)->set_tile_size(tile_size);
 }
 
+//' Set the output data type
+//'
+//' Controls the on-disk data type of the output \code{bio.tif} file.
+//'\describe{
+//'   \item{"Float64"}{IEEE 754 double precision (default).}
+//'   \item{"Float32"}{IEEE 754 single precision — half the file size with
+//'     negligible loss for most climate data.}
+//' }
+//'
+//' @param xptr  External pointer returned by \code{\link{engine_create}}.
+//' @param dtype Character scalar: one of \code{"Float64"} or \code{"Float32"}.
+//' @return \code{NULL} invisibly.
+//' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
+//' @keywords internal
+// [[Rcpp::export]]
+void engine_set_dtype(SEXP xptr, std::string dtype) {
+    Rcpp::XPtr<xbioclim::BioclimEngine>(xptr)->set_dtype(dtype);
+}
+
 //' Select which bioclimatic variables to write
 //'
 //' Restricts the output to a subset of the 19 standard bioclimatic variables.
 //' The engine always computes all 19 internally (they share intermediate
-//' values), but only the selected ones are written to disk.
+//' values).  With the multi-band output file, all 19 bands are written and
+//' the \code{\link{bioclim_engine}} R wrapper subsets the returned
+//' \code{SpatRaster}.
 //'
 //' @param xptr      External pointer returned by \code{\link{engine_create}}.
 //' @param variables Integer vector with elements in 1..19.
@@ -578,9 +613,10 @@ void engine_set_variables(SEXP xptr, Rcpp::IntegerVector variables) {
 //' Run the bioclimatic-variable computation pipeline
 //'
 //' Reads all monthly climate input rasters tile by tile, computes the
-//' bioclimatic variables for every pixel, and writes each selected variable
-//' to a separate single-band GeoTIFF inside the output directory.  Peak
-//' memory is proportional to the tile size, not the full raster size.
+//' bioclimatic variables for every pixel, and writes all 19 variables to a
+//' single multi-band GeoTIFF named \code{bio.tif} inside the output
+//' directory.  Peak memory is proportional to the tile size, not the full
+//' raster size.
 //'
 //' Requires GDAL support.  Stops with an informative error when the package
 //' was built without GDAL.

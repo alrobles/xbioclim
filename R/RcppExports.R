@@ -32,11 +32,12 @@ engine_open <- function(xptr, tas_files, tasmax_files, tasmin_files, pr_files) {
 
 #' Set the output raster path
 #'
-#' The engine will create (or overwrite) a Float64 GeoTIFF with 19 bands at
-#' this path when \code{\link{engine_compute}} is called.
+#' The engine will create (or overwrite) a multi-band GeoTIFF named
+#' \code{bio.tif} inside this directory when \code{\link{engine_compute}} is
+#' called.
 #'
 #' @param xptr External pointer returned by \code{\link{engine_create}}.
-#' @param path Character scalar: output file path.
+#' @param path Character scalar: output directory path.
 #' @return \code{NULL} invisibly.
 #' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 engine_set_output <- function(xptr, path) {
@@ -84,11 +85,31 @@ engine_set_tile_size <- function(xptr, tile_size) {
     invisible(.Call(`_xbioclim_engine_set_tile_size`, xptr, tile_size))
 }
 
+#' Set the output data type
+#'
+#' Controls the on-disk data type of the output \code{bio.tif} file.
+#'\describe{
+#'   \item{"Float64"}{IEEE 754 double precision (default).}
+#'   \item{"Float32"}{IEEE 754 single precision — half the file size with
+#'     negligible loss for most climate data.}
+#' }
+#'
+#' @param xptr  External pointer returned by \code{\link{engine_create}}.
+#' @param dtype Character scalar: one of \code{"Float64"} or \code{"Float32"}.
+#' @return \code{NULL} invisibly.
+#' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
+#' @keywords internal
+engine_set_dtype <- function(xptr, dtype) {
+    invisible(.Call(`_xbioclim_engine_set_dtype`, xptr, dtype))
+}
+
 #' Select which bioclimatic variables to write
 #'
 #' Restricts the output to a subset of the 19 standard bioclimatic variables.
 #' The engine always computes all 19 internally (they share intermediate
-#' values), but only the selected ones are written to disk.
+#' values).  With the multi-band output file, all 19 bands are written and
+#' the \code{\link{bioclim_engine}} R wrapper subsets the returned
+#' \code{SpatRaster}.
 #'
 #' @param xptr      External pointer returned by \code{\link{engine_create}}.
 #' @param variables Integer vector with elements in 1..19.
@@ -102,9 +123,10 @@ engine_set_variables <- function(xptr, variables) {
 #' Run the bioclimatic-variable computation pipeline
 #'
 #' Reads all monthly climate input rasters tile by tile, computes the
-#' bioclimatic variables for every pixel, and writes each selected variable
-#' to a separate single-band GeoTIFF inside the output directory.  Peak
-#' memory is proportional to the tile size, not the full raster size.
+#' bioclimatic variables for every pixel, and writes all 19 variables to a
+#' single multi-band GeoTIFF named \code{bio.tif} inside the output
+#' directory.  Peak memory is proportional to the tile size, not the full
+#' raster size.
 #'
 #' Requires GDAL support.  Stops with an informative error when the package
 #' was built without GDAL.
