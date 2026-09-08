@@ -25,14 +25,20 @@
 #endif
 
 #include <algorithm>
+#include <atomic>
+#include <chrono>
 #include <cmath>
+#include <condition_variable>
+#include <deque>
 #include <exception>
 #include <iomanip>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
+#include <thread>
 #include <vector>
 
 namespace xbioclim {
@@ -101,6 +107,10 @@ void BioclimEngine::set_variables(const std::vector<int>& variables) {
         }
     }
     variables_ = variables;
+}
+
+void BioclimEngine::set_pipeline(bool use_pipeline) {
+    pipeline_ = use_pipeline;
 }
 
 // ── GDAL-dependent helpers (anonymous namespace, internal linkage) ────────────
@@ -267,6 +277,210 @@ open_readers(const std::vector<std::string>& files) {
     return readers;
 }
 
+// ── Tile-slot / pipeline helpers ────────────────────────────────────────────
+
+// One reusable tile buffer set.  The vectors are resized per tile, but each
+// slot is allocated once to the maximum tile size to avoid repeated heap calls.
+struct TileSlot {
+    int xoff = 0;
+    int yoff = 0;
+    int xsize = 0;
+    int ysize = 0;
+    int n_pix = 0;
+
+    std::vector<double> tas;
+    std::vector<double> tasmax;
+    std::vector<double> tasmin;
+    std::vector<double> pr;
+    std::vector<double> mask;
+    std::vector<double> bio;
+
+    void reserve(int max_n_pix) {
+        tas.reserve(static_cast<std::size_t>(12) * max_n_pix);
+        tasmax.reserve(static_cast<std::size_t>(12) * max_n_pix);
+        tasmin.reserve(static_cast<std::size_t>(12) * max_n_pix);
+        pr.reserve(static_cast<std::size_t>(12) * max_n_pix);
+        mask.reserve(static_cast<std::size_t>(max_n_pix));
+        bio.reserve(static_cast<std::size_t>(19) * max_n_pix);
+    }
+
+    void resize(int np) {
+        n_pix = np;
+        tas.resize(static_cast<std::size_t>(12) * n_pix);
+        tasmax.resize(static_cast<std::size_t>(12) * n_pix);
+        tasmin.resize(static_cast<std::size_t>(12) * n_pix);
+        pr.resize(static_cast<std::size_t>(12) * n_pix);
+        // mask is resized by the reader only when a mask is configured.
+        bio.resize(static_cast<std::size_t>(19) * n_pix);
+    }
+};
+
+// Simple mutex/CV queue used to hand off TileSlot* pointers between the
+// reader, compute, and writer threads.  A nullptr is used as an end-of-stream
+// sentinel.  Once cancel() has been called, pop() drains any remaining items
+// and then returns nullptr, allowing workers to exit cleanly after an error.
+class TileQueue {
+public:
+    void push(TileSlot* slot) {
+        {
+            std::lock_guard<std::mutex> lk(mtx_);
+            q_.push_back(slot);
+        }
+        cv_.notify_one();
+    }
+
+    TileSlot* pop() {
+        std::unique_lock<std::mutex> lk(mtx_);
+        cv_.wait(lk, [this] { return !q_.empty() || cancelled_; });
+        if (q_.empty()) return nullptr;
+        TileSlot* slot = q_.front();
+        q_.pop_front();
+        return slot;
+    }
+
+    void cancel() {
+        {
+            std::lock_guard<std::mutex> lk(mtx_);
+            cancelled_ = true;
+        }
+        cv_.notify_all();
+    }
+
+private:
+    std::deque<TileSlot*> q_;
+    std::mutex mtx_;
+    std::condition_variable cv_;
+    bool cancelled_ = false;
+};
+
+// Shared error/cancellation state for the three pipeline workers.
+struct PipelineContext {
+    std::atomic<bool> has_error{false};
+    std::string error_message;
+    std::mutex error_mtx;
+
+    TileQueue free_queue;
+    TileQueue ready_compute;
+    TileQueue ready_write;
+
+    void report_error(const std::string& msg) {
+        std::lock_guard<std::mutex> lk(error_mtx);
+        if (!has_error.load()) {
+            has_error.store(true);
+            error_message = msg;
+        }
+        free_queue.cancel();
+        ready_compute.cancel();
+        ready_write.cancel();
+    }
+};
+
+// Read one tile into a slot.  This function is always called from the reader
+// thread so no other thread touches the GdalReader objects used here.
+void read_tile_into_slot(
+    TileSlot* slot,
+    const std::vector<std::unique_ptr<GdalReader>>& tas_readers,
+    const std::vector<std::unique_ptr<GdalReader>>& tasmax_readers,
+    const std::vector<std::unique_ptr<GdalReader>>& tasmin_readers,
+    const std::vector<std::unique_ptr<GdalReader>>& pr_readers,
+    bool tas_multi, bool tasmax_multi, bool tasmin_multi, bool pr_multi,
+    const GdalReader* mask_reader,
+    const std::vector<int>& input_bands,
+    int xoff, int yoff, int xsize, int ysize) {
+
+    const int n_pix = xsize * ysize;
+    slot->xoff = xoff;
+    slot->yoff = yoff;
+    slot->xsize = xsize;
+    slot->ysize = ysize;
+    slot->resize(n_pix);
+
+    if (tas_multi) {
+        tas_readers[0]->read_bands_window(
+            xoff, yoff, xsize, ysize, input_bands, slot->tas);
+    } else {
+        for (int m = 0; m < 12; ++m) {
+            tas_readers[static_cast<std::size_t>(m)]->read_window(
+                xoff, yoff, xsize, ysize, 1,
+                slot->tas.data() + static_cast<std::size_t>(m) * n_pix);
+        }
+    }
+
+    if (tasmax_multi) {
+        tasmax_readers[0]->read_bands_window(
+            xoff, yoff, xsize, ysize, input_bands, slot->tasmax);
+    } else {
+        for (int m = 0; m < 12; ++m) {
+            tasmax_readers[static_cast<std::size_t>(m)]->read_window(
+                xoff, yoff, xsize, ysize, 1,
+                slot->tasmax.data() + static_cast<std::size_t>(m) * n_pix);
+        }
+    }
+
+    if (tasmin_multi) {
+        tasmin_readers[0]->read_bands_window(
+            xoff, yoff, xsize, ysize, input_bands, slot->tasmin);
+    } else {
+        for (int m = 0; m < 12; ++m) {
+            tasmin_readers[static_cast<std::size_t>(m)]->read_window(
+                xoff, yoff, xsize, ysize, 1,
+                slot->tasmin.data() + static_cast<std::size_t>(m) * n_pix);
+        }
+    }
+
+    if (pr_multi) {
+        pr_readers[0]->read_bands_window(
+            xoff, yoff, xsize, ysize, input_bands, slot->pr);
+    } else {
+        for (int m = 0; m < 12; ++m) {
+            pr_readers[static_cast<std::size_t>(m)]->read_window(
+                xoff, yoff, xsize, ysize, 1,
+                slot->pr.data() + static_cast<std::size_t>(m) * n_pix);
+        }
+    }
+
+    if (mask_reader) {
+        slot->mask.resize(static_cast<std::size_t>(n_pix));
+        mask_reader->read_window(xoff, yoff, xsize, ysize, 1, slot->mask);
+    } else {
+        slot->mask.clear();
+    }
+}
+
+// Compute one tile on the CPU.  Re-uses the existing compute_pixel kernel.
+void compute_tile_cpu(TileSlot* slot, int n_threads) {
+    const int n_pix = slot->n_pix;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static) num_threads(n_threads)
+#endif
+    for (int i = 0; i < n_pix; ++i) {
+        double t[12], tmx[12], tmn[12], p[12], bio[19];
+        for (int m = 0; m < 12; ++m) {
+            t[m]   = slot->tas[   static_cast<std::size_t>(m * n_pix + i)];
+            tmx[m] = slot->tasmax[static_cast<std::size_t>(m * n_pix + i)];
+            tmn[m] = slot->tasmin[static_cast<std::size_t>(m * n_pix + i)];
+            p[m]   = slot->pr[    static_cast<std::size_t>(m * n_pix + i)];
+        }
+
+        bool masked = false;
+        if (!slot->mask.empty()) {
+            const double mv = slot->mask[static_cast<std::size_t>(i)];
+            masked = (std::isnan(mv) || mv == 0.0);
+        }
+
+        if (masked) {
+            for (int j = 0; j < 19; ++j)
+                slot->bio[static_cast<std::size_t>(j * n_pix + i)] =
+                    std::numeric_limits<double>::quiet_NaN();
+        } else {
+            compute_pixel(t, tmx, tmn, p, bio);
+            for (int j = 0; j < 19; ++j)
+                slot->bio[static_cast<std::size_t>(j * n_pix + i)] = bio[j];
+        }
+    }
+}
+
 }  // anonymous namespace
 
 #endif  // HAVE_GDAL
@@ -283,6 +497,11 @@ std::string BioclimEngine::compute() {
     validate_file_vector(tasmax_files_, "tasmax");
     validate_file_vector(tasmin_files_, "tasmin");
     validate_file_vector(pr_files_,     "pr");
+
+    // Use the overlapped pipeline if requested.
+    if (pipeline_) {
+        return compute_pipelined();
+    }
 
     // ── Determine effective variable set ─────────────────────────────────────
     std::vector<int> eff_vars = variables_;
@@ -495,6 +714,180 @@ std::string BioclimEngine::compute() {
 #endif
 }
 
+// ── BioclimEngine::compute_pipelined() ───────────────────────────────────────
+
+std::string BioclimEngine::compute_pipelined() {
+#ifdef HAVE_GDAL
+    // ── Validate configuration ──────────────────────────────────────────────
+    if (output_path_.empty())
+        throw std::runtime_error("BioclimEngine::compute_pipelined: output path not set.");
+
+    validate_file_vector(tas_files_,    "tas");
+    validate_file_vector(tasmax_files_, "tasmax");
+    validate_file_vector(tasmin_files_, "tasmin");
+    validate_file_vector(pr_files_,     "pr");
+
+    // ── Open readers ────────────────────────────────────────────────────────
+    const bool tas_multi    = (tas_files_.size()    == 1);
+    const bool tasmax_multi = (tasmax_files_.size() == 1);
+    const bool tasmin_multi = (tasmin_files_.size() == 1);
+    const bool pr_multi     = (pr_files_.size()     == 1);
+
+    auto tas_readers    = open_readers(tas_files_);
+    auto tasmax_readers = open_readers(tasmax_files_);
+    auto tasmin_readers = open_readers(tasmin_files_);
+    auto pr_readers     = open_readers(pr_files_);
+
+    // Reference dimensions come from the first tas reader.
+    const int nrows = tas_readers[0]->nrows();
+    const int ncols = tas_readers[0]->ncols();
+    const auto gt   = tas_readers[0]->geotransform();
+    const auto crs  = tas_readers[0]->crs();
+
+    // ── Open mask reader (optional) ─────────────────────────────────────────
+    std::unique_ptr<GdalReader> mask_reader;
+    if (!mask_path_.empty())
+        mask_reader = std::make_unique<GdalReader>(mask_path_);
+
+    // ── Create one 19-band output GeoTIFF ───────────────────────────────────
+    std::ostringstream out_fname;
+    out_fname << output_path_ << "/bio.tif";
+    GdalWriter writer(out_fname.str(), nrows, ncols, 19, gt, crs,
+                      false, output_dtype_);
+
+    // Band map for writing all 19 bands in one call (1-based).
+    std::vector<int> write_bands(19);
+    std::iota(write_bands.begin(), write_bands.end(), 1);
+
+    // Input band map for multi-band reads (1..12).
+    std::vector<int> input_bands(12);
+    std::iota(input_bands.begin(), input_bands.end(), 1);
+
+    // ── Determine compute device ────────────────────────────────────────────
+    bool use_gpu = false;
+#ifdef HAVE_CUDA
+    if (device_ != Device::CPU) {
+        int gpu_count = 0;
+        cudaError_t cuda_err = cudaGetDeviceCount(&gpu_count);
+        if (cuda_err == cudaSuccess && gpu_count > 0) {
+            use_gpu = true;
+        }
+    }
+#endif
+
+    // ── Set up the overlapped pipeline ──────────────────────────────────────
+    const int ts = tile_size_;
+    const int max_n_pix = ts * ts;
+
+    PipelineContext ctx;
+    std::vector<std::unique_ptr<TileSlot>> slots;
+    slots.reserve(3);
+    for (int i = 0; i < 3; ++i) {
+        auto s = std::make_unique<TileSlot>();
+        s->reserve(max_n_pix);
+        slots.push_back(std::move(s));
+        ctx.free_queue.push(slots.back().get());
+    }
+
+    // Reader thread: fills free slots and pushes them to the compute queue.
+    std::thread reader_thread([&]() {
+        try {
+            for (int yoff = 0; yoff < nrows; yoff += ts) {
+                const int ysize = std::min(ts, nrows - yoff);
+                for (int xoff = 0; xoff < ncols; xoff += ts) {
+                    const int xsize = std::min(ts, ncols - xoff);
+
+                    TileSlot* slot = ctx.free_queue.pop();
+                    if (slot == nullptr) break;
+
+                    read_tile_into_slot(
+                        slot,
+                        tas_readers, tasmax_readers, tasmin_readers, pr_readers,
+                        tas_multi, tasmax_multi, tasmin_multi, pr_multi,
+                        mask_reader.get(), input_bands,
+                        xoff, yoff, xsize, ysize);
+
+                    ctx.ready_compute.push(slot);
+                }
+            }
+            ctx.ready_compute.push(nullptr);  // end-of-stream sentinel
+        } catch (const std::exception& e) {
+            ctx.report_error(e.what());
+        }
+    });
+
+    // Compute thread: consumes filled slots, runs the per-pixel BIOCLIM loop,
+    // and pushes results to the writer queue.
+    std::thread compute_thread([&]() {
+        try {
+            while (true) {
+                TileSlot* slot = ctx.ready_compute.pop();
+                if (slot == nullptr) {
+                    ctx.ready_write.push(nullptr);
+                    break;
+                }
+
+#ifdef HAVE_CUDA
+                if (use_gpu) {
+                    launch_bioclim_cuda(
+                        slot->tas.data(), slot->tasmax.data(),
+                        slot->tasmin.data(), slot->pr.data(),
+                        slot->mask.empty() ? nullptr : slot->mask.data(),
+                        slot->bio.data(),
+                        slot->n_pix
+                    );
+                } else
+#endif
+                {
+                    compute_tile_cpu(slot, n_threads_);
+                }
+
+                ctx.ready_write.push(slot);
+            }
+        } catch (const std::exception& e) {
+            ctx.report_error(e.what());
+        }
+    });
+
+    // Writer thread: drains computed tiles in order and returns slots to the
+    // free queue for reuse.
+    std::thread writer_thread([&]() {
+        try {
+            while (true) {
+                TileSlot* slot = ctx.ready_write.pop();
+                if (slot == nullptr) break;
+
+                writer.write_bands_window(
+                    slot->xoff, slot->yoff, slot->xsize, slot->ysize,
+                    write_bands, slot->bio, output_dtype_);
+
+                ctx.free_queue.push(slot);
+            }
+        } catch (const std::exception& e) {
+            ctx.report_error(e.what());
+        }
+    });
+
+    reader_thread.join();
+    compute_thread.join();
+    writer_thread.join();
+
+    if (ctx.has_error.load()) {
+        throw std::runtime_error(ctx.error_message);
+    }
+
+    writer.close();
+    return output_path_;
+
+#else
+    throw std::runtime_error(
+        "GDAL is required for BioclimEngine. "
+        "Rebuild the package with GDAL support."
+    );
+    return "";  // unreachable — silences compiler warning
+#endif
+}
+
 }  // namespace xbioclim
 
 // ── Rcpp XPtr wrappers ────────────────────────────────────────────────────────
@@ -638,6 +1031,24 @@ void engine_set_dtype(SEXP xptr, std::string dtype) {
 void engine_set_variables(SEXP xptr, Rcpp::IntegerVector variables) {
     Rcpp::XPtr<xbioclim::BioclimEngine> eng(xptr);
     eng->set_variables(Rcpp::as<std::vector<int>>(variables));
+}
+
+//' Enable or disable the overlapped read/compute/write pipeline
+//'
+//' This is an internal, opt-in flag.  When \code{TRUE}, the next call to
+//' \code{\link{engine_compute}} uses three background threads to overlap
+//' the GDAL read, BIOCLIM computation, and GDAL write stages for each tile.
+//' When \code{FALSE} (the default) the engine uses the original serial loop.
+//'
+//' @param xptr External pointer returned by \code{\link{engine_create}}.
+//' @param use_pipeline Logical scalar: \code{TRUE} to enable the pipeline.
+//' @return \code{NULL} invisibly.
+//' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
+//' @keywords internal
+// [[Rcpp::export]]
+void engine_set_pipeline(SEXP xptr, bool use_pipeline) {
+    Rcpp::XPtr<xbioclim::BioclimEngine> eng(xptr);
+    eng->set_pipeline(use_pipeline);
 }
 
 //' Run the bioclimatic-variable computation pipeline
