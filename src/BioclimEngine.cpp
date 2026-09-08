@@ -30,7 +30,6 @@
 #include <condition_variable>
 #include <deque>
 #include <exception>
-#include <immintrin.h>
 #include <iomanip>
 #include <limits>
 #include <memory>
@@ -498,6 +497,8 @@ void compute_tile_buffers_scalar(const double* tas, const double* tasmax,
 }
 
 #ifdef __AVX2__
+#include <immintrin.h>
+
 // Compute four contiguous pixels in one AVX2 pass.
 // Data layout: buf[month * n_pix + pixel], so pixels i0..i0+3 for a fixed
 // month are contiguous and can be loaded into one __m256d.
