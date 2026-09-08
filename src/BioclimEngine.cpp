@@ -415,6 +415,11 @@ struct PipelineContext {
 
 // Read one tile into a slot.  This function is always called from the reader
 // thread so no other thread touches the GdalReader objects used here.
+//
+// For each of the four climate variables, the 12 monthly band reads run in
+// parallel (up to `n_threads` threads).  This is safe because `open_readers`
+// creates 12 distinct `GdalReader` / `GDALDataset` handles, even for a single
+// multi-band input file.
 void read_tile_into_slot(
     TileSlot* slot,
     const std::vector<std::unique_ptr<GdalReader>>& tas_readers,
@@ -423,8 +428,8 @@ void read_tile_into_slot(
     const std::vector<std::unique_ptr<GdalReader>>& pr_readers,
     bool tas_multi, bool tasmax_multi, bool tasmin_multi, bool pr_multi,
     const GdalReader* mask_reader,
-    const std::vector<int>& input_bands,
-    int xoff, int yoff, int xsize, int ysize) {
+    int xoff, int yoff, int xsize, int ysize,
+    int n_threads) {
 
     const int n_pix = xsize * ysize;
     slot->xoff = xoff;
@@ -433,49 +438,44 @@ void read_tile_into_slot(
     slot->ysize = ysize;
     slot->resize(n_pix);
 
-    if (tas_multi) {
-        tas_readers[0]->read_bands_window(
-            xoff, yoff, xsize, ysize, input_bands, slot->tas);
-    } else {
-        for (int m = 0; m < 12; ++m) {
-            tas_readers[static_cast<std::size_t>(m)]->read_window(
-                xoff, yoff, xsize, ysize, 1,
-                slot->tas.data() + static_cast<std::size_t>(m) * n_pix);
-        }
-    }
+    const std::vector<std::unique_ptr<GdalReader>>* var_readers[4] = {
+        &tas_readers, &tasmax_readers, &tasmin_readers, &pr_readers
+    };
+    const bool var_multi[4] = {
+        tas_multi, tasmax_multi, tasmin_multi, pr_multi
+    };
+    double* var_tiles[4] = {
+        slot->tas.data(), slot->tasmax.data(),
+        slot->tasmin.data(), slot->pr.data()
+    };
 
-    if (tasmax_multi) {
-        tasmax_readers[0]->read_bands_window(
-            xoff, yoff, xsize, ysize, input_bands, slot->tasmax);
-    } else {
+    std::exception_ptr read_error;
+#ifdef _OPENMP
+#pragma omp parallel for collapse(2) schedule(static) num_threads(n_threads)
+#endif
+    for (int v = 0; v < 4; ++v) {
         for (int m = 0; m < 12; ++m) {
-            tasmax_readers[static_cast<std::size_t>(m)]->read_window(
-                xoff, yoff, xsize, ysize, 1,
-                slot->tasmax.data() + static_cast<std::size_t>(m) * n_pix);
+            try {
+                (*var_readers[v])[static_cast<std::size_t>(m)]
+                    ->read_window(
+                        xoff, yoff, xsize, ysize,
+                        var_multi[v] ? m + 1 : 1,
+                        var_tiles[v] +
+                            static_cast<std::size_t>(m) * n_pix);
+            } catch (...) {
+                // Exceptions must not escape an OpenMP region;
+                // record the first one and rethrow below.
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+                {
+                    if (!read_error)
+                        read_error = std::current_exception();
+                }
+            }
         }
     }
-
-    if (tasmin_multi) {
-        tasmin_readers[0]->read_bands_window(
-            xoff, yoff, xsize, ysize, input_bands, slot->tasmin);
-    } else {
-        for (int m = 0; m < 12; ++m) {
-            tasmin_readers[static_cast<std::size_t>(m)]->read_window(
-                xoff, yoff, xsize, ysize, 1,
-                slot->tasmin.data() + static_cast<std::size_t>(m) * n_pix);
-        }
-    }
-
-    if (pr_multi) {
-        pr_readers[0]->read_bands_window(
-            xoff, yoff, xsize, ysize, input_bands, slot->pr);
-    } else {
-        for (int m = 0; m < 12; ++m) {
-            pr_readers[static_cast<std::size_t>(m)]->read_window(
-                xoff, yoff, xsize, ysize, 1,
-                slot->pr.data() + static_cast<std::size_t>(m) * n_pix);
-        }
-    }
+    if (read_error) std::rethrow_exception(read_error);
 
     if (mask_reader) {
         slot->mask.resize(static_cast<std::size_t>(n_pix));
@@ -966,10 +966,6 @@ std::string BioclimEngine::compute_pipelined() {
     std::vector<int> write_bands(19);
     std::iota(write_bands.begin(), write_bands.end(), 1);
 
-    // Input band map for multi-band reads (1..12).
-    std::vector<int> input_bands(12);
-    std::iota(input_bands.begin(), input_bands.end(), 1);
-
     // ── Determine compute device ────────────────────────────────────────────
     bool use_gpu = false;
 #ifdef HAVE_CUDA
@@ -1011,8 +1007,8 @@ std::string BioclimEngine::compute_pipelined() {
                         slot,
                         tas_readers, tasmax_readers, tasmin_readers, pr_readers,
                         tas_multi, tasmax_multi, tasmin_multi, pr_multi,
-                        mask_reader.get(), input_bands,
-                        xoff, yoff, xsize, ysize);
+                        mask_reader.get(),
+                        xoff, yoff, xsize, ysize, n_threads_);
 
                     ctx.ready_compute.push(slot);
                 }
@@ -1252,6 +1248,7 @@ void engine_set_variables(SEXP xptr, Rcpp::IntegerVector variables) {
 //' @return \code{NULL} invisibly.
 //' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 //' @keywords internal
+//' @export
 // [[Rcpp::export]]
 void engine_set_pipeline(SEXP xptr, bool use_pipeline) {
     Rcpp::XPtr<xbioclim::BioclimEngine> eng(xptr);

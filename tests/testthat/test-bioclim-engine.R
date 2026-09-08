@@ -531,3 +531,34 @@ test_that("bioclim_engine() stops for invalid mask type", {
     regexp = "'mask' must be"
   )
 })
+
+# ── 6. Overlapped pipeline correctness (Phase C) ──────────────────────────────
+
+test_that("bioclim_engine() use_pipeline = TRUE matches use_pipeline = FALSE", {
+  skip_without_gdal()
+  skip_without_terra()
+
+  tmpdir <- tempfile("be_pipeline_")
+  dir.create(tmpdir)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+
+  tas_f    <- make_multiband_file(std_tas_vals,    file.path(tmpdir, "tas.tif"))
+  tasmax_f <- make_multiband_file(std_tasmax_vals, file.path(tmpdir, "tasmax.tif"))
+  tasmin_f <- make_multiband_file(std_tasmin_vals, file.path(tmpdir, "tasmin.tif"))
+  pr_f     <- make_multiband_file(std_pr_vals,     file.path(tmpdir, "pr.tif"))
+
+  out_serial <- file.path(tmpdir, "out_serial")
+  out_pipe   <- file.path(tmpdir, "out_pipe")
+  dir.create(out_serial)
+  dir.create(out_pipe)
+
+  r_serial <- bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f,
+                             output = out_serial, tile_size = 2L,
+                             use_pipeline = FALSE, overwrite = TRUE)
+  r_pipe <- bioclim_engine(tas_f, tasmax_f, tasmin_f, pr_f,
+                           output = out_pipe, tile_size = 2L,
+                           use_pipeline = TRUE, overwrite = TRUE)
+
+  expect_equal(terra::nlyr(r_serial), terra::nlyr(r_pipe))
+  expect_equal(terra::values(r_serial), terra::values(r_pipe))
+})

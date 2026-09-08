@@ -132,6 +132,7 @@ engine_set_variables <- function(xptr, variables) {
 #' @return \code{NULL} invisibly.
 #' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 #' @keywords internal
+#' @export
 engine_set_pipeline <- function(xptr, use_pipeline) {
     invisible(.Call(`_xbioclim_engine_set_pipeline`, xptr, use_pipeline))
 }
