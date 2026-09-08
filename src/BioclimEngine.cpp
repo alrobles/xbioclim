@@ -26,11 +26,11 @@
 
 #include <algorithm>
 #include <atomic>
-#include <chrono>
 #include <cmath>
 #include <condition_variable>
 #include <deque>
 #include <exception>
+#include <immintrin.h>
 #include <iomanip>
 #include <limits>
 #include <memory>
@@ -143,10 +143,15 @@ inline int argmin12(const double* x) {
 
 // Population standard deviation (denominator N) for a 12-element array
 inline double sd_pop(const double* x) {
-    double s = 0.0, ss = 0.0;
-    for (int i = 0; i < 12; ++i) { s += x[i]; ss += x[i] * x[i]; }
+    double s = 0.0;
+    for (int i = 0; i < 12; ++i) s += x[i];
     const double m = s / 12.0;
-    return std::sqrt(ss / 12.0 - m * m);
+    double ss = 0.0;
+    for (int i = 0; i < 12; ++i) {
+        const double d = x[i] - m;
+        ss += d * d;
+    }
+    return std::sqrt(ss / 12.0);
 }
 
 // Compute 19 bioclimatic variables for one pixel.
@@ -235,6 +240,39 @@ void compute_pixel(const double* t, const double* tmx,
     bio[18] = pr_qs[cold_q];         // BIO19
 }
 
+// Compute a single pixel from the month-major tile buffers and write the
+// result into the band-major output tile.  Used as the scalar tail for tiles
+// whose pixel count is not a multiple of the SIMD width.
+inline void compute_pixel_at(const double* tas, const double* tasmax,
+                             const double* tasmin, const double* pr,
+                             const double* mask, double* bio,
+                             int n_pix, int i) {
+    double t[12], tmx[12], tmn[12], p[12], out[19];
+    for (int m = 0; m < 12; ++m) {
+        const std::size_t off = static_cast<std::size_t>(m) * n_pix + i;
+        t[m]   = tas[off];
+        tmx[m] = tasmax[off];
+        tmn[m] = tasmin[off];
+        p[m]   = pr[off];
+    }
+
+    bool masked = false;
+    if (mask != nullptr) {
+        const double mv = mask[static_cast<std::size_t>(i)];
+        masked = (std::isnan(mv) || mv == 0.0);
+    }
+
+    if (masked) {
+        for (int j = 0; j < 19; ++j)
+            bio[static_cast<std::size_t>(j) * n_pix + i] =
+                std::numeric_limits<double>::quiet_NaN();
+    } else {
+        compute_pixel(t, tmx, tmn, p, out);
+        for (int j = 0; j < 19; ++j)
+            bio[static_cast<std::size_t>(j) * n_pix + i] = out[j];
+    }
+}
+
 // ── GDAL I/O helpers ─────────────────────────────────────────────────────────
 
 // Validate that a file vector is acceptable (1 multi-band or 12 single-band).
@@ -305,6 +343,7 @@ struct TileSlot {
     }
 
     void resize(int np) {
+        if (n_pix == np) return;
         n_pix = np;
         tas.resize(static_cast<std::size_t>(12) * n_pix);
         tasmax.resize(static_cast<std::size_t>(12) * n_pix);
@@ -447,38 +486,237 @@ void read_tile_into_slot(
     }
 }
 
-// Compute one tile on the CPU.  Re-uses the existing compute_pixel kernel.
-void compute_tile_cpu(TileSlot* slot, int n_threads) {
-    const int n_pix = slot->n_pix;
+
+// Scalar tile driver (used when AVX2 is unavailable).
+void compute_tile_buffers_scalar(const double* tas, const double* tasmax,
+                                 const double* tasmin, const double* pr,
+                                 const double* mask, double* bio,
+                                 int n_pix) {
+    for (int i = 0; i < n_pix; ++i) {
+        compute_pixel_at(tas, tasmax, tasmin, pr, mask, bio, n_pix, i);
+    }
+}
+
+#ifdef __AVX2__
+// Compute four contiguous pixels in one AVX2 pass.
+// Data layout: buf[month * n_pix + pixel], so pixels i0..i0+3 for a fixed
+// month are contiguous and can be loaded into one __m256d.
+inline void compute_pixel4(const double* tas, const double* tasmax,
+                           const double* tasmin, const double* pr,
+                           const double* mask, double* bio,
+                           int n_pix, int i0) {
+    const __m256d zero = _mm256_setzero_pd();
+    const __m256d inv12 = _mm256_set1_pd(1.0 / 12.0);
+    const __m256d inv3  = _mm256_set1_pd(1.0 / 3.0);
+    const __m256d hundred = _mm256_set1_pd(100.0);
+    const __m256d nan = _mm256_set1_pd(
+        std::numeric_limits<double>::quiet_NaN());
+    // -1.0 has the sign bit set, which is all blendv_pd needs for "true".
+    __m256d valid = _mm256_set1_pd(-1.0);
+
+    // Month 0: initialise accumulators and the 12-month caches.
+    __m256d t0   = _mm256_loadu_pd(tas    + static_cast<std::size_t>(i0));
+    __m256d tmx0 = _mm256_loadu_pd(tasmax + static_cast<std::size_t>(i0));
+    __m256d tmn0 = _mm256_loadu_pd(tasmin + static_cast<std::size_t>(i0));
+    __m256d p0   = _mm256_loadu_pd(pr     + static_cast<std::size_t>(i0));
+
+    __m256d month_t[12];
+    __m256d month_p[12];
+    month_t[0] = t0;
+    month_p[0] = p0;
+
+    // NaN guard for month 0.
+    __m256d nan_t   = _mm256_cmp_pd(t0,   t0,   _CMP_UNORD_Q);
+    __m256d nan_tmx = _mm256_cmp_pd(tmx0, tmx0, _CMP_UNORD_Q);
+    __m256d nan_tmn = _mm256_cmp_pd(tmn0, tmn0, _CMP_UNORD_Q);
+    __m256d nan_p   = _mm256_cmp_pd(p0,   p0,   _CMP_UNORD_Q);
+    __m256d any_nan = _mm256_or_pd(_mm256_or_pd(nan_t, nan_tmx),
+                                   _mm256_or_pd(nan_tmn, nan_p));
+    valid = _mm256_andnot_pd(any_nan, valid);
+
+    __m256d t_sum   = t0;
+    __m256d diurnal = _mm256_sub_pd(tmx0, tmn0);
+    __m256d tmx_max = tmx0;
+    __m256d tmn_min = tmn0;
+    __m256d p_sum   = p0;
+    __m256d p_max   = p0;
+    __m256d p_min   = p0;
+
+    // Months 1..11.
+    for (int m = 1; m < 12; ++m) {
+        const std::size_t off = static_cast<std::size_t>(m) * n_pix + i0;
+        __m256d t   = _mm256_loadu_pd(tas    + off);
+        __m256d tmx = _mm256_loadu_pd(tasmax + off);
+        __m256d tmn = _mm256_loadu_pd(tasmin + off);
+        __m256d p   = _mm256_loadu_pd(pr     + off);
+
+        month_t[m] = t;
+        month_p[m] = p;
+
+        nan_t   = _mm256_cmp_pd(t,   t,   _CMP_UNORD_Q);
+        nan_tmx = _mm256_cmp_pd(tmx, tmx, _CMP_UNORD_Q);
+        nan_tmn = _mm256_cmp_pd(tmn, tmn, _CMP_UNORD_Q);
+        nan_p   = _mm256_cmp_pd(p,   p,   _CMP_UNORD_Q);
+        any_nan = _mm256_or_pd(_mm256_or_pd(nan_t, nan_tmx),
+                               _mm256_or_pd(nan_tmn, nan_p));
+        valid = _mm256_andnot_pd(any_nan, valid);
+
+        t_sum   = _mm256_add_pd(t_sum, t);
+        diurnal = _mm256_add_pd(diurnal, _mm256_sub_pd(tmx, tmn));
+        tmx_max = _mm256_max_pd(tmx_max, tmx);
+        tmn_min = _mm256_min_pd(tmn_min, tmn);
+        p_sum   = _mm256_add_pd(p_sum, p);
+        p_max   = _mm256_max_pd(p_max, p);
+        p_min   = _mm256_min_pd(p_min, p);
+    }
+
+    if (mask != nullptr) {
+        __m256d m = _mm256_loadu_pd(mask + i0);
+        __m256d nan_m  = _mm256_cmp_pd(m, m, _CMP_UNORD_Q);
+        __m256d zero_m = _mm256_cmp_pd(m, zero, _CMP_EQ_OQ);
+        __m256d bad = _mm256_or_pd(nan_m, zero_m);
+        valid = _mm256_andnot_pd(bad, valid);
+    }
+
+    // BIO01--BIO07.
+    __m256d b01 = _mm256_mul_pd(t_sum, inv12);
+    __m256d b02 = _mm256_mul_pd(diurnal, inv12);
+    __m256d b05 = tmx_max;
+    __m256d b06 = tmn_min;
+    __m256d b07 = _mm256_sub_pd(b05, b06);
+
+    __m256d b07_gt0 = _mm256_cmp_pd(b07, zero, _CMP_GT_OQ);
+    __m256d b03 = _mm256_mul_pd(hundred, _mm256_div_pd(b02, b07));
+    b03 = _mm256_blendv_pd(zero, b03, b07_gt0);
+
+    // BIO04: use a two-pass variance (matches the R bioclim() reference).
+    __m256d t_mean = b01;
+    __m256d t_ssq  = zero;
+    for (int m = 0; m < 12; ++m) {
+        __m256d d = _mm256_sub_pd(month_t[m], t_mean);
+        t_ssq = _mm256_add_pd(t_ssq, _mm256_mul_pd(d, d));
+    }
+    __m256d t_var = _mm256_mul_pd(t_ssq, inv12);
+    t_var = _mm256_max_pd(t_var, zero);
+    __m256d b04 = _mm256_mul_pd(hundred, _mm256_sqrt_pd(t_var));
+
+    // BIO12--BIO15.
+    __m256d b12 = p_sum;
+    __m256d b13 = p_max;
+    __m256d b14 = p_min;
+
+    __m256d p_mean = _mm256_mul_pd(p_sum, inv12);
+    __m256d p_ssq = zero;
+    for (int m = 0; m < 12; ++m) {
+        __m256d d = _mm256_sub_pd(month_p[m], p_mean);
+        p_ssq = _mm256_add_pd(p_ssq, _mm256_mul_pd(d, d));
+    }
+    __m256d p_var = _mm256_mul_pd(p_ssq, inv12);
+    p_var = _mm256_max_pd(p_var, zero);
+    __m256d b15 = _mm256_mul_pd(hundred,
+                                _mm256_div_pd(_mm256_sqrt_pd(p_var), p_mean));
+    __m256d p_mean_eq0 = _mm256_cmp_pd(p_mean, zero, _CMP_EQ_OQ);
+    b15 = _mm256_blendv_pd(b15, nan, p_mean_eq0);
+
+    // Rolling quarter sums, re-using the cached month vectors.
+    __m256d t_qs[12];
+    __m256d p_qs[12];
+    for (int k = 0; k < 12; ++k) {
+        int k1 = k + 1;
+        if (k1 == 12) k1 = 0;
+        int k2 = k + 2;
+        if (k2 == 12) k2 = 0;
+        if (k2 == 13) k2 = 1;
+
+        t_qs[k] = _mm256_add_pd(month_t[k],
+                     _mm256_add_pd(month_t[k1], month_t[k2]));
+        p_qs[k] = _mm256_add_pd(month_p[k],
+                     _mm256_add_pd(month_p[k1], month_p[k2]));
+    }
+
+    // Argmax / argmin over the 12 quarter-sum vectors, keeping both the
+    // temperature and precipitation values at the chosen index.
+    __m256d wet_pr  = p_qs[0], dry_pr  = p_qs[0];
+    __m256d warm_t  = t_qs[0], cold_t  = t_qs[0];
+    __m256d wet_t   = t_qs[0], dry_t   = t_qs[0];
+    __m256d warm_pr = p_qs[0], cold_pr = p_qs[0];
+
+    for (int k = 1; k < 12; ++k) {
+        __m256d pk = p_qs[k];
+        __m256d tk = t_qs[k];
+
+        __m256d gt_pr = _mm256_cmp_pd(pk, wet_pr, _CMP_GT_OQ);
+        wet_pr = _mm256_blendv_pd(wet_pr, pk, gt_pr);
+        wet_t  = _mm256_blendv_pd(wet_t,  tk, gt_pr);
+
+        __m256d lt_pr = _mm256_cmp_pd(pk, dry_pr, _CMP_LT_OQ);
+        dry_pr = _mm256_blendv_pd(dry_pr, pk, lt_pr);
+        dry_t  = _mm256_blendv_pd(dry_t,  tk, lt_pr);
+
+        __m256d gt_t = _mm256_cmp_pd(tk, warm_t, _CMP_GT_OQ);
+        warm_t  = _mm256_blendv_pd(warm_t,  tk, gt_t);
+        warm_pr = _mm256_blendv_pd(warm_pr, pk, gt_t);
+
+        __m256d lt_t = _mm256_cmp_pd(tk, cold_t, _CMP_LT_OQ);
+        cold_t  = _mm256_blendv_pd(cold_t,  tk, lt_t);
+        cold_pr = _mm256_blendv_pd(cold_pr, pk, lt_t);
+    }
+
+    __m256d b08 = _mm256_mul_pd(wet_t,  inv3);
+    __m256d b09 = _mm256_mul_pd(dry_t,  inv3);
+    __m256d b10 = _mm256_mul_pd(warm_t, inv3);
+    __m256d b11 = _mm256_mul_pd(cold_t, inv3);
+
+    __m256d b16 = wet_pr;
+    __m256d b17 = dry_pr;
+    __m256d b18 = warm_pr;
+    __m256d b19 = cold_pr;
+
+    // Apply the validity mask and store 19 outputs for 4 pixels.
+    __m256d* out[19] = {
+        &b01, &b02, &b03, &b04, &b05, &b06, &b07, &b08, &b09,
+        &b10, &b11, &b12, &b13, &b14, &b15, &b16, &b17, &b18, &b19
+    };
+    for (int j = 0; j < 19; ++j) {
+        __m256d v = _mm256_blendv_pd(nan, *out[j], valid);
+        _mm256_storeu_pd(bio + static_cast<std::size_t>(j) * n_pix + i0, v);
+    }
+}
+#endif  // __AVX2__
+
+// Compute one tile on the CPU.
+void compute_tile_buffers(const double* tas, const double* tasmax,
+                          const double* tasmin, const double* pr,
+                          const double* mask, double* bio,
+                          int n_pix, int n_threads) {
+#ifdef __AVX2__
+    const int full_end = n_pix - 3;
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static) num_threads(n_threads)
 #endif
-    for (int i = 0; i < n_pix; ++i) {
-        double t[12], tmx[12], tmn[12], p[12], bio[19];
-        for (int m = 0; m < 12; ++m) {
-            t[m]   = slot->tas[   static_cast<std::size_t>(m * n_pix + i)];
-            tmx[m] = slot->tasmax[static_cast<std::size_t>(m * n_pix + i)];
-            tmn[m] = slot->tasmin[static_cast<std::size_t>(m * n_pix + i)];
-            p[m]   = slot->pr[    static_cast<std::size_t>(m * n_pix + i)];
-        }
-
-        bool masked = false;
-        if (!slot->mask.empty()) {
-            const double mv = slot->mask[static_cast<std::size_t>(i)];
-            masked = (std::isnan(mv) || mv == 0.0);
-        }
-
-        if (masked) {
-            for (int j = 0; j < 19; ++j)
-                slot->bio[static_cast<std::size_t>(j * n_pix + i)] =
-                    std::numeric_limits<double>::quiet_NaN();
-        } else {
-            compute_pixel(t, tmx, tmn, p, bio);
-            for (int j = 0; j < 19; ++j)
-                slot->bio[static_cast<std::size_t>(j * n_pix + i)] = bio[j];
-        }
+    for (int i = 0; i < full_end; i += 4) {
+        compute_pixel4(tas, tasmax, tasmin, pr, mask, bio, n_pix, i);
     }
+
+    // Scalar tail for the last 0-3 pixels.
+    const int tail = n_pix - (n_pix % 4);
+    for (int k = tail; k < n_pix; ++k) {
+        compute_pixel_at(tas, tasmax, tasmin, pr, mask, bio, n_pix, k);
+    }
+#else
+    compute_tile_buffers_scalar(tas, tasmax, tasmin, pr, mask, bio, n_pix);
+    (void)n_threads;  // unused when scalar
+#endif
+}
+
+// TileSlot wrapper around the raw-buffer compute kernel.
+void compute_tile_cpu(TileSlot* slot, int n_threads) {
+    const double* mask = slot->mask.empty() ? nullptr : slot->mask.data();
+    compute_tile_buffers(slot->tas.data(), slot->tasmax.data(),
+                         slot->tasmin.data(), slot->pr.data(),
+                         mask, slot->bio.data(),
+                         slot->n_pix, n_threads);
 }
 
 }  // anonymous namespace
@@ -544,7 +782,6 @@ std::string BioclimEngine::compute() {
     std::vector<int> write_bands(19);
     std::iota(write_bands.begin(), write_bands.end(), 1);
 
-
     // ── Determine compute device ────────────────────────────────────────────
 #ifdef HAVE_CUDA
     bool use_gpu = false;
@@ -559,6 +796,22 @@ std::string BioclimEngine::compute() {
 
     // ── Tiled processing loop ───────────────────────────────────────────────
     const int ts = tile_size_;
+    const int max_n_pix = ts * ts;
+
+    // Reusable tile buffers; capacity is the largest possible tile.
+    std::vector<double> tas_tile;
+    std::vector<double> tasmax_tile;
+    std::vector<double> tasmin_tile;
+    std::vector<double> pr_tile;
+    std::vector<double> bio_tile;
+    std::vector<double> mask_buf;
+
+    tas_tile.reserve(static_cast<std::size_t>(12) * max_n_pix);
+    tasmax_tile.reserve(static_cast<std::size_t>(12) * max_n_pix);
+    tasmin_tile.reserve(static_cast<std::size_t>(12) * max_n_pix);
+    pr_tile.reserve(static_cast<std::size_t>(12) * max_n_pix);
+    bio_tile.reserve(static_cast<std::size_t>(19) * max_n_pix);
+    mask_buf.reserve(static_cast<std::size_t>(max_n_pix));
 
     for (int yoff = 0; yoff < nrows; yoff += ts) {
         const int ysize = std::min(ts, nrows - yoff);
@@ -566,24 +819,20 @@ std::string BioclimEngine::compute() {
             const int xsize = std::min(ts, ncols - xoff);
             const int n_pix = xsize * ysize;
 
-            // ── Read 4 × 12 monthly bands into pixel-major tile buffers ──────
-            // Layout: tile[pixel * 12 + month] — each pixel's 12 monthly
-            // values are contiguous, so compute_pixel() can be called on a
-            // pointer into the buffer with no per-pixel gather.
-            //
-            // The 48 band reads run in parallel: each month has its own
-            // GdalReader (GDAL datasets are not thread-safe) and RasterIO
-            // writes each band strided directly into its month slot
-            // (pixel_stride = 12).  Interleaving here keeps the transpose
-            // off the serial multi-band RasterIO path and out of the
-            // compute loop.
-            const std::size_t in_elems  = static_cast<std::size_t>(n_pix) * 12;
-            const std::size_t out_elems = static_cast<std::size_t>(n_pix) * 19;
-            std::vector<double> tas_tile(   in_elems);
-            std::vector<double> tasmax_tile(in_elems);
-            std::vector<double> tasmin_tile(in_elems);
-            std::vector<double> pr_tile(    in_elems);
+            // ── Resize / reuse the tile buffers for this tile ───────────────
+            const std::size_t n_in  = static_cast<std::size_t>(12) * n_pix;
+            const std::size_t n_out = static_cast<std::size_t>(19) * n_pix;
+            if (tas_tile.size() != n_in)     tas_tile.resize(n_in);
+            if (tasmax_tile.size() != n_in)  tasmax_tile.resize(n_in);
+            if (tasmin_tile.size() != n_in)  tasmin_tile.resize(n_in);
+            if (pr_tile.size() != n_in)      pr_tile.resize(n_in);
+            if (bio_tile.size() != n_out)    bio_tile.resize(n_out);
 
+            // ── Read 4 × 12 monthly bands into band-major tile buffers ─────
+            // Layout: tile[var][month * n_pix + pixel] (band-major).
+            // The 48 band reads run in parallel: each month has its own
+            // GdalReader (GDAL datasets are not thread-safe) and writes
+            // directly into the contiguous month slice.
             std::vector<std::unique_ptr<GdalReader>>* var_readers[4] = {
                 &tas_readers, &tasmax_readers, &tasmin_readers, &pr_readers
             };
@@ -606,7 +855,8 @@ std::string BioclimEngine::compute() {
                             ->read_window(
                                 xoff, yoff, xsize, ysize,
                                 var_multi[v] ? m + 1 : 1,
-                                var_tiles[v] + m, 12);
+                                var_tiles[v] +
+                                    static_cast<std::size_t>(m) * n_pix);
                     } catch (...) {
                         // Exceptions must not escape an OpenMP region;
                         // record the first one and rethrow below.
@@ -623,14 +873,15 @@ std::string BioclimEngine::compute() {
             if (read_error) std::rethrow_exception(read_error);
 
             // ── Read mask tile (optional) ────────────────────────────────────
-            std::vector<double> mask_buf;
-            if (mask_reader)
+            if (mask_reader) {
+                mask_buf.resize(static_cast<std::size_t>(n_pix));
                 mask_reader->read_window(xoff, yoff, xsize, ysize, 1, mask_buf);
+            } else {
+                mask_buf.clear();
+            }
 
             // ── Compute 19 bio variables per pixel ───────────────────────────
-            // Output layout: bio_tile[pixel * 19 + bio_index]
-            std::vector<double> bio_tile(out_elems);
-
+            // Output layout: bio_tile[bio_index * n_pix + pixel_index]
 #ifdef HAVE_CUDA
             if (use_gpu) {
                 launch_bioclim_cuda(
@@ -643,62 +894,17 @@ std::string BioclimEngine::compute() {
             } else
 #endif
             {
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static) num_threads(n_threads_)
-#endif
-            for (int i = 0; i < n_pix; ++i) {
-                // Pointers to this pixel's contiguous 12-month inputs and
-                // 19-variable output slot (pixel-major layout).
-                const std::size_t in_off  = static_cast<std::size_t>(i) * 12;
-                const std::size_t out_off = static_cast<std::size_t>(i) * 19;
-                const double* t   = tas_tile.data()    + in_off;
-                const double* tmx = tasmax_tile.data() + in_off;
-                const double* tmn = tasmin_tile.data() + in_off;
-                const double* p   = pr_tile.data()     + in_off;
-                double* bio       = bio_tile.data()    + out_off;
-
-                // Apply mask: 0 or NaN mask → all-NaN output.
-                bool masked = false;
-                if (!mask_buf.empty()) {
-                    const double mv = mask_buf[static_cast<std::size_t>(i)];
-                    masked = (std::isnan(mv) || mv == 0.0);
-                }
-
-                if (masked) {
-                    for (int j = 0; j < 19; ++j)
-                        bio[j] = std::numeric_limits<double>::quiet_NaN();
-                } else {
-                    compute_pixel(t, tmx, tmn, p, bio);
-                }
-            }
+                compute_tile_buffers(
+                    tas_tile.data(), tasmax_tile.data(),
+                    tasmin_tile.data(), pr_tile.data(),
+                    mask_buf.empty() ? nullptr : mask_buf.data(),
+                    bio_tile.data(),
+                    n_pix, n_threads_);
             }  // end CPU branch
 
             // ── Write all 19 output bands in one multi-band call ─────────────
-            // bio_tile is pixel-major (bio[pixel * 19 + var]).  GDAL's
-            // strided-write path is single-threaded, so for large tiles it
-            // is faster to transpose to a band-major scratch buffer in
-            // parallel and write it packed.
-            std::vector<double> bio_tile_bmaj(out_elems);
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static) num_threads(n_threads_)
-#endif
-            for (std::ptrdiff_t i0 = 0; i0 < n_pix; i0 += 256) {
-                const std::size_t iend = std::min<std::size_t>(
-                    static_cast<std::size_t>(i0) + 256,
-                    static_cast<std::size_t>(n_pix));
-                for (int j = 0; j < 19; ++j) {
-                    const double* srcp = bio_tile.data() + j;
-                    double* dstp = bio_tile_bmaj.data() +
-                        static_cast<std::size_t>(j) *
-                        static_cast<std::size_t>(n_pix);
-                    for (std::size_t i = static_cast<std::size_t>(i0);
-                         i < iend; ++i)
-                        dstp[i] = srcp[i * 19];
-                }
-            }
             writer.write_bands_window(xoff, yoff, xsize, ysize,
-                                      write_bands, bio_tile_bmaj,
-                                      output_dtype_);
+                                      write_bands, bio_tile, output_dtype_);
         }
     }
 
