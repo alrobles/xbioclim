@@ -16,6 +16,37 @@ Install the development version from GitHub:
 remotes::install_github("alrobles/xbioclim")
 ```
 
+## Building from source
+
+`xbioclim` uses `configure` and `src/Makevars.in` to detect optional GDAL and CUDA support. For a production-quality build, use `R CMD build` (which automatically runs the `cleanup` script) and then install from the tarball:
+
+```bash
+R CMD build .
+R CMD INSTALL --configure-args='--without-cuda' xbioclim_*.tar.gz
+```
+
+### Cleaning after `roxygen2::roxygenise()`
+
+`roxygen2::roxygenise()` loads the package with debug compilation flags (`-g -O0 -UNDEBUG`) to extract `Rd` and `NAMESPACE` entries. This leaves `src/*.o` files compiled without optimization. A later `R CMD INSTALL .` may reuse those object files and install an unoptimized shared library.
+
+If you run `roxygen2::roxygenise()`, remove the stale debug objects before `R CMD INSTALL`:
+
+```bash
+make clean              # from the repository root
+# or
+Rscript tools/clean-obj.R
+# or
+./cleanup
+```
+
+Then install as usual:
+
+```bash
+R CMD INSTALL --configure-args='--without-cuda' .
+```
+
+For production and CI, always use `R CMD build` (which runs `cleanup`) followed by `R CMD INSTALL` from the tarball.
+
 ## Usage
 
 ### Single-pixel (vector) interface

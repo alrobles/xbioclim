@@ -12,6 +12,8 @@ changes.
 Rscript benchmarks/run_benchmarks.R
 ```
 
+For accurate timings, install the package from an optimized build. If you ran `roxygen2::roxygenise()` first, run `make clean` (or `Rscript tools/clean-obj.R`) and reinstall with `R CMD INSTALL --configure-args='--without-cuda' .` before benchmarking. Better still, use `R CMD build` and install from the tarball.
+
 The script exits with code **0** if all targets are met and **1** otherwise,
 making it suitable for CI integration.
 
