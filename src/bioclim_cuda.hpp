@@ -13,10 +13,10 @@
 // device allocation, host-to-device transfer, kernel launch, and
 // device-to-host copy internally.
 //
-// Data layout:
-//   Input:  var[month * n_pix + i]   (12 months, n_pix pixels)
-//   Mask:   mask[i]                  (nullptr means no mask)
-//   Output: bio[bio_idx * n_pix + i] (19 variables, n_pix pixels)
+// Data layout (pixel-major, matching BioclimEngine.cpp tile buffers):
+//   Input:  var[i * 12 + month]    (12 months, n_pix pixels)
+//   Mask:   mask[i]                (nullptr means no mask)
+//   Output: bio[i * 19 + bio_idx]  (19 variables, n_pix pixels)
 //
 // @param h_tas    Host pointer to mean temperature tile   [12 * n_pix].
 // @param h_tasmax Host pointer to max temperature tile    [12 * n_pix].

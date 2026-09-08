@@ -132,7 +132,8 @@ void GdalReader::read_window(int xoff, int yoff,
 void GdalReader::read_window(int xoff, int yoff,
                              int xsize, int ysize,
                              int band,
-                             double* out) const {
+                             double* out,
+                             std::size_t pixel_stride) const {
 #ifdef HAVE_GDAL
     GDALRasterBand* b = ds_->GetRasterBand(band);
     if (b == nullptr) {
@@ -141,14 +142,19 @@ void GdalReader::read_window(int xoff, int yoff,
         throw std::runtime_error(oss.str());
     }
 
-    const int n = xsize * ysize;
+    const std::size_t n = static_cast<std::size_t>(xsize) * ysize;
+
+    const GIntBig px_space   =
+        static_cast<GIntBig>(pixel_stride * sizeof(double));
+    const GIntBig line_space =
+        static_cast<GIntBig>(pixel_stride) * xsize * sizeof(double);
 
     CPLErr err = b->RasterIO(GF_Read,
                              xoff, yoff, xsize, ysize,
                              out,
                              xsize, ysize,
                              GDT_Float64,
-                             0, 0);
+                             px_space, line_space);
     if (err != CE_None) {
         std::ostringstream oss;
         oss << "GdalReader::read_window: RasterIO failed for band " << band
@@ -165,12 +171,14 @@ void GdalReader::read_window(int xoff, int yoff,
     if (has_scale || has_offset) {
         if (!has_scale)  sc = 1.0;
         if (!has_offset) of = 0.0;
-        for (int i = 0; i < n; ++i) {
-            out[i] = out[i] * sc + of;
+        for (std::size_t i = 0; i < n; ++i) {
+            double& v = out[i * pixel_stride];
+            v = v * sc + of;
         }
     }
 #else
     (void)xoff; (void)yoff; (void)xsize; (void)ysize; (void)band; (void)out;
+    (void)pixel_stride;
     throw std::runtime_error(
         "GdalReader::read_window: xbioclim was built without GDAL support."
     );
@@ -180,18 +188,36 @@ void GdalReader::read_window(int xoff, int yoff,
 void GdalReader::read_bands_window(int xoff, int yoff,
                                    int xsize, int ysize,
                                    const std::vector<int>& bands,
-                                   std::vector<double>& buf) const {
+                                   std::vector<double>& buf,
+                                   bool pixel_major) const {
     const std::size_t n = static_cast<std::size_t>(xsize) * ysize;
     buf.resize(n * bands.size());
-    read_bands_window(xoff, yoff, xsize, ysize, bands, buf.data());
+    read_bands_window(xoff, yoff, xsize, ysize, bands, buf.data(),
+                      pixel_major);
 }
 
 void GdalReader::read_bands_window(int xoff, int yoff,
                                    int xsize, int ysize,
                                    const std::vector<int>& bands,
-                                   double* out) const {
+                                   double* out,
+                                   bool pixel_major) const {
 #ifdef HAVE_GDAL
-    const std::size_t n = static_cast<std::size_t>(xsize) * ysize;
+    const std::size_t n  = static_cast<std::size_t>(xsize) * ysize;
+    const std::size_t nb = bands.size();
+
+    // Memory layout of the output buffer, expressed as GDAL element strides:
+    //   band-major  (default): out[band * n_pix + pixel]
+    //   pixel-major (interleaved): out[pixel * nb + band]
+    GIntBig px_space, line_space, band_space;
+    if (pixel_major) {
+        px_space   = static_cast<GIntBig>(nb * sizeof(double));
+        line_space = static_cast<GIntBig>(nb * xsize * sizeof(double));
+        band_space = static_cast<GIntBig>(sizeof(double));
+    } else {
+        px_space   = static_cast<GIntBig>(sizeof(double));
+        line_space = 0;
+        band_space = static_cast<GIntBig>(n * sizeof(double));
+    }
 
     CPLErr err = ds_->RasterIO(
         GF_Read,
@@ -199,11 +225,11 @@ void GdalReader::read_bands_window(int xoff, int yoff,
         out,
         xsize, ysize,
         GDT_Float64,
-        static_cast<int>(bands.size()),
+        static_cast<int>(nb),
         const_cast<int*>(bands.data()),
-        static_cast<GIntBig>(sizeof(double)),
-        0,
-        static_cast<GIntBig>(n * sizeof(double)),
+        px_space,
+        line_space,
+        band_space,
         nullptr
     );
 
@@ -215,7 +241,7 @@ void GdalReader::read_bands_window(int xoff, int yoff,
     }
 
     // Apply scale / offset per band.
-    for (std::size_t bi = 0; bi < bands.size(); ++bi) {
+    for (std::size_t bi = 0; bi < nb; ++bi) {
         GDALRasterBand* b = ds_->GetRasterBand(bands[bi]);
         if (b == nullptr) {
             std::ostringstream oss;
@@ -231,15 +257,22 @@ void GdalReader::read_bands_window(int xoff, int yoff,
         if (has_scale || has_offset) {
             if (!has_scale)  sc = 1.0;
             if (!has_offset) of = 0.0;
-            double* band_ptr = out + bi * n;
-            for (std::size_t i = 0; i < n; ++i) {
-                band_ptr[i] = band_ptr[i] * sc + of;
+            if (pixel_major) {
+                for (std::size_t i = 0; i < n; ++i) {
+                    double& v = out[i * nb + bi];
+                    v = v * sc + of;
+                }
+            } else {
+                double* band_ptr = out + bi * n;
+                for (std::size_t i = 0; i < n; ++i) {
+                    band_ptr[i] = band_ptr[i] * sc + of;
+                }
             }
         }
     }
 #else
     (void)xoff; (void)yoff; (void)xsize; (void)ysize;
-    (void)bands; (void)out;
+    (void)bands; (void)out; (void)pixel_major;
     throw std::runtime_error(
         "GdalReader::read_bands_window: xbioclim was built without GDAL support."
     );
@@ -385,23 +418,27 @@ void GdalWriter::write_window(int xoff, int yoff,
 void GdalWriter::write_bands_window(int xoff, int yoff,
                                     int xsize, int ysize,
                                     const std::vector<int>& bands,
-                                    const std::vector<double>& buf) {
-    write_bands_window(xoff, yoff, xsize, ysize, bands, buf, dtype_);
+                                    const std::vector<double>& buf,
+                                    bool pixel_major) {
+    write_bands_window(xoff, yoff, xsize, ysize, bands, buf, dtype_,
+                       pixel_major);
 }
 
 void GdalWriter::write_bands_window(int xoff, int yoff,
                                     int xsize, int ysize,
                                     const std::vector<int>& bands,
                                     const std::vector<double>& buf,
-                                    GDALDataType dtype) {
+                                    GDALDataType dtype,
+                                    bool pixel_major) {
 #ifdef HAVE_GDAL
     if (closed_) {
         throw std::runtime_error(
             "GdalWriter::write_bands_window: dataset is already closed.");
     }
 
-    const std::size_t n = static_cast<std::size_t>(xsize) * ysize;
-    const std::size_t needed = n * bands.size();
+    const std::size_t n  = static_cast<std::size_t>(xsize) * ysize;
+    const std::size_t nb = bands.size();
+    const std::size_t needed = n * nb;
     if (buf.size() < needed) {
         std::ostringstream oss;
         oss << "GdalWriter::write_bands_window: buffer too small ("
@@ -409,8 +446,26 @@ void GdalWriter::write_bands_window(int xoff, int yoff,
         throw std::runtime_error(oss.str());
     }
 
+    // Element strides describing the input buffer layout:
+    //   band-major  (default): buf[band * n_pix + pixel]
+    //   pixel-major (interleaved): buf[pixel * nb + band]
+    const std::size_t esz = (dtype == GDT_Float32) ? sizeof(float)
+                                                   : sizeof(double);
+    GIntBig px_space, line_space, band_space;
+    if (pixel_major) {
+        px_space   = static_cast<GIntBig>(nb * esz);
+        line_space = static_cast<GIntBig>(nb * xsize * esz);
+        band_space = static_cast<GIntBig>(esz);
+    } else {
+        px_space   = static_cast<GIntBig>(esz);
+        line_space = 0;
+        band_space = static_cast<GIntBig>(n * esz);
+    }
+
     CPLErr err;
     if (dtype == GDT_Float32) {
+        // Linear copy: fbuf preserves the buffer layout, so the same
+        // strides apply with sizeof(float) elements.
         std::vector<float> fbuf(buf.begin(), buf.begin() + needed);
         err = ds_->RasterIO(
             GF_Write,
@@ -418,11 +473,11 @@ void GdalWriter::write_bands_window(int xoff, int yoff,
             fbuf.data(),
             xsize, ysize,
             GDT_Float32,
-            static_cast<int>(bands.size()),
+            static_cast<int>(nb),
             const_cast<int*>(bands.data()),
-            static_cast<GIntBig>(sizeof(float)),
-            0,
-            static_cast<GIntBig>(n * sizeof(float)),
+            px_space,
+            line_space,
+            band_space,
             nullptr
         );
     } else {
@@ -432,11 +487,11 @@ void GdalWriter::write_bands_window(int xoff, int yoff,
             const_cast<double*>(buf.data()),
             xsize, ysize,
             GDT_Float64,
-            static_cast<int>(bands.size()),
+            static_cast<int>(nb),
             const_cast<int*>(bands.data()),
-            static_cast<GIntBig>(sizeof(double)),
-            0,
-            static_cast<GIntBig>(n * sizeof(double)),
+            px_space,
+            line_space,
+            band_space,
             nullptr
         );
     }
@@ -449,7 +504,7 @@ void GdalWriter::write_bands_window(int xoff, int yoff,
     }
 #else
     (void)xoff; (void)yoff; (void)xsize; (void)ysize;
-    (void)bands; (void)buf; (void)dtype;
+    (void)bands; (void)buf; (void)dtype; (void)pixel_major;
     throw std::runtime_error(
         "GdalWriter::write_bands_window: xbioclim was built without GDAL support."
     );

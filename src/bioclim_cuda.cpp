@@ -4,10 +4,10 @@
 // (detected by configure.ac).  All CUDA-specific code is guarded by
 // #ifdef HAVE_CUDA so that the file compiles to nothing when CUDA is absent.
 //
-// Data layout (matches BioclimEngine.cpp tile buffers):
-//   Input:  var[month * n_pix + i]   — 12 months × n_pix pixels
-//   Mask:   mask[i]                  — n_pix pixels (nullptr = no mask)
-//   Output: bio[bio_idx * n_pix + i] — 19 variables × n_pix pixels
+// Data layout (pixel-major, matches BioclimEngine.cpp tile buffers):
+//   Input:  var[i * 12 + month]    — 12 months × n_pix pixels
+//   Mask:   mask[i]                — n_pix pixels (nullptr = no mask)
+//   Output: bio[i * 19 + bio_idx]  — 19 variables × n_pix pixels
 
 #ifdef HAVE_CUDA
 
@@ -81,25 +81,25 @@ __global__ void bioclim_kernel(
         const double mv = mask[i];
         if (isnan(mv) || mv == 0.0) {
             for (int j = 0; j < 19; ++j)
-                bio[j * n_pix + i] = __longlong_as_double(kQuietNanBits);
+                bio[i * 19 + j] = __longlong_as_double(kQuietNanBits);
             return;
         }
     }
 
-    // -- Load 12-month vectors for this pixel ----------------------------------
+    // -- Load 12-month vectors for this pixel (pixel-major layout) -------------
     double t[12], tmx[12], tmn[12], p[12];
     for (int m = 0; m < 12; ++m) {
-        t[m]   = tas[   m * n_pix + i];
-        tmx[m] = tasmax[m * n_pix + i];
-        tmn[m] = tasmin[m * n_pix + i];
-        p[m]   = pr[    m * n_pix + i];
+        t[m]   = tas[   i * 12 + m];
+        tmx[m] = tasmax[i * 12 + m];
+        tmn[m] = tasmin[i * 12 + m];
+        p[m]   = pr[    i * 12 + m];
     }
 
     // -- NA / NaN guard -------------------------------------------------------
     for (int m = 0; m < 12; ++m) {
         if (isnan(t[m]) || isnan(tmx[m]) || isnan(tmn[m]) || isnan(p[m])) {
             for (int j = 0; j < 19; ++j)
-                bio[j * n_pix + i] = __longlong_as_double(kQuietNanBits);
+                bio[i * 19 + j] = __longlong_as_double(kQuietNanBits);
             return;
         }
     }
@@ -154,26 +154,26 @@ __global__ void bioclim_kernel(
     const int warm_q = argmax12_dev(t_qs);
     const int cold_q = argmin12_dev(t_qs);
 
-    // -- Write output ---------------------------------------------------------
-    bio[ 0 * n_pix + i] = b01;
-    bio[ 1 * n_pix + i] = b02;
-    bio[ 2 * n_pix + i] = b03;
-    bio[ 3 * n_pix + i] = b04;
-    bio[ 4 * n_pix + i] = b05;
-    bio[ 5 * n_pix + i] = b06;
-    bio[ 6 * n_pix + i] = b07;
-    bio[ 7 * n_pix + i] = t_qs[wet_q]  / 3.0;   // BIO08
-    bio[ 8 * n_pix + i] = t_qs[dry_q]  / 3.0;   // BIO09
-    bio[ 9 * n_pix + i] = t_qs[warm_q] / 3.0;   // BIO10
-    bio[10 * n_pix + i] = t_qs[cold_q] / 3.0;   // BIO11
-    bio[11 * n_pix + i] = b12;
-    bio[12 * n_pix + i] = b13;
-    bio[13 * n_pix + i] = b14;
-    bio[14 * n_pix + i] = b15;
-    bio[15 * n_pix + i] = pr_qs[wet_q];           // BIO16
-    bio[16 * n_pix + i] = pr_qs[dry_q];           // BIO17
-    bio[17 * n_pix + i] = pr_qs[warm_q];          // BIO18
-    bio[18 * n_pix + i] = pr_qs[cold_q];          // BIO19
+    // -- Write output (pixel-major: bio[i * 19 + bio_idx]) ---------------------
+    bio[i * 19 +  0] = b01;
+    bio[i * 19 +  1] = b02;
+    bio[i * 19 +  2] = b03;
+    bio[i * 19 +  3] = b04;
+    bio[i * 19 +  4] = b05;
+    bio[i * 19 +  5] = b06;
+    bio[i * 19 +  6] = b07;
+    bio[i * 19 +  7] = t_qs[wet_q]  / 3.0;   // BIO08
+    bio[i * 19 +  8] = t_qs[dry_q]  / 3.0;   // BIO09
+    bio[i * 19 +  9] = t_qs[warm_q] / 3.0;   // BIO10
+    bio[i * 19 + 10] = t_qs[cold_q] / 3.0;   // BIO11
+    bio[i * 19 + 11] = b12;
+    bio[i * 19 + 12] = b13;
+    bio[i * 19 + 13] = b14;
+    bio[i * 19 + 14] = b15;
+    bio[i * 19 + 15] = pr_qs[wet_q];           // BIO16
+    bio[i * 19 + 16] = pr_qs[dry_q];           // BIO17
+    bio[i * 19 + 17] = pr_qs[warm_q];          // BIO18
+    bio[i * 19 + 18] = pr_qs[cold_q];          // BIO19
 }
 
 // ── Host launcher ─────────────────────────────────────────────────────────────

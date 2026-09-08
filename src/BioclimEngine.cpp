@@ -26,6 +26,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <exception>
 #include <iomanip>
 #include <limits>
 #include <memory>
@@ -244,16 +245,22 @@ void validate_file_vector(const std::vector<std::string>& files,
 }
 
 // Open readers for a variable's file list.
-// Returns a vector of unique_ptr<GdalReader>:
-//   size 1  when files.size() == 1 (multi-band)
-//   size 12 when files.size() == 12 (one per month)
+// Always returns 12 unique_ptr<GdalReader>, one per calendar month:
+//   * files.size() == 1  — 12 readers on the same multi-band file
+//                          (month m reads band m+1)
+//   * files.size() == 12 — one reader per single-band file
+//                          (every month reads band 1)
+// Per-month handles let the monthly window reads run in parallel —
+// GDAL datasets are not thread-safe, so each concurrent read needs its
+// own GdalReader.
 std::vector<std::unique_ptr<GdalReader>>
 open_readers(const std::vector<std::string>& files) {
     std::vector<std::unique_ptr<GdalReader>> readers;
+    readers.reserve(12);
     if (files.size() == 1) {
-        readers.push_back(std::make_unique<GdalReader>(files[0]));
+        for (int m = 0; m < 12; ++m)
+            readers.push_back(std::make_unique<GdalReader>(files[0]));
     } else {
-        readers.reserve(files.size());
         for (const auto& f : files)
             readers.push_back(std::make_unique<GdalReader>(f));
     }
@@ -318,9 +325,6 @@ std::string BioclimEngine::compute() {
     std::vector<int> write_bands(19);
     std::iota(write_bands.begin(), write_bands.end(), 1);
 
-    // Input band map for multi-band reads (1..12).
-    std::vector<int> input_bands(12);
-    std::iota(input_bands.begin(), input_bands.end(), 1);
 
     // ── Determine compute device ────────────────────────────────────────────
 #ifdef HAVE_CUDA
@@ -343,56 +347,61 @@ std::string BioclimEngine::compute() {
             const int xsize = std::min(ts, ncols - xoff);
             const int n_pix = xsize * ysize;
 
-            // ── Read 4 × 12 monthly bands into tile buffers ─────────────────
-            // Layout: tile[month * n_pix + pixel_index]
-            std::vector<double> tas_tile(   static_cast<std::size_t>(12 * n_pix));
-            std::vector<double> tasmax_tile(static_cast<std::size_t>(12 * n_pix));
-            std::vector<double> tasmin_tile(static_cast<std::size_t>(12 * n_pix));
-            std::vector<double> pr_tile(    static_cast<std::size_t>(12 * n_pix));
+            // ── Read 4 × 12 monthly bands into pixel-major tile buffers ──────
+            // Layout: tile[pixel * 12 + month] — each pixel's 12 monthly
+            // values are contiguous, so compute_pixel() can be called on a
+            // pointer into the buffer with no per-pixel gather.
+            //
+            // The 48 band reads run in parallel: each month has its own
+            // GdalReader (GDAL datasets are not thread-safe) and RasterIO
+            // writes each band strided directly into its month slot
+            // (pixel_stride = 12).  Interleaving here keeps the transpose
+            // off the serial multi-band RasterIO path and out of the
+            // compute loop.
+            const std::size_t in_elems  = static_cast<std::size_t>(n_pix) * 12;
+            const std::size_t out_elems = static_cast<std::size_t>(n_pix) * 19;
+            std::vector<double> tas_tile(   in_elems);
+            std::vector<double> tasmax_tile(in_elems);
+            std::vector<double> tasmin_tile(in_elems);
+            std::vector<double> pr_tile(    in_elems);
 
-            if (tas_multi) {
-                tas_readers[0]->read_bands_window(
-                    xoff, yoff, xsize, ysize, input_bands, tas_tile);
-            } else {
+            std::vector<std::unique_ptr<GdalReader>>* var_readers[4] = {
+                &tas_readers, &tasmax_readers, &tasmin_readers, &pr_readers
+            };
+            const bool var_multi[4] = {
+                tas_multi, tasmax_multi, tasmin_multi, pr_multi
+            };
+            double* var_tiles[4] = {
+                tas_tile.data(), tasmax_tile.data(),
+                tasmin_tile.data(), pr_tile.data()
+            };
+
+            std::exception_ptr read_error;
+#ifdef _OPENMP
+#pragma omp parallel for collapse(2) schedule(static) num_threads(n_threads_)
+#endif
+            for (int v = 0; v < 4; ++v) {
                 for (int m = 0; m < 12; ++m) {
-                    tas_readers[static_cast<std::size_t>(m)]->read_window(
-                        xoff, yoff, xsize, ysize, 1,
-                        tas_tile.data() + static_cast<std::size_t>(m) * n_pix);
+                    try {
+                        (*var_readers[v])[static_cast<std::size_t>(m)]
+                            ->read_window(
+                                xoff, yoff, xsize, ysize,
+                                var_multi[v] ? m + 1 : 1,
+                                var_tiles[v] + m, 12);
+                    } catch (...) {
+                        // Exceptions must not escape an OpenMP region;
+                        // record the first one and rethrow below.
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+                        {
+                            if (!read_error)
+                                read_error = std::current_exception();
+                        }
+                    }
                 }
             }
-
-            if (tasmax_multi) {
-                tasmax_readers[0]->read_bands_window(
-                    xoff, yoff, xsize, ysize, input_bands, tasmax_tile);
-            } else {
-                for (int m = 0; m < 12; ++m) {
-                    tasmax_readers[static_cast<std::size_t>(m)]->read_window(
-                        xoff, yoff, xsize, ysize, 1,
-                        tasmax_tile.data() + static_cast<std::size_t>(m) * n_pix);
-                }
-            }
-
-            if (tasmin_multi) {
-                tasmin_readers[0]->read_bands_window(
-                    xoff, yoff, xsize, ysize, input_bands, tasmin_tile);
-            } else {
-                for (int m = 0; m < 12; ++m) {
-                    tasmin_readers[static_cast<std::size_t>(m)]->read_window(
-                        xoff, yoff, xsize, ysize, 1,
-                        tasmin_tile.data() + static_cast<std::size_t>(m) * n_pix);
-                }
-            }
-
-            if (pr_multi) {
-                pr_readers[0]->read_bands_window(
-                    xoff, yoff, xsize, ysize, input_bands, pr_tile);
-            } else {
-                for (int m = 0; m < 12; ++m) {
-                    pr_readers[static_cast<std::size_t>(m)]->read_window(
-                        xoff, yoff, xsize, ysize, 1,
-                        pr_tile.data() + static_cast<std::size_t>(m) * n_pix);
-                }
-            }
+            if (read_error) std::rethrow_exception(read_error);
 
             // ── Read mask tile (optional) ────────────────────────────────────
             std::vector<double> mask_buf;
@@ -400,8 +409,8 @@ std::string BioclimEngine::compute() {
                 mask_reader->read_window(xoff, yoff, xsize, ysize, 1, mask_buf);
 
             // ── Compute 19 bio variables per pixel ───────────────────────────
-            // Output layout: bio_tile[bio_index * n_pix + pixel_index]
-            std::vector<double> bio_tile(static_cast<std::size_t>(19 * n_pix));
+            // Output layout: bio_tile[pixel * 19 + bio_index]
+            std::vector<double> bio_tile(out_elems);
 
 #ifdef HAVE_CUDA
             if (use_gpu) {
@@ -419,14 +428,15 @@ std::string BioclimEngine::compute() {
 #pragma omp parallel for schedule(static) num_threads(n_threads_)
 #endif
             for (int i = 0; i < n_pix; ++i) {
-                // Gather 12-month vectors from the tile buffers.
-                double t[12], tmx[12], tmn[12], p[12], bio[19];
-                for (int m = 0; m < 12; ++m) {
-                    t[m]   = tas_tile[   static_cast<std::size_t>(m * n_pix + i)];
-                    tmx[m] = tasmax_tile[static_cast<std::size_t>(m * n_pix + i)];
-                    tmn[m] = tasmin_tile[static_cast<std::size_t>(m * n_pix + i)];
-                    p[m]   = pr_tile[    static_cast<std::size_t>(m * n_pix + i)];
-                }
+                // Pointers to this pixel's contiguous 12-month inputs and
+                // 19-variable output slot (pixel-major layout).
+                const std::size_t in_off  = static_cast<std::size_t>(i) * 12;
+                const std::size_t out_off = static_cast<std::size_t>(i) * 19;
+                const double* t   = tas_tile.data()    + in_off;
+                const double* tmx = tasmax_tile.data() + in_off;
+                const double* tmn = tasmin_tile.data() + in_off;
+                const double* p   = pr_tile.data()     + in_off;
+                double* bio       = bio_tile.data()    + out_off;
 
                 // Apply mask: 0 or NaN mask → all-NaN output.
                 bool masked = false;
@@ -437,19 +447,39 @@ std::string BioclimEngine::compute() {
 
                 if (masked) {
                     for (int j = 0; j < 19; ++j)
-                        bio_tile[static_cast<std::size_t>(j * n_pix + i)] =
-                            std::numeric_limits<double>::quiet_NaN();
+                        bio[j] = std::numeric_limits<double>::quiet_NaN();
                 } else {
                     compute_pixel(t, tmx, tmn, p, bio);
-                    for (int j = 0; j < 19; ++j)
-                        bio_tile[static_cast<std::size_t>(j * n_pix + i)] = bio[j];
                 }
             }
             }  // end CPU branch
 
             // ── Write all 19 output bands in one multi-band call ─────────────
+            // bio_tile is pixel-major (bio[pixel * 19 + var]).  GDAL's
+            // strided-write path is single-threaded, so for large tiles it
+            // is faster to transpose to a band-major scratch buffer in
+            // parallel and write it packed.
+            std::vector<double> bio_tile_bmaj(out_elems);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static) num_threads(n_threads_)
+#endif
+            for (std::ptrdiff_t i0 = 0; i0 < n_pix; i0 += 256) {
+                const std::size_t iend = std::min<std::size_t>(
+                    static_cast<std::size_t>(i0) + 256,
+                    static_cast<std::size_t>(n_pix));
+                for (int j = 0; j < 19; ++j) {
+                    const double* srcp = bio_tile.data() + j;
+                    double* dstp = bio_tile_bmaj.data() +
+                        static_cast<std::size_t>(j) *
+                        static_cast<std::size_t>(n_pix);
+                    for (std::size_t i = static_cast<std::size_t>(i0);
+                         i < iend; ++i)
+                        dstp[i] = srcp[i * 19];
+                }
+            }
             writer.write_bands_window(xoff, yoff, xsize, ysize,
-                                      write_bands, bio_tile, output_dtype_);
+                                      write_bands, bio_tile_bmaj,
+                                      output_dtype_);
         }
     }
 
