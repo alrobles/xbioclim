@@ -204,7 +204,7 @@ fi
 # Enumerate all .o files explicitly (no GNU Make extensions needed).
 # bioclim_cuda.o is always included: when CUDA is absent, g++ compiles it
 # to an empty object because all code is guarded by #ifdef HAVE_CUDA.
-ALL_OBJECTS="bioclim.o xbioclim_core_primitives.o xbioclim_core_bioclim.o bioclim_cuda.o bioclim_model.o bioclim_xt.o BioclimEngine.o cuda_utils.o gdal_io.o gdal_io_rcpp.o gdal_mask.o gdal_mask_rcpp.o rcpp_bioclim_mod.o RcppExports.o"
+ALL_OBJECTS="bioclim.o bioclim_cuda.o bioclim_model.o bioclim_xt.o BioclimEngine.o cuda_utils.o gdal_io.o gdal_io_rcpp.o gdal_mask.o gdal_mask_rcpp.o rcpp_bioclim_mod.o RcppExports.o"
 
 AC_SUBST([HAVE_CUDA])
 AC_SUBST([CUDA_CPPFLAGS])
