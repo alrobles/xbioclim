@@ -120,6 +120,22 @@ engine_set_variables <- function(xptr, variables) {
     invisible(.Call(`_xbioclim_engine_set_variables`, xptr, variables))
 }
 
+#' Enable or disable the overlapped read/compute/write pipeline
+#'
+#' This is an internal, opt-in flag.  When \code{TRUE}, the next call to
+#' \code{\link{engine_compute}} uses three background threads to overlap
+#' the GDAL read, BIOCLIM computation, and GDAL write stages for each tile.
+#' When \code{FALSE} (the default) the engine uses the original serial loop.
+#'
+#' @param xptr External pointer returned by \code{\link{engine_create}}.
+#' @param use_pipeline Logical scalar: \code{TRUE} to enable the pipeline.
+#' @return \code{NULL} invisibly.
+#' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
+#' @keywords internal
+engine_set_pipeline <- function(xptr, use_pipeline) {
+    invisible(.Call(`_xbioclim_engine_set_pipeline`, xptr, use_pipeline))
+}
+
 #' Run the bioclimatic-variable computation pipeline
 #'
 #' Reads all monthly climate input rasters tile by tile, computes the

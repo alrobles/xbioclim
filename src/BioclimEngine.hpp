@@ -85,6 +85,10 @@ public:
     // subsets the returned SpatRaster when a selection is requested.
     void set_variables(const std::vector<int>& variables);
 
+    // Enable or disable the overlapped read/compute/write pipeline.
+    // This is an internal opt-in flag; the default is false (serial).
+    void set_pipeline(bool use_pipeline);
+
     // ── Execution ──────────────────────────────────────────────────────────
 
     // Run the tiled pipeline and return the output directory path.
@@ -118,6 +122,12 @@ private:
     // compute() always writes all 19 bands, so this only affects the
     // post-processing done by bioclim_engine().
     std::vector<int> variables_;
+
+    // Internal flag: when true compute() uses the overlapped pipeline.
+    bool pipeline_ = false;
+
+    // Overlapped read/compute/write pipeline (used when pipeline_ == true).
+    std::string compute_pipelined();
 };
 
 }  // namespace xbioclim
