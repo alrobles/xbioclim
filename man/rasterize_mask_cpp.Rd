@@ -35,16 +35,18 @@ support.
 }
 \examples{
 \donttest{
-# Requires GDAL support at build time.
-ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
-poly <- tempfile(fileext = ".geojson")
-mask <- tempfile(fileext = ".tif")
+if (has_gdal()) {
+  # Requires GDAL support at build time.
+  ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
+  poly <- tempfile(fileext = ".geojson")
+  mask <- tempfile(fileext = ".tif")
 writeLines(
   '{"type":"FeatureCollection","features":[{"type":"Feature",
     "geometry":{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]},
     "properties":{}}]}',
   poly)
-rasterize_mask_cpp(poly, ref, mask)
+  rasterize_mask_cpp(poly, ref, mask)
+}
 }
 }
 \seealso{

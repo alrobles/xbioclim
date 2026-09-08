@@ -555,8 +555,9 @@ engine_set_device <- function(xptr, device) {
 #'   otherwise.
 #' @examples
 #' \donttest{
-#' # Works only when GDAL is available:
-#' gdal_can_open(system.file("extdata", "tiny.tif", package = "xbioclim"))
+#' if (has_gdal()) {
+#'   gdal_can_open(system.file("extdata", "tiny.tif", package = "xbioclim"))
+#' }
 #' }
 #' @export
 gdal_can_open <- function(path) {
@@ -596,10 +597,12 @@ gdal_can_open <- function(path) {
 #'   }
 #' @examples
 #' \donttest{
-#' info <- gdal_info(
-#'   system.file("extdata", "tiny.tif", package = "xbioclim")
-#' )
-#' str(info)
+#' if (has_gdal()) {
+#'   info <- gdal_info(
+#'     system.file("extdata", "tiny.tif", package = "xbioclim")
+#'   )
+#'   str(info)
+#' }
 #' }
 #' @export
 gdal_info <- function(path) {
@@ -630,16 +633,18 @@ gdal_info <- function(path) {
 #' @seealso \code{\link{create_mask}}, \code{\link{apply_mask_cpp}}
 #' @examples
 #' \donttest{
-#' # Requires GDAL support at build time.
-#' ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
-#' poly <- tempfile(fileext = ".geojson")
-#' mask <- tempfile(fileext = ".tif")
+#' if (has_gdal()) {
+#'   # Requires GDAL support at build time.
+#'   ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
+#'   poly <- tempfile(fileext = ".geojson")
+#'   mask <- tempfile(fileext = ".tif")
 #' writeLines(
 #'   '{"type":"FeatureCollection","features":[{"type":"Feature",
 #'     "geometry":{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]},
 #'     "properties":{}}]}',
 #'   poly)
-#' rasterize_mask_cpp(poly, ref, mask)
+#'   rasterize_mask_cpp(poly, ref, mask)
+#' }
 #' }
 #' @export
 rasterize_mask_cpp <- function(vector_path, ref_raster_path, output_mask_path) {
@@ -670,18 +675,20 @@ rasterize_mask_cpp <- function(vector_path, ref_raster_path, output_mask_path) {
 #' @seealso \code{\link{create_mask}}, \code{\link{rasterize_mask_cpp}}
 #' @examples
 #' \donttest{
-#' # Requires GDAL support at build time.
-#' ref    <- system.file("extdata", "tiny.tif", package = "xbioclim")
-#' poly   <- tempfile(fileext = ".geojson")
-#' mask   <- tempfile(fileext = ".tif")
-#' output <- tempfile(fileext = ".tif")
+#' if (has_gdal()) {
+#'   # Requires GDAL support at build time.
+#'   ref    <- system.file("extdata", "tiny.tif", package = "xbioclim")
+#'   poly   <- tempfile(fileext = ".geojson")
+#'   mask   <- tempfile(fileext = ".tif")
+#'   output <- tempfile(fileext = ".tif")
 #' writeLines(
 #'   '{"type":"FeatureCollection","features":[{"type":"Feature",
 #'     "geometry":{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]},
 #'     "properties":{}}]}',
 #'   poly)
-#' rasterize_mask_cpp(poly, ref, mask)
-#' apply_mask_cpp(ref, mask, output)
+#'   rasterize_mask_cpp(poly, ref, mask)
+#'   apply_mask_cpp(ref, mask, output)
+#' }
 #' }
 #' @export
 apply_mask_cpp <- function(input_path, mask_path, output_path) {

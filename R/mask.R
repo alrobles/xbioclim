@@ -41,9 +41,10 @@
 #'
 #' @examples
 #' \donttest{
-#' # Requires GDAL support at build time.
-#' ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
-#' poly <- tempfile(fileext = ".geojson")
+#' if (has_gdal()) {
+#'   # Requires GDAL support at build time.
+#'   ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
+#'   poly <- tempfile(fileext = ".geojson")
 #' writeLines(
 #'   paste0(
 #'     '{"type":"FeatureCollection","features":[{"type":"Feature",',
@@ -53,7 +54,8 @@
 #'   ),
 #'   poly
 #' )
-#' mask_path <- create_mask(poly, ref)
+#'   mask_path <- create_mask(poly, ref)
+#' }
 #' }
 #' @seealso [rasterize_mask_cpp()], [apply_mask_cpp()]
 #' @export

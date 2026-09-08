@@ -61,9 +61,10 @@ with a message) when the package was built without GDAL support.
 }
 \examples{
 \donttest{
-# Requires GDAL support at build time.
-ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
-poly <- tempfile(fileext = ".geojson")
+if (has_gdal()) {
+  # Requires GDAL support at build time.
+  ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
+  poly <- tempfile(fileext = ".geojson")
 writeLines(
   paste0(
     '{"type":"FeatureCollection","features":[{"type":"Feature",',
@@ -73,7 +74,8 @@ writeLines(
   ),
   poly
 )
-mask_path <- create_mask(poly, ref)
+  mask_path <- create_mask(poly, ref)
+}
 }
 }
 \seealso{
