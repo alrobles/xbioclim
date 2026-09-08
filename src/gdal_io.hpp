@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -89,23 +90,35 @@ public:
     void read_window(int xoff, int yoff, int xsize, int ysize,
                      int band, std::vector<double>& buf) const;
 
-    // Same as above, but writes directly into a caller-provided contiguous
-    // buffer of at least xsize * ysize doubles.
+    // Same as above, but writes directly into a caller-provided buffer.
+    //
+    // pixel_stride is the distance between consecutive pixels in `out`,
+    // measured in doubles (default 1 = packed).  A stride greater than 1
+    // interleaves this band with other data: the value of pixel i is
+    // written to out[i * pixel_stride], so the buffer must hold at least
+    // (xsize * ysize - 1) * pixel_stride + 1 doubles.  This is used to
+    // write directly into pixel-major (band-interleaved) tile buffers.
     void read_window(int xoff, int yoff, int xsize, int ysize,
-                     int band, double* out) const;
+                     int band, double* out,
+                     std::size_t pixel_stride = 1) const;
 
     // Read a rectangular window from multiple bands in one GDAL call.
-    // The output is stored band-major in buf: buf[band * n_pix + pixel].
     // Bands are 1-based.  Scale and offset are applied per band.
+    //
+    // When pixel_major is false (default) the output is stored band-major:
+    // buf[band * n_pix + pixel].  When pixel_major is true the output is
+    // pixel-major (band-interleaved): buf[pixel * bands.size() + band].
     void read_bands_window(int xoff, int yoff, int xsize, int ysize,
                            const std::vector<int>& bands,
-                           std::vector<double>& buf) const;
+                           std::vector<double>& buf,
+                           bool pixel_major = false) const;
 
     // Same, but writes into a caller-provided buffer of at least
     // bands.size() * xsize * ysize doubles.
     void read_bands_window(int xoff, int yoff, int xsize, int ysize,
                            const std::vector<int>& bands,
-                           double* out) const;
+                           double* out,
+                           bool pixel_major = false) const;
 
 private:
 #ifdef HAVE_GDAL
@@ -165,17 +178,23 @@ public:
                       GDALDataType dtype);
 
     // Write a rectangular window to multiple bands in one GDAL call.
-    // buf must contain bands.size() * xsize * ysize elements, band-major:
-    // buf[band * n_pix + pixel].  bands are 1-based output band indices.
+    // buf must contain bands.size() * xsize * ysize elements.  bands are
+    // 1-based output band indices.
+    //
+    // When pixel_major is false (default) buf is band-major:
+    // buf[band * n_pix + pixel].  When pixel_major is true buf is
+    // pixel-major (band-interleaved): buf[pixel * bands.size() + band].
     void write_bands_window(int xoff, int yoff, int xsize, int ysize,
                             const std::vector<int>& bands,
-                            const std::vector<double>& buf);
+                            const std::vector<double>& buf,
+                            bool pixel_major = false);
 
     // Same, but with explicit buffer/output GDAL data type.
     void write_bands_window(int xoff, int yoff, int xsize, int ysize,
                             const std::vector<int>& bands,
                             const std::vector<double>& buf,
-                            GDALDataType dtype);
+                            GDALDataType dtype,
+                            bool pixel_major = false);
 
     // Flush caches and close the dataset.  Safe to call more than once.
     void close();

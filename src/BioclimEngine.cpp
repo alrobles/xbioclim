@@ -343,54 +343,62 @@ std::string BioclimEngine::compute() {
             const int xsize = std::min(ts, ncols - xoff);
             const int n_pix = xsize * ysize;
 
-            // ── Read 4 × 12 monthly bands into tile buffers ─────────────────
-            // Layout: tile[month * n_pix + pixel_index]
-            std::vector<double> tas_tile(   static_cast<std::size_t>(12 * n_pix));
-            std::vector<double> tasmax_tile(static_cast<std::size_t>(12 * n_pix));
-            std::vector<double> tasmin_tile(static_cast<std::size_t>(12 * n_pix));
-            std::vector<double> pr_tile(    static_cast<std::size_t>(12 * n_pix));
+            // ── Read 4 × 12 monthly bands into pixel-major tile buffers ──────
+            // Layout: tile[pixel * 12 + month] — each pixel's 12 monthly
+            // values are contiguous, so compute_pixel() can be called on a
+            // pointer into the buffer with no per-pixel gather.
+            const std::size_t in_elems  = static_cast<std::size_t>(n_pix) * 12;
+            const std::size_t out_elems = static_cast<std::size_t>(n_pix) * 19;
+            std::vector<double> tas_tile(   in_elems);
+            std::vector<double> tasmax_tile(in_elems);
+            std::vector<double> tasmin_tile(in_elems);
+            std::vector<double> pr_tile(    in_elems);
 
             if (tas_multi) {
                 tas_readers[0]->read_bands_window(
-                    xoff, yoff, xsize, ysize, input_bands, tas_tile);
+                    xoff, yoff, xsize, ysize, input_bands, tas_tile,
+                    /*pixel_major=*/true);
             } else {
                 for (int m = 0; m < 12; ++m) {
                     tas_readers[static_cast<std::size_t>(m)]->read_window(
                         xoff, yoff, xsize, ysize, 1,
-                        tas_tile.data() + static_cast<std::size_t>(m) * n_pix);
+                        tas_tile.data() + m, 12);
                 }
             }
 
             if (tasmax_multi) {
                 tasmax_readers[0]->read_bands_window(
-                    xoff, yoff, xsize, ysize, input_bands, tasmax_tile);
+                    xoff, yoff, xsize, ysize, input_bands, tasmax_tile,
+                    /*pixel_major=*/true);
             } else {
                 for (int m = 0; m < 12; ++m) {
                     tasmax_readers[static_cast<std::size_t>(m)]->read_window(
                         xoff, yoff, xsize, ysize, 1,
-                        tasmax_tile.data() + static_cast<std::size_t>(m) * n_pix);
+                        tasmax_tile.data() + m, 12);
                 }
             }
 
             if (tasmin_multi) {
                 tasmin_readers[0]->read_bands_window(
-                    xoff, yoff, xsize, ysize, input_bands, tasmin_tile);
+                    xoff, yoff, xsize, ysize, input_bands, tasmin_tile,
+                    /*pixel_major=*/true);
             } else {
                 for (int m = 0; m < 12; ++m) {
                     tasmin_readers[static_cast<std::size_t>(m)]->read_window(
                         xoff, yoff, xsize, ysize, 1,
-                        tasmin_tile.data() + static_cast<std::size_t>(m) * n_pix);
+                        tasmin_tile.data() + m, 12);
                 }
             }
 
             if (pr_multi) {
                 pr_readers[0]->read_bands_window(
-                    xoff, yoff, xsize, ysize, input_bands, pr_tile);
+                    xoff, yoff, xsize, ysize, input_bands, pr_tile,
+                    /*pixel_major=*/true);
             } else {
                 for (int m = 0; m < 12; ++m) {
                     pr_readers[static_cast<std::size_t>(m)]->read_window(
                         xoff, yoff, xsize, ysize, 1,
-                        pr_tile.data() + static_cast<std::size_t>(m) * n_pix);
+                        pr_tile.data() + m, 12);
                 }
             }
 
@@ -400,8 +408,8 @@ std::string BioclimEngine::compute() {
                 mask_reader->read_window(xoff, yoff, xsize, ysize, 1, mask_buf);
 
             // ── Compute 19 bio variables per pixel ───────────────────────────
-            // Output layout: bio_tile[bio_index * n_pix + pixel_index]
-            std::vector<double> bio_tile(static_cast<std::size_t>(19 * n_pix));
+            // Output layout: bio_tile[pixel * 19 + bio_index]
+            std::vector<double> bio_tile(out_elems);
 
 #ifdef HAVE_CUDA
             if (use_gpu) {
@@ -419,14 +427,15 @@ std::string BioclimEngine::compute() {
 #pragma omp parallel for schedule(static) num_threads(n_threads_)
 #endif
             for (int i = 0; i < n_pix; ++i) {
-                // Gather 12-month vectors from the tile buffers.
-                double t[12], tmx[12], tmn[12], p[12], bio[19];
-                for (int m = 0; m < 12; ++m) {
-                    t[m]   = tas_tile[   static_cast<std::size_t>(m * n_pix + i)];
-                    tmx[m] = tasmax_tile[static_cast<std::size_t>(m * n_pix + i)];
-                    tmn[m] = tasmin_tile[static_cast<std::size_t>(m * n_pix + i)];
-                    p[m]   = pr_tile[    static_cast<std::size_t>(m * n_pix + i)];
-                }
+                // Pointers to this pixel's contiguous 12-month inputs and
+                // 19-variable output slot (pixel-major layout).
+                const std::size_t in_off  = static_cast<std::size_t>(i) * 12;
+                const std::size_t out_off = static_cast<std::size_t>(i) * 19;
+                const double* t   = tas_tile.data()    + in_off;
+                const double* tmx = tasmax_tile.data() + in_off;
+                const double* tmn = tasmin_tile.data() + in_off;
+                const double* p   = pr_tile.data()     + in_off;
+                double* bio       = bio_tile.data()    + out_off;
 
                 // Apply mask: 0 or NaN mask → all-NaN output.
                 bool masked = false;
@@ -437,19 +446,17 @@ std::string BioclimEngine::compute() {
 
                 if (masked) {
                     for (int j = 0; j < 19; ++j)
-                        bio_tile[static_cast<std::size_t>(j * n_pix + i)] =
-                            std::numeric_limits<double>::quiet_NaN();
+                        bio[j] = std::numeric_limits<double>::quiet_NaN();
                 } else {
                     compute_pixel(t, tmx, tmn, p, bio);
-                    for (int j = 0; j < 19; ++j)
-                        bio_tile[static_cast<std::size_t>(j * n_pix + i)] = bio[j];
                 }
             }
             }  // end CPU branch
 
             // ── Write all 19 output bands in one multi-band call ─────────────
             writer.write_bands_window(xoff, yoff, xsize, ysize,
-                                      write_bands, bio_tile, output_dtype_);
+                                      write_bands, bio_tile, output_dtype_,
+                                      /*pixel_major=*/true);
         }
     }
 
