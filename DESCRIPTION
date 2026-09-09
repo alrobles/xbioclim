@@ -40,6 +40,7 @@ Collate:
     'primitives.R'
     'bioclim.R'
     'BioclimData.R'
+    'quarterly.R'
     'bioclim_module.R'
     'bioclimmodel.R'
     'bioclim_raster.R'

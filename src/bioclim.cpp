@@ -720,3 +720,153 @@ NumericMatrix bioclim_cpp(NumericMatrix tas,
 
   return result;
 }
+
+// ── Quarterly / seasonal variables for arbitrary months ──────────────────────
+
+static inline bool has_na_sel(const NumericVector& x, const IntegerVector& months) {
+  for (int j = 0; j < months.size(); j++) {
+    if (NumericVector::is_na(x[months[j] - 1])) return true;
+  }
+  return false;
+}
+
+static inline int n_valid_sel(const NumericVector& x, const IntegerVector& months) {
+  int n = 0;
+  for (int j = 0; j < months.size(); j++) {
+    if (!NumericVector::is_na(x[months[j] - 1])) n++;
+  }
+  return n;
+}
+
+static inline double mean_sel(const NumericVector& x, const IntegerVector& months, bool na_rm) {
+  double s = 0.0;
+  int n = 0;
+  for (int j = 0; j < months.size(); j++) {
+    double v = x[months[j] - 1];
+    if (na_rm && NumericVector::is_na(v)) continue;
+    s += v;
+    n++;
+  }
+  if (n == 0) return R_NaN;
+  return s / n;
+}
+
+static inline double sum_sel(const NumericVector& x, const IntegerVector& months, bool na_rm) {
+  double s = 0.0;
+  int n = 0;
+  for (int j = 0; j < months.size(); j++) {
+    double v = x[months[j] - 1];
+    if (na_rm && NumericVector::is_na(v)) continue;
+    s += v;
+    n++;
+  }
+  if (n == 0) return R_NaN;
+  return s;
+}
+
+static inline double max_sel(const NumericVector& x, const IntegerVector& months, bool na_rm) {
+  bool first = true;
+  double m = 0.0;
+  for (int j = 0; j < months.size(); j++) {
+    double v = x[months[j] - 1];
+    if (na_rm && NumericVector::is_na(v)) continue;
+    if (first || v > m) { m = v; first = false; }
+  }
+  if (first) return R_NaN;
+  return m;
+}
+
+static inline double min_sel(const NumericVector& x, const IntegerVector& months, bool na_rm) {
+  bool first = true;
+  double m = 0.0;
+  for (int j = 0; j < months.size(); j++) {
+    double v = x[months[j] - 1];
+    if (na_rm && NumericVector::is_na(v)) continue;
+    if (first || v < m) { m = v; first = false; }
+  }
+  if (first) return R_NaN;
+  return m;
+}
+
+static inline double sd_pop_sel(const NumericVector& x, const IntegerVector& months, bool na_rm) {
+  double s = 0.0, ss = 0.0;
+  int n = 0;
+  for (int j = 0; j < months.size(); j++) {
+    double v = x[months[j] - 1];
+    if (na_rm && NumericVector::is_na(v)) continue;
+    s += v;
+    ss += v * v;
+    n++;
+  }
+  if (n == 0) return R_NaN;
+  double m = s / n;
+  return std::sqrt(ss / n - m * m);
+}
+
+//' Compute quarterly/seasonal climate variables for a raster block
+//'
+//' @param tas    Numeric matrix (pixels x 12): monthly mean temperature.
+//' @param tasmax Numeric matrix (pixels x 12): monthly maximum temperature.
+//' @param tasmin Numeric matrix (pixels x 12): monthly minimum temperature.
+//' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
+//' @param months Integer vector of 1-based month indices to include.
+//' @param na_rm  Logical: if `TRUE`, skip `NA` months.
+//' @return Numeric matrix (pixels x 6) with columns
+//'   `tmean_s`, `tmax_max`, `tmin_min`, `trange`, `pr_tot`, `pr_cv`.
+//' @keywords internal
+// [[Rcpp::export]]
+NumericMatrix quarterly_variables_cpp(NumericMatrix tas,
+                                      NumericMatrix tasmax,
+                                      NumericMatrix tasmin,
+                                      NumericMatrix pr,
+                                      IntegerVector months,
+                                      bool na_rm = false) {
+  if (tas.nrow() != tasmax.nrow() || tas.nrow() != tasmin.nrow() ||
+      tas.nrow() != pr.nrow()) {
+    stop("All input matrices must have the same number of rows");
+  }
+  if (tas.ncol() != 12 || tasmax.ncol() != 12 || tasmin.ncol() != 12 ||
+      pr.ncol() != 12) {
+    stop("All input matrices must have 12 columns (one per month)");
+  }
+  for (int j = 0; j < months.size(); j++) {
+    if (months[j] < 1 || months[j] > 12) {
+      stop("month indices must be between 1 and 12");
+    }
+  }
+
+  int n = tas.nrow();
+  NumericMatrix result(n, 6);
+  colnames(result) = CharacterVector::create(
+    "tmean_s", "tmax_max", "tmin_min", "trange", "pr_tot", "pr_cv");
+
+  for (int i = 0; i < n; i++) {
+    NumericVector r_tas    = tas.row(i);
+    NumericVector r_tasmax = tasmax.row(i);
+    NumericVector r_tasmin = tasmin.row(i);
+    NumericVector r_pr     = pr.row(i);
+
+    if (!na_rm && (has_na_sel(r_tas, months) || has_na_sel(r_tasmax, months) ||
+                   has_na_sel(r_tasmin, months) || has_na_sel(r_pr, months))) {
+      for (int j = 0; j < 6; j++) result(i, j) = NA_REAL;
+      continue;
+    }
+
+    double tmean_s = mean_sel(r_tas, months, na_rm);
+    double tmax_m  = max_sel(r_tasmax, months, na_rm);
+    double tmin_m  = min_sel(r_tasmin, months, na_rm);
+    double pr_sum  = sum_sel(r_pr, months, na_rm);
+    double pr_mean = mean_sel(r_pr, months, na_rm);
+
+    result(i, 0) = tmean_s;
+    result(i, 1) = tmax_m;
+    result(i, 2) = tmin_m;
+    result(i, 3) = std::isnan(tmax_m) || std::isnan(tmin_m)
+                     ? R_NaN : tmax_m - tmin_m;
+    result(i, 4) = pr_sum;
+    result(i, 5) = (std::isnan(pr_mean) || pr_mean <= 0.0)
+                     ? R_NaN : 100.0 * sd_pop_sel(r_pr, months, na_rm) / pr_mean;
+  }
+
+  return result;
+}

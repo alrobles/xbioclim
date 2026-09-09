@@ -352,6 +352,21 @@ bioclim_cpp <- function(tas, tasmax, tasmin, pr, ncores = 1L, na_rm = FALSE) {
     .Call(`_xbioclim_bioclim_cpp`, tas, tasmax, tasmin, pr, ncores, na_rm)
 }
 
+#' Compute quarterly/seasonal climate variables for a raster block
+#'
+#' @param tas    Numeric matrix (pixels x 12): monthly mean temperature.
+#' @param tasmax Numeric matrix (pixels x 12): monthly maximum temperature.
+#' @param tasmin Numeric matrix (pixels x 12): monthly minimum temperature.
+#' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
+#' @param months Integer vector of 1-based month indices to include.
+#' @param na_rm  Logical: if `TRUE`, skip `NA` months.
+#' @return Numeric matrix (pixels x 6) with columns
+#'   `tmean_s`, `tmax_max`, `tmin_min`, `trange`, `pr_tot`, `pr_cv`.
+#' @keywords internal
+quarterly_variables_cpp <- function(tas, tasmax, tasmin, pr, months, na_rm = FALSE) {
+    .Call(`_xbioclim_quarterly_variables_cpp`, tas, tasmax, tasmin, pr, months, na_rm)
+}
+
 #' Create a new C++ BioclimModel and return an external pointer
 #'
 #' @param tas    Numeric vector of length 12.
