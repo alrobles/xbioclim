@@ -1,0 +1,15 @@
+url: https://alrobles.github.io/xbioclim/
+template:
+  bootstrap: 5
+development:
+  mode: auto
+navbar:
+  structure:
+    left: [reference, articles]
+  components:
+    articles:
+      text: Articles
+      href: articles/index.html
+    reference:
+      text: Reference
+      href: reference/index.html

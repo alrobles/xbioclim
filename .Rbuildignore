@@ -4,6 +4,7 @@
 ^\.github$
 ^README\.Rmd$
 ^codecov\.yml$
+^_pkgdown\.yml$
 ^docs$
 ^benchmarks$
 ^tools$

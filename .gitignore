@@ -6,6 +6,8 @@ inst/doc
 *.o
 *.so
 *.dll
+*.Rcheck
+*.tar.gz
 autom4te.cache/
 config.log
 config.status

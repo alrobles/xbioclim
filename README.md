@@ -32,10 +32,6 @@ R CMD INSTALL --configure-args='--without-cuda' xbioclim_*.tar.gz
 If you run `roxygen2::roxygenise()`, remove the stale debug objects before `R CMD INSTALL`:
 
 ```bash
-make clean              # from the repository root
-# or
-Rscript tools/clean-obj.R
-# or
 ./cleanup
 ```
 
@@ -158,7 +154,9 @@ names(result)  # "bio01" "bio12"
 
 ## Documentation
 
-Comprehensive vignettes are available after installing the package:
+An online reference site is available at
+<https://alrobles.github.io/xbioclim/>. Comprehensive vignettes are also
+available after installing the package:
 
 ```r
 vignette("getting-started",  package = "xbioclim")  # Introduction & real-world examples
