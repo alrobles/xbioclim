@@ -17,6 +17,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # GitHub ubuntu-latest images ship a google-chrome apt source whose
+      # Packages.gz periodically returns a "Hash Sum mismatch", breaking
+      # every apt-get update (incl. r-lib setup-r). Neutralize it here.
+      - name: Disable broken Google Chrome apt source
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list
+          sudo rm -f /etc/apt/sources.list.d/google.list
+        shell: bash
+
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: 'release'
