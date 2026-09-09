@@ -24,8 +24,9 @@ using namespace Rcpp;
 //'   otherwise.
 //' @examples
 //' \donttest{
-//' # Works only when GDAL is available:
-//' gdal_can_open(system.file("extdata", "tiny.tif", package = "xbioclim"))
+//' if (has_gdal()) {
+//'   gdal_can_open(system.file("extdata", "tiny.tif", package = "xbioclim"))
+//' }
 //' }
 //' @export
 // [[Rcpp::export]]
@@ -81,10 +82,12 @@ bool gdal_can_open(const std::string& path) {  // NOLINT
 //'   }
 //' @examples
 //' \donttest{
-//' info <- gdal_info(
-//'   system.file("extdata", "tiny.tif", package = "xbioclim")
-//' )
-//' str(info)
+//' if (has_gdal()) {
+//'   info <- gdal_info(
+//'     system.file("extdata", "tiny.tif", package = "xbioclim")
+//'   )
+//'   str(info)
+//' }
 //' }
 //' @export
 // [[Rcpp::export]]

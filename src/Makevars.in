@@ -5,8 +5,8 @@ CUDA_LIBS       = @CUDA_LIBS@
 CUDA_ARCH_FLAGS = @CUDA_ARCH_FLAGS@
 
 # ── Compiler / linker flags ───────────────────────────────────────────
-PKG_CPPFLAGS = @GDAL_CPPFLAGS@ $(CUDA_CPPFLAGS) -I../inst/include
-PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -pthread
+PKG_CPPFLAGS = @GDAL_CPPFLAGS@ $(CUDA_CPPFLAGS)
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -pthread -march=native -O3
 PKG_LIBS     = @GDAL_LIBS@ $(SHLIB_OPENMP_CXXFLAGS) -pthread $(CUDA_LIBS)
 
 # ── Object list (enumerated by configure — no GNU Make extensions) ────

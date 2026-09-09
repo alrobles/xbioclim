@@ -381,13 +381,13 @@ void GdalWriter::write_window(int xoff, int yoff,
 
     CPLErr err;
     if (dtype == GDT_Float32) {
-        std::vector<float> fbuf(static_cast<std::size_t>(n));
+        fbuf_.resize(static_cast<std::size_t>(n));
         for (int i = 0; i < n; ++i) {
-            fbuf[static_cast<std::size_t>(i)] = static_cast<float>(buf[i]);
+            fbuf_[static_cast<std::size_t>(i)] = static_cast<float>(buf[i]);
         }
         err = b->RasterIO(GF_Write,
                           xoff, yoff, xsize, ysize,
-                          fbuf.data(),
+                          fbuf_.data(),
                           xsize, ysize,
                           GDT_Float32,
                           0, 0);
@@ -464,13 +464,16 @@ void GdalWriter::write_bands_window(int xoff, int yoff,
 
     CPLErr err;
     if (dtype == GDT_Float32) {
-        // Linear copy: fbuf preserves the buffer layout, so the same
-        // strides apply with sizeof(float) elements.
-        std::vector<float> fbuf(buf.begin(), buf.begin() + needed);
+        // Reuse the class scratch Float32 buffer, resizing only when
+        // the current tile needs more room.
+        fbuf_.resize(needed);
+        for (std::size_t i = 0; i < needed; ++i) {
+            fbuf_[i] = static_cast<float>(buf[i]);
+        }
         err = ds_->RasterIO(
             GF_Write,
             xoff, yoff, xsize, ysize,
-            fbuf.data(),
+            fbuf_.data(),
             xsize, ysize,
             GDT_Float32,
             static_cast<int>(nb),

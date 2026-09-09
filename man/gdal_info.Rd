@@ -43,9 +43,11 @@ support.
 }
 \examples{
 \donttest{
-info <- gdal_info(
-  system.file("extdata", "tiny.tif", package = "xbioclim")
-)
-str(info)
+if (has_gdal()) {
+  info <- gdal_info(
+    system.file("extdata", "tiny.tif", package = "xbioclim")
+  )
+  str(info)
+}
 }
 }

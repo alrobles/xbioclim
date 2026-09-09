@@ -132,6 +132,7 @@ engine_set_variables <- function(xptr, variables) {
 #' @return \code{NULL} invisibly.
 #' @seealso \code{\link{engine_create}}, \code{\link{engine_compute}}
 #' @keywords internal
+#' @export
 engine_set_pipeline <- function(xptr, use_pipeline) {
     invisible(.Call(`_xbioclim_engine_set_pipeline`, xptr, use_pipeline))
 }
@@ -351,6 +352,55 @@ bioclim_cpp <- function(tas, tasmax, tasmin, pr, ncores = 1L, na_rm = FALSE) {
     .Call(`_xbioclim_bioclim_cpp`, tas, tasmax, tasmin, pr, ncores, na_rm)
 }
 
+#' Compute quarterly/seasonal climate variables for a raster block
+#'
+#' @param tas    Numeric matrix (pixels x 12): monthly mean temperature.
+#' @param tasmax Numeric matrix (pixels x 12): monthly maximum temperature.
+#' @param tasmin Numeric matrix (pixels x 12): monthly minimum temperature.
+#' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
+#' @param months Integer vector of 1-based month indices to include.
+#' @param na_rm  Logical: if `TRUE`, skip `NA` months.
+#' @return Numeric matrix (pixels x 6) with columns
+#'   `tmean_s`, `tmax_max`, `tmin_min`, `trange`, `pr_tot`, `pr_cv`.
+#' @keywords internal
+quarterly_variables_cpp <- function(tas, tasmax, tasmin, pr, months, na_rm = FALSE) {
+    .Call(`_xbioclim_quarterly_variables_cpp`, tas, tasmax, tasmin, pr, months, na_rm)
+}
+
+#' Compute bioclimatic variables over an arbitrary window of months
+#'
+#' @param tas    Numeric matrix (pixels x 12): monthly mean temperature.
+#' @param tasmax Numeric matrix (pixels x 12): monthly maximum temperature.
+#' @param tasmin Numeric matrix (pixels x 12): monthly minimum temperature.
+#' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
+#' @param months Integer vector of 1-based month indices in the window.
+#' @param window Integer: length (months) of the internal rolling sub-window
+#'   used for the BIO08-BIO19 variables.  Must be >= 3 and <= length(months)
+#'   for those variables to be non-NA.
+#' @param na_rm  Logical: if `TRUE`, skip `NA` months.
+#' @return Numeric matrix (pixels x 19) with columns `bio01`..`bio19`.
+#' @keywords internal
+bioclim_window_cpp <- function(tas, tasmax, tasmin, pr, months, window = 3L, na_rm = FALSE) {
+    .Call(`_xbioclim_bioclim_window_cpp`, tas, tasmax, tasmin, pr, months, window, na_rm)
+}
+
+#' Compute bioclimatic variables using a rolling window of arbitrary length
+#'
+#' @param tas    Numeric matrix (pixels x 12): monthly mean temperature.
+#' @param tasmax Numeric matrix (pixels x 12): monthly maximum temperature.
+#' @param tasmin Numeric matrix (pixels x 12): monthly minimum temperature.
+#' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
+#' @param window Integer: length (months) of the rolling window (2-11).
+#' @param na_rm  Logical: if `TRUE`, skip `NA` months.
+#' @return Numeric matrix (pixels x 19) with columns `bio01`..`bio19`.
+#'   The base variables (bio01-bio07, bio12-bio15) are computed over the
+#'   full 12 months; the rolling-window variables (bio08-bio11, bio16-bio19)
+#'   are computed over the best `window`-month period.
+#' @keywords internal
+bioclim_rolling_cpp <- function(tas, tasmax, tasmin, pr, window = 3L, na_rm = FALSE) {
+    .Call(`_xbioclim_bioclim_rolling_cpp`, tas, tasmax, tasmin, pr, window, na_rm)
+}
+
 #' Create a new C++ BioclimModel and return an external pointer
 #'
 #' @param tas    Numeric vector of length 12.
@@ -555,8 +605,9 @@ engine_set_device <- function(xptr, device) {
 #'   otherwise.
 #' @examples
 #' \donttest{
-#' # Works only when GDAL is available:
-#' gdal_can_open(system.file("extdata", "tiny.tif", package = "xbioclim"))
+#' if (has_gdal()) {
+#'   gdal_can_open(system.file("extdata", "tiny.tif", package = "xbioclim"))
+#' }
 #' }
 #' @export
 gdal_can_open <- function(path) {
@@ -596,10 +647,12 @@ gdal_can_open <- function(path) {
 #'   }
 #' @examples
 #' \donttest{
-#' info <- gdal_info(
-#'   system.file("extdata", "tiny.tif", package = "xbioclim")
-#' )
-#' str(info)
+#' if (has_gdal()) {
+#'   info <- gdal_info(
+#'     system.file("extdata", "tiny.tif", package = "xbioclim")
+#'   )
+#'   str(info)
+#' }
 #' }
 #' @export
 gdal_info <- function(path) {
@@ -630,16 +683,18 @@ gdal_info <- function(path) {
 #' @seealso \code{\link{create_mask}}, \code{\link{apply_mask_cpp}}
 #' @examples
 #' \donttest{
-#' # Requires GDAL support at build time.
-#' ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
-#' poly <- tempfile(fileext = ".geojson")
-#' mask <- tempfile(fileext = ".tif")
+#' if (has_gdal()) {
+#'   # Requires GDAL support at build time.
+#'   ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
+#'   poly <- tempfile(fileext = ".geojson")
+#'   mask <- tempfile(fileext = ".tif")
 #' writeLines(
 #'   '{"type":"FeatureCollection","features":[{"type":"Feature",
 #'     "geometry":{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]},
 #'     "properties":{}}]}',
 #'   poly)
-#' rasterize_mask_cpp(poly, ref, mask)
+#'   rasterize_mask_cpp(poly, ref, mask)
+#' }
 #' }
 #' @export
 rasterize_mask_cpp <- function(vector_path, ref_raster_path, output_mask_path) {
@@ -670,18 +725,20 @@ rasterize_mask_cpp <- function(vector_path, ref_raster_path, output_mask_path) {
 #' @seealso \code{\link{create_mask}}, \code{\link{rasterize_mask_cpp}}
 #' @examples
 #' \donttest{
-#' # Requires GDAL support at build time.
-#' ref    <- system.file("extdata", "tiny.tif", package = "xbioclim")
-#' poly   <- tempfile(fileext = ".geojson")
-#' mask   <- tempfile(fileext = ".tif")
-#' output <- tempfile(fileext = ".tif")
+#' if (has_gdal()) {
+#'   # Requires GDAL support at build time.
+#'   ref    <- system.file("extdata", "tiny.tif", package = "xbioclim")
+#'   poly   <- tempfile(fileext = ".geojson")
+#'   mask   <- tempfile(fileext = ".tif")
+#'   output <- tempfile(fileext = ".tif")
 #' writeLines(
 #'   '{"type":"FeatureCollection","features":[{"type":"Feature",
 #'     "geometry":{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]},
 #'     "properties":{}}]}',
 #'   poly)
-#' rasterize_mask_cpp(poly, ref, mask)
-#' apply_mask_cpp(ref, mask, output)
+#'   rasterize_mask_cpp(poly, ref, mask)
+#'   apply_mask_cpp(ref, mask, output)
+#' }
 #' }
 #' @export
 apply_mask_cpp <- function(input_path, mask_path, output_path) {

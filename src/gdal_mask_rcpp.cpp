@@ -36,16 +36,18 @@ using namespace Rcpp;
 //' @seealso \code{\link{create_mask}}, \code{\link{apply_mask_cpp}}
 //' @examples
 //' \donttest{
-//' # Requires GDAL support at build time.
-//' ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
-//' poly <- tempfile(fileext = ".geojson")
-//' mask <- tempfile(fileext = ".tif")
+//' if (has_gdal()) {
+//'   # Requires GDAL support at build time.
+//'   ref  <- system.file("extdata", "tiny.tif", package = "xbioclim")
+//'   poly <- tempfile(fileext = ".geojson")
+//'   mask <- tempfile(fileext = ".tif")
 //' writeLines(
 //'   '{"type":"FeatureCollection","features":[{"type":"Feature",
 //'     "geometry":{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]},
 //'     "properties":{}}]}',
 //'   poly)
-//' rasterize_mask_cpp(poly, ref, mask)
+//'   rasterize_mask_cpp(poly, ref, mask)
+//' }
 //' }
 //' @export
 // [[Rcpp::export]]
@@ -86,18 +88,20 @@ SEXP rasterize_mask_cpp(const std::string& vector_path,   // NOLINT
 //' @seealso \code{\link{create_mask}}, \code{\link{rasterize_mask_cpp}}
 //' @examples
 //' \donttest{
-//' # Requires GDAL support at build time.
-//' ref    <- system.file("extdata", "tiny.tif", package = "xbioclim")
-//' poly   <- tempfile(fileext = ".geojson")
-//' mask   <- tempfile(fileext = ".tif")
-//' output <- tempfile(fileext = ".tif")
+//' if (has_gdal()) {
+//'   # Requires GDAL support at build time.
+//'   ref    <- system.file("extdata", "tiny.tif", package = "xbioclim")
+//'   poly   <- tempfile(fileext = ".geojson")
+//'   mask   <- tempfile(fileext = ".tif")
+//'   output <- tempfile(fileext = ".tif")
 //' writeLines(
 //'   '{"type":"FeatureCollection","features":[{"type":"Feature",
 //'     "geometry":{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]},
 //'     "properties":{}}]}',
 //'   poly)
-//' rasterize_mask_cpp(poly, ref, mask)
-//' apply_mask_cpp(ref, mask, output)
+//'   rasterize_mask_cpp(poly, ref, mask)
+//'   apply_mask_cpp(ref, mask, output)
+//' }
 //' }
 //' @export
 // [[Rcpp::export]]

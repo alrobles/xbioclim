@@ -87,6 +87,9 @@
 #'   otherwise).
 #' @param dtype Character scalar: output data type, one of \code{"Float64"}
 #'   (default) or \code{"Float32"}.
+#' @param use_pipeline Logical scalar: if \code{TRUE}, use the experimental
+#'   overlapped read/compute/write pipeline with parallel 12-reader I/O.
+#'   Default is \code{FALSE}, which keeps the original serial tiled loop.
 #'
 #' @return If \pkg{terra} is installed, a \code{terra::SpatRaster} with one
 #'   layer per selected variable (named \code{bio01} … \code{bio19}).
@@ -149,11 +152,16 @@ bioclim_engine <- function(
     tile_size  = 256L,
     overwrite  = FALSE,
     device     = c("auto", "cpu", "gpu"),
-    dtype      = c("Float64", "Float32")
+    dtype      = c("Float64", "Float32"),
+    use_pipeline = FALSE
 ) {
 
   device <- match.arg(device)
   dtype  <- match.arg(dtype)
+
+  if (!is.logical(use_pipeline) || length(use_pipeline) != 1L || is.na(use_pipeline)) {
+    stop("'use_pipeline' must be a single non-NA logical value.", call. = FALSE)
+  }
 
   # Auto-detect: use GPU if available, otherwise CPU.
   if (device == "auto") {
@@ -280,6 +288,7 @@ bioclim_engine <- function(
   engine_set_threads(eng, threads)
   engine_set_tile_size(eng, tile_size)
   engine_set_device(eng, device)
+  if (isTRUE(use_pipeline)) engine_set_pipeline(eng, use_pipeline)
   engine_compute(eng)
 
   # -- 6. Return result -------------------------------------------------------

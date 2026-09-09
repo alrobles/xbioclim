@@ -205,6 +205,10 @@ private:
 #endif
     GDALDataType dtype_ = GDT_Float64;
     bool closed_ = false;
+
+    // Reusable Float32 conversion buffer, resized on first Float32 write and
+    // kept across tiles to avoid repeated heap allocations.
+    std::vector<float> fbuf_;
 };
 
 } // namespace xbioclim

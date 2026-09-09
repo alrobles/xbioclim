@@ -354,6 +354,55 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// quarterly_variables_cpp
+NumericMatrix quarterly_variables_cpp(NumericMatrix tas, NumericMatrix tasmax, NumericMatrix tasmin, NumericMatrix pr, IntegerVector months, bool na_rm);
+RcppExport SEXP _xbioclim_quarterly_variables_cpp(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP, SEXP monthsSEXP, SEXP na_rmSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type tas(tasSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type tasmax(tasmaxSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type tasmin(tasminSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type pr(prSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type months(monthsSEXP);
+    Rcpp::traits::input_parameter< bool >::type na_rm(na_rmSEXP);
+    rcpp_result_gen = Rcpp::wrap(quarterly_variables_cpp(tas, tasmax, tasmin, pr, months, na_rm));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bioclim_window_cpp
+NumericMatrix bioclim_window_cpp(NumericMatrix tas, NumericMatrix tasmax, NumericMatrix tasmin, NumericMatrix pr, IntegerVector months, int window, bool na_rm);
+RcppExport SEXP _xbioclim_bioclim_window_cpp(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP, SEXP monthsSEXP, SEXP windowSEXP, SEXP na_rmSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type tas(tasSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type tasmax(tasmaxSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type tasmin(tasminSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type pr(prSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type months(monthsSEXP);
+    Rcpp::traits::input_parameter< int >::type window(windowSEXP);
+    Rcpp::traits::input_parameter< bool >::type na_rm(na_rmSEXP);
+    rcpp_result_gen = Rcpp::wrap(bioclim_window_cpp(tas, tasmax, tasmin, pr, months, window, na_rm));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bioclim_rolling_cpp
+NumericMatrix bioclim_rolling_cpp(NumericMatrix tas, NumericMatrix tasmax, NumericMatrix tasmin, NumericMatrix pr, int window, bool na_rm);
+RcppExport SEXP _xbioclim_bioclim_rolling_cpp(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP, SEXP windowSEXP, SEXP na_rmSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type tas(tasSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type tasmax(tasmaxSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type tasmin(tasminSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type pr(prSEXP);
+    Rcpp::traits::input_parameter< int >::type window(windowSEXP);
+    Rcpp::traits::input_parameter< bool >::type na_rm(na_rmSEXP);
+    rcpp_result_gen = Rcpp::wrap(bioclim_rolling_cpp(tas, tasmax, tasmin, pr, window, na_rm));
+    return rcpp_result_gen;
+END_RCPP
+}
 // bioclim_model_new
 SEXP bioclim_model_new(Rcpp::NumericVector tas, Rcpp::NumericVector tasmax, Rcpp::NumericVector tasmin, Rcpp::NumericVector pr);
 RcppExport SEXP _xbioclim_bioclim_model_new(SEXP tasSEXP, SEXP tasmaxSEXP, SEXP tasminSEXP, SEXP prSEXP) {
@@ -727,6 +776,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_xbioclim_bio18_cpp", (DL_FUNC) &_xbioclim_bio18_cpp, 2},
     {"_xbioclim_bio19_cpp", (DL_FUNC) &_xbioclim_bio19_cpp, 2},
     {"_xbioclim_bioclim_cpp", (DL_FUNC) &_xbioclim_bioclim_cpp, 6},
+    {"_xbioclim_quarterly_variables_cpp", (DL_FUNC) &_xbioclim_quarterly_variables_cpp, 6},
+    {"_xbioclim_bioclim_window_cpp", (DL_FUNC) &_xbioclim_bioclim_window_cpp, 7},
+    {"_xbioclim_bioclim_rolling_cpp", (DL_FUNC) &_xbioclim_bioclim_rolling_cpp, 6},
     {"_xbioclim_bioclim_model_new", (DL_FUNC) &_xbioclim_bioclim_model_new, 4},
     {"_xbioclim_bioclim_model_is_null", (DL_FUNC) &_xbioclim_bioclim_model_is_null, 1},
     {"_xbioclim_bioclim_model_bio01", (DL_FUNC) &_xbioclim_bioclim_model_bio01, 1},

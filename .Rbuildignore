@@ -18,3 +18,4 @@
 ^src/config\.status$
 ^src/autom4te\.cache$
 ^Makefile$
+^PHASE_C_DESIGN\.md$

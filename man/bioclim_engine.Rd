@@ -16,7 +16,8 @@ bioclim_engine(
   tile_size = 256L,
   overwrite = FALSE,
   device = c("auto", "cpu", "gpu"),
-  dtype = c("Float64", "Float32")
+  dtype = c("Float64", "Float32"),
+  use_pipeline = FALSE
 )
 }
 \arguments{
@@ -64,6 +65,10 @@ otherwise).}
 
 \item{dtype}{Character scalar: output data type, one of \code{"Float64"}
 (default) or \code{"Float32"}.}
+
+\item{use_pipeline}{Logical scalar: if \code{TRUE}, use the experimental
+overlapped read/compute/write pipeline with parallel 12-reader I/O.
+Default is \code{FALSE}, which keeps the original serial tiled loop.}
 }
 \value{
 If \pkg{terra} is installed, a \code{terra::SpatRaster} with one
