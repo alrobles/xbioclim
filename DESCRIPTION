@@ -41,6 +41,7 @@ Collate:
     'bioclim.R'
     'BioclimData.R'
     'quarterly.R'
+    'bioclim_window.R'
     'bioclim_module.R'
     'bioclimmodel.R'
     'bioclim_raster.R'

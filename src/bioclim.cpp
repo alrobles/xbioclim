@@ -870,3 +870,425 @@ NumericMatrix quarterly_variables_cpp(NumericMatrix tas,
 
   return result;
 }
+
+// ── Window / rolling bioclimatic variables ───────────────────────────────────
+
+// Build a 0-based mask for selected months (true = selected).
+static inline void build_month_mask(const IntegerVector& months, bool mask[12]) {
+  for (int i = 0; i < 12; i++) mask[i] = false;
+  for (int j = 0; j < months.size(); j++) {
+    if (months[j] >= 1 && months[j] <= 12) mask[months[j] - 1] = true;
+  }
+}
+
+// Sum over a contiguous window starting at 1-based `start` (length `win`).
+static inline double window_sum_sel(const NumericVector& x,
+                                    int start, int win, bool na_rm) {
+  double s = 0.0;
+  int n = 0;
+  for (int i = 0; i < win; i++) {
+    int idx = (start - 1 + i) % 12;
+    double v = x[idx];
+    if (na_rm && NumericVector::is_na(v)) continue;
+    s += v;
+    n++;
+  }
+  if (n == 0) return R_NaN;
+  return s;
+}
+
+// Mean over a contiguous window starting at 1-based `start`.
+static inline double window_mean_sel(const NumericVector& x,
+                                     int start, int win, bool na_rm) {
+  double s = 0.0;
+  int n = 0;
+  for (int i = 0; i < win; i++) {
+    int idx = (start - 1 + i) % 12;
+    double v = x[idx];
+    if (na_rm && NumericVector::is_na(v)) continue;
+    s += v;
+    n++;
+  }
+  if (n == 0) return R_NaN;
+  return s / n;
+}
+
+// Find the starting month of the valid contiguous window (length `win`)
+// within `months` with the maximum sum of `x`.
+static inline int argmax_window_sum(const NumericVector& x,
+                                    const IntegerVector& months,
+                                    int win,
+                                    const bool mask[12],
+                                    bool na_rm) {
+  int best_start = -1;
+  double best_sum = 0.0;
+  bool first = true;
+  for (int j = 0; j < months.size(); j++) {
+    int start = months[j];
+    bool valid = true;
+    for (int i = 0; i < win; i++) {
+      int idx = (start - 1 + i) % 12;
+      if (!mask[idx]) { valid = false; break; }
+    }
+    if (!valid) continue;
+
+    double s = window_sum_sel(x, start, win, na_rm);
+    if (NumericVector::is_na(s)) continue;
+    if (first || s > best_sum) {
+      best_sum = s;
+      best_start = start;
+      first = false;
+    }
+  }
+  return best_start;
+}
+
+// Minimum sum.
+static inline int argmin_window_sum(const NumericVector& x,
+                                    const IntegerVector& months,
+                                    int win,
+                                    const bool mask[12],
+                                    bool na_rm) {
+  int best_start = -1;
+  double best_sum = 0.0;
+  bool first = true;
+  for (int j = 0; j < months.size(); j++) {
+    int start = months[j];
+    bool valid = true;
+    for (int i = 0; i < win; i++) {
+      int idx = (start - 1 + i) % 12;
+      if (!mask[idx]) { valid = false; break; }
+    }
+    if (!valid) continue;
+
+    double s = window_sum_sel(x, start, win, na_rm);
+    if (NumericVector::is_na(s)) continue;
+    if (first || s < best_sum) {
+      best_sum = s;
+      best_start = start;
+      first = false;
+    }
+  }
+  return best_start;
+}
+
+// Maximum mean.
+static inline int argmax_window_mean(const NumericVector& x,
+                                     const IntegerVector& months,
+                                     int win,
+                                     const bool mask[12],
+                                     bool na_rm) {
+  int best_start = -1;
+  double best_mean = 0.0;
+  bool first = true;
+  for (int j = 0; j < months.size(); j++) {
+    int start = months[j];
+    bool valid = true;
+    for (int i = 0; i < win; i++) {
+      int idx = (start - 1 + i) % 12;
+      if (!mask[idx]) { valid = false; break; }
+    }
+    if (!valid) continue;
+
+    double m = window_mean_sel(x, start, win, na_rm);
+    if (NumericVector::is_na(m)) continue;
+    if (first || m > best_mean) {
+      best_mean = m;
+      best_start = start;
+      first = false;
+    }
+  }
+  return best_start;
+}
+
+// Minimum mean.
+static inline int argmin_window_mean(const NumericVector& x,
+                                     const IntegerVector& months,
+                                     int win,
+                                     const bool mask[12],
+                                     bool na_rm) {
+  int best_start = -1;
+  double best_mean = 0.0;
+  bool first = true;
+  for (int j = 0; j < months.size(); j++) {
+    int start = months[j];
+    bool valid = true;
+    for (int i = 0; i < win; i++) {
+      int idx = (start - 1 + i) % 12;
+      if (!mask[idx]) { valid = false; break; }
+    }
+    if (!valid) continue;
+
+    double m = window_mean_sel(x, start, win, na_rm);
+    if (NumericVector::is_na(m)) continue;
+    if (first || m < best_mean) {
+      best_mean = m;
+      best_start = start;
+      first = false;
+    }
+  }
+  return best_start;
+}
+
+// Compute the 19 bioclimatic variables over a selected set of months.
+static inline std::array<double, 19> compute_pixel_window(
+    const NumericVector& tas,
+    const NumericVector& tasmax,
+    const NumericVector& tasmin,
+    const NumericVector& pr,
+    const IntegerVector& months,
+    int window,
+    bool na_rm) {
+
+  std::array<double, 19> bio;
+  bio.fill(NA_REAL);
+
+  if (!na_rm && (has_na_sel(tas, months) || has_na_sel(tasmax, months) ||
+                 has_na_sel(tasmin, months) || has_na_sel(pr, months))) {
+    return bio;
+  }
+
+  // Base statistics over the selected months.
+  double b01 = mean_sel(tas, months, na_rm);
+  double b05 = max_sel(tasmax, months, na_rm);
+  double b06 = min_sel(tasmin, months, na_rm);
+  double b12 = sum_sel(pr, months, na_rm);
+  double b13 = max_sel(pr, months, na_rm);
+  double b14 = min_sel(pr, months, na_rm);
+  double pr_mean = mean_sel(pr, months, na_rm);
+
+  double b02 = mean_sel(tasmax, months, na_rm) - mean_sel(tasmin, months, na_rm);
+  double b07 = (std::isnan(b05) || std::isnan(b06))
+                 ? R_NaN : b05 - b06;
+  double b03 = (std::isnan(b07) || b07 == 0.0) ? R_NaN : 100.0 * b02 / b07;
+  double b04 = 100.0 * sd_pop_sel(tas, months, na_rm);
+  double b15 = (std::isnan(pr_mean) || pr_mean <= 0.0)
+                 ? R_NaN : 100.0 * sd_pop_sel(pr, months, na_rm) / pr_mean;
+
+  bio[0]  = b01;
+  bio[1]  = b02;
+  bio[2]  = b03;
+  bio[3]  = b04;
+  bio[4]  = b05;
+  bio[5]  = b06;
+  bio[6]  = b07;
+  bio[11] = b12;
+  bio[12] = b13;
+  bio[13] = b14;
+  bio[14] = b15;
+
+  if (months.size() >= window) {
+    bool mask[12];
+    build_month_mask(months, mask);
+
+    int wet_start  = argmax_window_sum(pr, months, window, mask, na_rm);
+    int dry_start  = argmin_window_sum(pr, months, window, mask, na_rm);
+    int warm_start = argmax_window_mean(tas, months, window, mask, na_rm);
+    int cold_start = argmin_window_mean(tas, months, window, mask, na_rm);
+
+    if (wet_start > 0) {
+      bio[7]  = window_mean_sel(tas, wet_start, window, na_rm);  // BIO08
+      bio[15] = window_sum_sel(pr, wet_start, window, na_rm);     // BIO16
+    }
+    if (dry_start > 0) {
+      bio[8]  = window_mean_sel(tas, dry_start, window, na_rm);  // BIO09
+      bio[16] = window_sum_sel(pr, dry_start, window, na_rm);     // BIO17
+    }
+    if (warm_start > 0) {
+      bio[9]  = window_mean_sel(tas, warm_start, window, na_rm); // BIO10
+      bio[17] = window_sum_sel(pr, warm_start, window, na_rm);    // BIO18
+    }
+    if (cold_start > 0) {
+      bio[10] = window_mean_sel(tas, cold_start, window, na_rm); // BIO11
+      bio[18] = window_sum_sel(pr, cold_start, window, na_rm);    // BIO19
+    }
+  }
+
+  return bio;
+}
+
+//' Compute bioclimatic variables over an arbitrary window of months
+//'
+//' @param tas    Numeric matrix (pixels x 12): monthly mean temperature.
+//' @param tasmax Numeric matrix (pixels x 12): monthly maximum temperature.
+//' @param tasmin Numeric matrix (pixels x 12): monthly minimum temperature.
+//' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
+//' @param months Integer vector of 1-based month indices in the window.
+//' @param window Integer: length (months) of the internal rolling sub-window
+//'   used for the BIO08-BIO19 variables.  Must be >= 3 and <= length(months)
+//'   for those variables to be non-NA.
+//' @param na_rm  Logical: if `TRUE`, skip `NA` months.
+//' @return Numeric matrix (pixels x 19) with columns `bio01`..`bio19`.
+//' @keywords internal
+// [[Rcpp::export]]
+NumericMatrix bioclim_window_cpp(NumericMatrix tas,
+                                 NumericMatrix tasmax,
+                                 NumericMatrix tasmin,
+                                 NumericMatrix pr,
+                                 IntegerVector months,
+                                 int window = 3,
+                                 bool na_rm = false) {
+  if (tas.nrow() != tasmax.nrow() || tas.nrow() != tasmin.nrow() ||
+      tas.nrow() != pr.nrow()) {
+    stop("All input matrices must have the same number of rows");
+  }
+  if (tas.ncol() != 12 || tasmax.ncol() != 12 || tasmin.ncol() != 12 ||
+      pr.ncol() != 12) {
+    stop("All input matrices must have 12 columns");
+  }
+  if (window < 2 || window > 12) {
+    stop("'window' must be between 2 and 12");
+  }
+  for (int j = 0; j < months.size(); j++) {
+    if (months[j] < 1 || months[j] > 12) {
+      stop("month indices must be between 1 and 12");
+    }
+  }
+
+  int n = tas.nrow();
+  NumericMatrix result(n, 19);
+  colnames(result) = CharacterVector::create(
+    "bio01", "bio02", "bio03", "bio04", "bio05",
+    "bio06", "bio07", "bio08", "bio09", "bio10",
+    "bio11", "bio12", "bio13", "bio14", "bio15",
+    "bio16", "bio17", "bio18", "bio19");
+
+  for (int i = 0; i < n; i++) {
+    std::array<double, 19> bio = compute_pixel_window(
+      tas.row(i), tasmax.row(i), tasmin.row(i), pr.row(i),
+      months, window, na_rm);
+    for (int j = 0; j < 19; j++) {
+      double v = bio[j];
+      result(i, j) = std::isnan(v) ? NA_REAL : v;
+    }
+  }
+
+  return result;
+}
+
+//' Compute bioclimatic variables using a rolling window of arbitrary length
+//'
+//' @param tas    Numeric matrix (pixels x 12): monthly mean temperature.
+//' @param tasmax Numeric matrix (pixels x 12): monthly maximum temperature.
+//' @param tasmin Numeric matrix (pixels x 12): monthly minimum temperature.
+//' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
+//' @param window Integer: length (months) of the rolling window (2-11).
+//' @param na_rm  Logical: if `TRUE`, skip `NA` months.
+//' @return Numeric matrix (pixels x 19) with columns `bio01`..`bio19`.
+//'   The base variables (bio01-bio07, bio12-bio15) are computed over the
+//'   full 12 months; the rolling-window variables (bio08-bio11, bio16-bio19)
+//'   are computed over the best `window`-month period.
+//' @keywords internal
+// [[Rcpp::export]]
+NumericMatrix bioclim_rolling_cpp(NumericMatrix tas,
+                                  NumericMatrix tasmax,
+                                  NumericMatrix tasmin,
+                                  NumericMatrix pr,
+                                  int window = 3,
+                                  bool na_rm = false) {
+  if (tas.nrow() != tasmax.nrow() || tas.nrow() != tasmin.nrow() ||
+      tas.nrow() != pr.nrow()) {
+    stop("All input matrices must have the same number of rows");
+  }
+  if (tas.ncol() != 12 || tasmax.ncol() != 12 || tasmin.ncol() != 12 ||
+      pr.ncol() != 12) {
+    stop("All input matrices must have 12 columns");
+  }
+  if (window < 2 || window > 11) {
+    stop("'window' must be between 2 and 11");
+  }
+
+  IntegerVector months(12);
+  for (int m = 0; m < 12; m++) months[m] = m + 1;
+
+  int n = tas.nrow();
+  NumericMatrix result(n, 19);
+  colnames(result) = CharacterVector::create(
+    "bio01", "bio02", "bio03", "bio04", "bio05",
+    "bio06", "bio07", "bio08", "bio09", "bio10",
+    "bio11", "bio12", "bio13", "bio14", "bio15",
+    "bio16", "bio17", "bio18", "bio19");
+
+  for (int i = 0; i < n; i++) {
+    // Base annual statistics.
+    NumericVector r_tas    = tas.row(i);
+    NumericVector r_tasmax = tasmax.row(i);
+    NumericVector r_tasmin = tasmin.row(i);
+    NumericVector r_pr     = pr.row(i);
+
+    if (!na_rm && (has_na_sel(r_tas, months) || has_na_sel(r_tasmax, months) ||
+                   has_na_sel(r_tasmin, months) || has_na_sel(r_pr, months))) {
+      for (int j = 0; j < 19; j++) result(i, j) = NA_REAL;
+      continue;
+    }
+
+    double b01 = mean_sel(r_tas, months, na_rm);
+    double b05 = max_sel(r_tasmax, months, na_rm);
+    double b06 = min_sel(r_tasmin, months, na_rm);
+    double b12 = sum_sel(r_pr, months, na_rm);
+    double b13 = max_sel(r_pr, months, na_rm);
+    double b14 = min_sel(r_pr, months, na_rm);
+    double pr_mean = mean_sel(r_pr, months, na_rm);
+
+    double b02 = mean_sel(r_tasmax, months, na_rm) -
+                 mean_sel(r_tasmin, months, na_rm);
+    double b07 = (std::isnan(b05) || std::isnan(b06))
+                   ? R_NaN : b05 - b06;
+    double b03 = (std::isnan(b07) || b07 == 0.0) ? R_NaN : 100.0 * b02 / b07;
+    double b04 = 100.0 * sd_pop_sel(r_tas, months, na_rm);
+    double b15 = (std::isnan(pr_mean) || pr_mean <= 0.0)
+                   ? R_NaN : 100.0 * sd_pop_sel(r_pr, months, na_rm) / pr_mean;
+
+    result(i, 0)  = b01;
+    result(i, 1)  = b02;
+    result(i, 2)  = b03;
+    result(i, 3)  = b04;
+    result(i, 4)  = b05;
+    result(i, 5)  = b06;
+    result(i, 6)  = b07;
+    result(i, 11) = b12;
+    result(i, 12) = b13;
+    result(i, 13) = b14;
+    result(i, 14) = b15;
+
+    // Rolling window (length `window`) over the full year.
+    bool mask[12];
+    build_month_mask(months, mask);
+
+    int wet_start  = argmax_window_sum(r_pr, months, window, mask, na_rm);
+    int dry_start  = argmin_window_sum(r_pr, months, window, mask, na_rm);
+    int warm_start = argmax_window_mean(r_tas, months, window, mask, na_rm);
+    int cold_start = argmin_window_mean(r_tas, months, window, mask, na_rm);
+
+    if (wet_start > 0) {
+      result(i, 7)  = window_mean_sel(r_tas, wet_start, window, na_rm);
+      result(i, 15) = window_sum_sel(r_pr, wet_start, window, na_rm);
+    } else {
+      result(i, 7)  = NA_REAL;
+      result(i, 15) = NA_REAL;
+    }
+    if (dry_start > 0) {
+      result(i, 8)  = window_mean_sel(r_tas, dry_start, window, na_rm);
+      result(i, 16) = window_sum_sel(r_pr, dry_start, window, na_rm);
+    } else {
+      result(i, 8)  = NA_REAL;
+      result(i, 16) = NA_REAL;
+    }
+    if (warm_start > 0) {
+      result(i, 9)  = window_mean_sel(r_tas, warm_start, window, na_rm);
+      result(i, 17) = window_sum_sel(r_pr, warm_start, window, na_rm);
+    } else {
+      result(i, 9)  = NA_REAL;
+      result(i, 17) = NA_REAL;
+    }
+    if (cold_start > 0) {
+      result(i, 10) = window_mean_sel(r_tas, cold_start, window, na_rm);
+      result(i, 18) = window_sum_sel(r_pr, cold_start, window, na_rm);
+    } else {
+      result(i, 10) = NA_REAL;
+      result(i, 18) = NA_REAL;
+    }
+  }
+
+  return result;
+}

@@ -367,6 +367,40 @@ quarterly_variables_cpp <- function(tas, tasmax, tasmin, pr, months, na_rm = FAL
     .Call(`_xbioclim_quarterly_variables_cpp`, tas, tasmax, tasmin, pr, months, na_rm)
 }
 
+#' Compute bioclimatic variables over an arbitrary window of months
+#'
+#' @param tas    Numeric matrix (pixels x 12): monthly mean temperature.
+#' @param tasmax Numeric matrix (pixels x 12): monthly maximum temperature.
+#' @param tasmin Numeric matrix (pixels x 12): monthly minimum temperature.
+#' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
+#' @param months Integer vector of 1-based month indices in the window.
+#' @param window Integer: length (months) of the internal rolling sub-window
+#'   used for the BIO08-BIO19 variables.  Must be >= 3 and <= length(months)
+#'   for those variables to be non-NA.
+#' @param na_rm  Logical: if `TRUE`, skip `NA` months.
+#' @return Numeric matrix (pixels x 19) with columns `bio01`..`bio19`.
+#' @keywords internal
+bioclim_window_cpp <- function(tas, tasmax, tasmin, pr, months, window = 3L, na_rm = FALSE) {
+    .Call(`_xbioclim_bioclim_window_cpp`, tas, tasmax, tasmin, pr, months, window, na_rm)
+}
+
+#' Compute bioclimatic variables using a rolling window of arbitrary length
+#'
+#' @param tas    Numeric matrix (pixels x 12): monthly mean temperature.
+#' @param tasmax Numeric matrix (pixels x 12): monthly maximum temperature.
+#' @param tasmin Numeric matrix (pixels x 12): monthly minimum temperature.
+#' @param pr     Numeric matrix (pixels x 12): monthly precipitation.
+#' @param window Integer: length (months) of the rolling window (2-11).
+#' @param na_rm  Logical: if `TRUE`, skip `NA` months.
+#' @return Numeric matrix (pixels x 19) with columns `bio01`..`bio19`.
+#'   The base variables (bio01-bio07, bio12-bio15) are computed over the
+#'   full 12 months; the rolling-window variables (bio08-bio11, bio16-bio19)
+#'   are computed over the best `window`-month period.
+#' @keywords internal
+bioclim_rolling_cpp <- function(tas, tasmax, tasmin, pr, window = 3L, na_rm = FALSE) {
+    .Call(`_xbioclim_bioclim_rolling_cpp`, tas, tasmax, tasmin, pr, window, na_rm)
+}
+
 #' Create a new C++ BioclimModel and return an external pointer
 #'
 #' @param tas    Numeric vector of length 12.
