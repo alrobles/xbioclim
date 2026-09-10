@@ -5,7 +5,7 @@
 [![test-coverage](https://github.com/alrobles/xbioclim/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/alrobles/xbioclim/actions/workflows/test-coverage.yaml)
 <!-- badges: end -->
 
-An R package for computing the 19 standard bioclimatic variables (BIO01–BIO19) from monthly climate data, following the [WorldClim](https://www.worldclim.org/data/bioclim.html) specification. This is an R implementation of the [xbioclim](https://github.com/alrobles/xbioclim) C++ library.
+An R package for computing the 19 standard bioclimatic variables (BIO01–BIO19) from monthly climate data, following the [WorldClim](https://www.worldclim.org/data/bioclim.html) specification. This is an R implementation of the [xbioclimcpp](https://github.com/alrobles/xbioclimcpp) C++ library.
 
 ## Installation
 
