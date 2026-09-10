@@ -31,7 +31,9 @@ jobs:
       # GitHub ubuntu-latest images ship a google-chrome apt source whose
       # Packages.gz periodically returns a "Hash Sum mismatch", breaking
       # every apt-get update (incl. r-lib setup-r). Neutralize it here.
+      # Linux-only: the Windows/macOS runners have no `sudo`.
       - name: Disable broken Google Chrome apt source
+        if: runner.os == 'Linux'
         run: |
           sudo rm -f /etc/apt/sources.list.d/google-chrome.list
           sudo rm -f /etc/apt/sources.list.d/google.list
