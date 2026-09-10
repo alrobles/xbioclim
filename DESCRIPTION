@@ -33,7 +33,8 @@ Suggests:
     rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-URL: https://github.com/alrobles/xbioclim
+URL: https://alrobles.github.io/xbioclim/,
+    https://github.com/alrobles/xbioclim
 BugReports: https://github.com/alrobles/xbioclim/issues
 Collate:
     'RcppExports.R'
