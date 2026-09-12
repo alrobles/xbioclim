@@ -1,0 +1,9 @@
+bibentry(
+  bibtype  = "Manual",
+  title    = "xbioclim: Bioclimatic Variables from Monthly Climate Data",
+  author   = person("Angel Luis", "Robles Fernandez",
+                    email = "a.l.robles.fernandez@gmail.com"),
+  year     = "2026",
+  note     = "R package version 1.0.0",
+  url      = "https://alrobles.github.io/xbioclim/"
+)
