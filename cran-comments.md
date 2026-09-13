@@ -6,6 +6,16 @@ The note is:
 
     * New submission
 
+## Resubmission notes (1.0.2)
+
+Version 1.0.1 was stopped at prescreen with two additional NOTEs:
+
+* `Compilation used the following non-portable flag(s): '-march=native'` —
+  removed from `src/Makevars.in` (now `-O2` only).
+* `Possibly misspelled words in DESCRIPTION` (`Bioclimatic`, `WorldClim`,
+  `bioclimatic`) — these are technical terms now covered by the package
+  `.aspell` dictionary shipped in the tarball.
+
 ## Test environments
 
 * **Linux** (Ubuntu 22.04, x86_64), R 4.4.0 — CPU-only build (no GDAL, no CUDA)

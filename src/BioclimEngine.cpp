@@ -292,22 +292,20 @@ void validate_file_vector(const std::vector<std::string>& files,
 }
 
 // Open readers for a variable's file list.
-// Always returns 12 unique_ptr<GdalReader>, one per calendar month:
-//   * files.size() == 1  — 12 readers on the same multi-band file
-//                          (month m reads band m+1)
-//   * files.size() == 12 — one reader per single-band file
-//                          (every month reads band 1)
-// Per-month handles let the monthly window reads run in parallel —
-// GDAL datasets are not thread-safe, so each concurrent read needs its
-// own GdalReader.
+//   * files.size() == 1  — one multi-band GdalReader (12 bands, bands 1..12)
+//   * files.size() == 12 — one single-band GdalReader per month (band 1)
+//
+// For multi-band files, a single GDAL dataset handle is enough because
+// read_bands_window() reads all 12 bands in one RasterIO call.  Using one
+// handle instead of 12 also avoids driver-level contention on the same file
+// when the per-variable reads are parallelized with OpenMP.
 std::vector<std::unique_ptr<GdalReader>>
 open_readers(const std::vector<std::string>& files) {
     std::vector<std::unique_ptr<GdalReader>> readers;
-    readers.reserve(12);
     if (files.size() == 1) {
-        for (int m = 0; m < 12; ++m)
-            readers.push_back(std::make_unique<GdalReader>(files[0]));
+        readers.push_back(std::make_unique<GdalReader>(files[0]));
     } else {
+        readers.reserve(12);
         for (const auto& f : files)
             readers.push_back(std::make_unique<GdalReader>(f));
     }
@@ -449,29 +447,40 @@ void read_tile_into_slot(
         slot->tasmin.data(), slot->pr.data()
     };
 
+    // Band indices for a 12-month multi-band read (1-based).
+    std::vector<int> month_bands(12);
+    std::iota(month_bands.begin(), month_bands.end(), 1);
+
     std::exception_ptr read_error;
 #ifdef _OPENMP
-#pragma omp parallel for collapse(2) schedule(static) num_threads(n_threads)
+#pragma omp parallel for schedule(static) num_threads(n_threads)
 #endif
     for (int v = 0; v < 4; ++v) {
-        for (int m = 0; m < 12; ++m) {
-            try {
-                (*var_readers[v])[static_cast<std::size_t>(m)]
-                    ->read_window(
-                        xoff, yoff, xsize, ysize,
-                        var_multi[v] ? m + 1 : 1,
-                        var_tiles[v] +
-                            static_cast<std::size_t>(m) * n_pix);
-            } catch (...) {
-                // Exceptions must not escape an OpenMP region;
-                // record the first one and rethrow below.
+        try {
+            if (var_multi[v]) {
+                // Multi-band file: read all 12 months in one RasterIO call.
+                (*var_readers[v])[0]->read_bands_window(
+                    xoff, yoff, xsize, ysize,
+                    month_bands, var_tiles[v], false);
+            } else {
+                // Single-band files: one read per month from distinct files.
+                for (int m = 0; m < 12; ++m) {
+                    (*var_readers[v])[static_cast<std::size_t>(m)]
+                        ->read_window(
+                            xoff, yoff, xsize, ysize, 1,
+                            var_tiles[v] +
+                                static_cast<std::size_t>(m) * n_pix);
+                }
+            }
+        } catch (...) {
+            // Exceptions must not escape an OpenMP region;
+            // record the first one and rethrow below.
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-                {
-                    if (!read_error)
-                        read_error = std::current_exception();
-                }
+            {
+                if (!read_error)
+                    read_error = std::current_exception();
             }
         }
     }
@@ -831,9 +840,11 @@ std::string BioclimEngine::compute() {
 
             // ── Read 4 × 12 monthly bands into band-major tile buffers ─────
             // Layout: tile[var][month * n_pix + pixel] (band-major).
-            // The 48 band reads run in parallel: each month has its own
-            // GdalReader (GDAL datasets are not thread-safe) and writes
-            // directly into the contiguous month slice.
+            // Multi-band files are read with one RasterIO call per variable
+            // using read_bands_window(); single-band files fall back to one
+            // read_window() per month.  The 4 variable reads are parallelized
+            // with OpenMP (GDAL datasets are not thread-safe, so each variable
+            // uses its own GdalReader).
             std::vector<std::unique_ptr<GdalReader>>* var_readers[4] = {
                 &tas_readers, &tasmax_readers, &tasmin_readers, &pr_readers
             };
@@ -845,29 +856,40 @@ std::string BioclimEngine::compute() {
                 tasmin_tile.data(), pr_tile.data()
             };
 
+            // Band indices for a 12-month multi-band read (1-based).
+            std::vector<int> month_bands(12);
+            std::iota(month_bands.begin(), month_bands.end(), 1);
+
             std::exception_ptr read_error;
 #ifdef _OPENMP
-#pragma omp parallel for collapse(2) schedule(static) num_threads(n_threads_)
+#pragma omp parallel for schedule(static) num_threads(n_threads_)
 #endif
             for (int v = 0; v < 4; ++v) {
-                for (int m = 0; m < 12; ++m) {
-                    try {
-                        (*var_readers[v])[static_cast<std::size_t>(m)]
-                            ->read_window(
-                                xoff, yoff, xsize, ysize,
-                                var_multi[v] ? m + 1 : 1,
-                                var_tiles[v] +
-                                    static_cast<std::size_t>(m) * n_pix);
-                    } catch (...) {
-                        // Exceptions must not escape an OpenMP region;
-                        // record the first one and rethrow below.
+                try {
+                    if (var_multi[v]) {
+                        // Multi-band file: read all 12 months in one call.
+                        (*var_readers[v])[0]->read_bands_window(
+                            xoff, yoff, xsize, ysize,
+                            month_bands, var_tiles[v], false);
+                    } else {
+                        // Single-band files: one read per month.
+                        for (int m = 0; m < 12; ++m) {
+                            (*var_readers[v])[static_cast<std::size_t>(m)]
+                                ->read_window(
+                                    xoff, yoff, xsize, ysize, 1,
+                                    var_tiles[v] +
+                                        static_cast<std::size_t>(m) * n_pix);
+                        }
+                    }
+                } catch (...) {
+                    // Exceptions must not escape an OpenMP region;
+                    // record the first one and rethrow below.
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-                        {
-                            if (!read_error)
-                                read_error = std::current_exception();
-                        }
+                    {
+                        if (!read_error)
+                            read_error = std::current_exception();
                     }
                 }
             }

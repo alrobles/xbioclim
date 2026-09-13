@@ -4,6 +4,6 @@ bibentry(
   author   = person("Angel Luis", "Robles Fernandez",
                     email = "a.l.robles.fernandez@gmail.com"),
   year     = "2026",
-  note     = "R package version 1.0.0",
+  note     = "R package version 1.0.2",
   url      = "https://alrobles.github.io/xbioclim/"
 )
