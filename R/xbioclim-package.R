@@ -5,6 +5,14 @@
 #' implementation of the xbioclim C++ library, with a compiled C++ back-end
 #' exposed through Rcpp Modules.
 #'
+#' @section ERA5-Land monthly aggregation:
+#' In addition to the BIO01–BIO19 computation, xbioclim provides helpers to
+#' aggregate ERA5-Land hourly `t2m`/`tp` into the CHELSA-compatible monthly
+#' variables (`tas`, `tasmax`, `tasmin`, `pr`) used by the bioclim functions:
+#' * [era5_to_monthly()] – single-pass hourly → monthly aggregation.
+#' * [era5_t2m_to_monthly()] / [era5_tp_to_monthly()] – variable-specific helpers.
+#' * [era5_bioclim()] / [era5_bioclim_years()] – end-to-end ERA5-Land → BIO pipeline.
+#'
 #' @section Error and warning propagation:
 #' xbioclim mirrors the `SpatMessages` pattern used by the terra package.
 #' C++ routines record errors and warnings into an internal message store

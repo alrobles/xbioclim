@@ -593,6 +593,61 @@ engine_set_device <- function(xptr, device) {
     invisible(.Call(`_xbioclim_engine_set_device`, xptr, device))
 }
 
+#' Aggregate ERA5-Land hourly 2-m temperature to monthly statistics
+#'
+#' Converts an hourly temperature matrix to monthly mean temperature (tas),
+#' monthly mean of daily maxima (tasmax), and monthly mean of daily minima
+#' (tasmin), following the CHELSA variable convention.
+#'
+#' @param hourly Numeric matrix (n_pixels x n_hours): hourly 2-m temperature.
+#'   Column-major layout.  n_hours must equal 24 * n_days.
+#' @param n_days Integer: number of days in the month.
+#' @param to_celsius Logical: if TRUE, convert Kelvin to Celsius (default
+#'   FALSE, output in Kelvin matching CHELSA convention).
+#' @param ncores Integer: number of OpenMP threads (default 1).
+#' @return A named list with three numeric vectors of length n_pixels:
+#'   \code{tas}, \code{tasmax}, \code{tasmin}.
+#' @keywords internal
+era5_t2m_to_monthly_cpp <- function(hourly, n_days, to_celsius = FALSE, ncores = 1L) {
+    .Call(`_xbioclim_era5_t2m_to_monthly_cpp`, hourly, n_days, to_celsius, ncores)
+}
+
+#' Aggregate ERA5-Land hourly total precipitation to monthly total
+#'
+#' Sums hourly precipitation accumulations and converts from metres of water
+#' to kg m-2 month-1 (equivalent to mm/month), matching the CHELSA \code{pr}
+#' variable convention.
+#'
+#' @param hourly Numeric matrix (n_pixels x n_hours): hourly total
+#'   precipitation in metres.
+#' @param ncores Integer: number of OpenMP threads (default 1).
+#' @return Numeric vector of length n_pixels: monthly total precipitation
+#'   in kg m-2 (mm).
+#' @keywords internal
+era5_tp_to_monthly_cpp <- function(hourly, ncores = 1L) {
+    .Call(`_xbioclim_era5_tp_to_monthly_cpp`, hourly, ncores)
+}
+
+#' Unified ERA5-Land hourly-to-monthly aggregation
+#'
+#' Converts hourly 2-m temperature and total precipitation to the four
+#' CHELSA-compatible monthly climate variables in a single parallel pass.
+#'
+#' @param hourly_t2m Numeric matrix (n_pixels x n_hours_t2m): hourly 2-m
+#'   temperature in Kelvin.  n_hours_t2m must equal 24 * n_days.
+#' @param hourly_tp Numeric matrix (n_pixels x n_hours_tp): hourly total
+#'   precipitation in metres.  n_pixels must match \code{hourly_t2m}.
+#' @param n_days Integer: number of days in the month.
+#' @param to_celsius Logical: convert temperatures from Kelvin to Celsius?
+#'   Default FALSE.
+#' @param ncores Integer: number of OpenMP threads (default 1).
+#' @return A named list with four numeric vectors of length n_pixels:
+#'   \code{tas}, \code{tasmax}, \code{tasmin}, \code{pr}.
+#' @keywords internal
+era5_to_monthly_cpp <- function(hourly_t2m, hourly_tp, n_days, to_celsius = FALSE, ncores = 1L) {
+    .Call(`_xbioclim_era5_to_monthly_cpp`, hourly_t2m, hourly_tp, n_days, to_celsius, ncores)
+}
+
 #' Check whether GDAL can open a raster file
 #'
 #' A lightweight diagnostic that tries to open the specified path via GDAL

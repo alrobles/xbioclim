@@ -11,6 +11,18 @@ climate data following the WorldClim specification. This is an R
 implementation of the xbioclim C++ library, with a compiled C++ back-end
 exposed through Rcpp Modules.
 }
+\section{ERA5-Land monthly aggregation}{
+
+In addition to the BIO01–BIO19 computation, xbioclim provides helpers to
+aggregate ERA5-Land hourly \code{t2m}/\code{tp} into the CHELSA-compatible monthly
+variables (\code{tas}, \code{tasmax}, \code{tasmin}, \code{pr}) used by the bioclim functions:
+\itemize{
+\item \code{\link[=era5_to_monthly]{era5_to_monthly()}} – single-pass hourly → monthly aggregation.
+\item \code{\link[=era5_t2m_to_monthly]{era5_t2m_to_monthly()}} / \code{\link[=era5_tp_to_monthly]{era5_tp_to_monthly()}} – variable-specific helpers.
+\item \code{\link[=era5_bioclim]{era5_bioclim()}} / \code{\link[=era5_bioclim_years]{era5_bioclim_years()}} – end-to-end ERA5-Land → BIO pipeline.
+}
+}
+
 \section{Error and warning propagation}{
 
 xbioclim mirrors the \code{SpatMessages} pattern used by the terra package.
@@ -29,6 +41,7 @@ programmatically:
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://alrobles.github.io/xbioclim/}
   \item \url{https://github.com/alrobles/xbioclim}
   \item Report bugs at \url{https://github.com/alrobles/xbioclim/issues}
 }

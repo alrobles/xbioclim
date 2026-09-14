@@ -45,6 +45,8 @@ Collate:
     'bioclim_module.R'
     'bioclimmodel.R'
     'bioclim_raster.R'
+    'era5_monthly.R'
+    'era5_bioclim.R'
     'bioclim_engine.R'
     'engine.R'
     'mask.R'

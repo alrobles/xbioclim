@@ -694,6 +694,47 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// era5_t2m_to_monthly_cpp
+List era5_t2m_to_monthly_cpp(NumericMatrix hourly, int n_days, bool to_celsius, int ncores);
+RcppExport SEXP _xbioclim_era5_t2m_to_monthly_cpp(SEXP hourlySEXP, SEXP n_daysSEXP, SEXP to_celsiusSEXP, SEXP ncoresSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type hourly(hourlySEXP);
+    Rcpp::traits::input_parameter< int >::type n_days(n_daysSEXP);
+    Rcpp::traits::input_parameter< bool >::type to_celsius(to_celsiusSEXP);
+    Rcpp::traits::input_parameter< int >::type ncores(ncoresSEXP);
+    rcpp_result_gen = Rcpp::wrap(era5_t2m_to_monthly_cpp(hourly, n_days, to_celsius, ncores));
+    return rcpp_result_gen;
+END_RCPP
+}
+// era5_tp_to_monthly_cpp
+NumericVector era5_tp_to_monthly_cpp(NumericMatrix hourly, int ncores);
+RcppExport SEXP _xbioclim_era5_tp_to_monthly_cpp(SEXP hourlySEXP, SEXP ncoresSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type hourly(hourlySEXP);
+    Rcpp::traits::input_parameter< int >::type ncores(ncoresSEXP);
+    rcpp_result_gen = Rcpp::wrap(era5_tp_to_monthly_cpp(hourly, ncores));
+    return rcpp_result_gen;
+END_RCPP
+}
+// era5_to_monthly_cpp
+List era5_to_monthly_cpp(NumericMatrix hourly_t2m, NumericMatrix hourly_tp, int n_days, bool to_celsius, int ncores);
+RcppExport SEXP _xbioclim_era5_to_monthly_cpp(SEXP hourly_t2mSEXP, SEXP hourly_tpSEXP, SEXP n_daysSEXP, SEXP to_celsiusSEXP, SEXP ncoresSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type hourly_t2m(hourly_t2mSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type hourly_tp(hourly_tpSEXP);
+    Rcpp::traits::input_parameter< int >::type n_days(n_daysSEXP);
+    Rcpp::traits::input_parameter< bool >::type to_celsius(to_celsiusSEXP);
+    Rcpp::traits::input_parameter< int >::type ncores(ncoresSEXP);
+    rcpp_result_gen = Rcpp::wrap(era5_to_monthly_cpp(hourly_t2m, hourly_tp, n_days, to_celsius, ncores));
+    return rcpp_result_gen;
+END_RCPP
+}
 // gdal_can_open
 bool gdal_can_open(const std::string& path);
 RcppExport SEXP _xbioclim_gdal_can_open(SEXP pathSEXP) {
@@ -805,6 +846,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_xbioclim_cuda_device_count", (DL_FUNC) &_xbioclim_cuda_device_count, 0},
     {"_xbioclim_cuda_device_info", (DL_FUNC) &_xbioclim_cuda_device_info, 0},
     {"_xbioclim_engine_set_device", (DL_FUNC) &_xbioclim_engine_set_device, 2},
+    {"_xbioclim_era5_t2m_to_monthly_cpp", (DL_FUNC) &_xbioclim_era5_t2m_to_monthly_cpp, 4},
+    {"_xbioclim_era5_tp_to_monthly_cpp", (DL_FUNC) &_xbioclim_era5_tp_to_monthly_cpp, 2},
+    {"_xbioclim_era5_to_monthly_cpp", (DL_FUNC) &_xbioclim_era5_to_monthly_cpp, 5},
     {"_xbioclim_gdal_can_open", (DL_FUNC) &_xbioclim_gdal_can_open, 1},
     {"_xbioclim_gdal_info", (DL_FUNC) &_xbioclim_gdal_info, 1},
     {"_xbioclim_rasterize_mask_cpp", (DL_FUNC) &_xbioclim_rasterize_mask_cpp, 3},
