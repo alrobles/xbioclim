@@ -6,13 +6,17 @@ Authors@R: person("Angel Luis", "Robles Fernandez",
                    email = "a.l.robles.fernandez@gmail.com",
                    role = c("aut", "cre"))
 Description: Computes the 19 standard bioclimatic variables (BIO01-BIO19) from
-    monthly climate data following the WorldClim specification. Provides both
-    individual variable functions and a unified interface to compute all 19
-    variables at once. Designed as an R implementation of the 'xbioclim' C++
-    library (Robles Fernandez, 2026
-    <https://github.com/alrobles/xbioclimcpp>). Supports single-pixel vectors
-    and block-based raster processing
-    via 'terra' for memory-efficient handling of large spatial datasets.
+    monthly climate data. The variable set was originally proposed by Nix
+    (1986, ISBN:978-0-644-04887-3) for the BIOCLIM modelling system and is
+    also distributed with the CHELSA climatologies (Karger et al., 2017
+    <doi:10.1038/sdata.2017.122>). Provides both individual variable
+    functions and a unified interface to compute all 19 variables at once.
+    Designed as an R implementation of the 'xbioclim' C++ library (Robles
+    Fernandez, 2026 <https://github.com/alrobles/xbioclimcpp>). Supports
+    single-pixel vectors and block-based raster processing via 'terra' for
+    memory-efficient handling of large spatial datasets. Includes helpers
+    to transform ERA5-Land hourly reanalysis data (Muñoz-Sabater et al.,
+    2021 <doi:10.5194/essd-13-4349-2021>) into monthly climate inputs.
 License: MIT + file LICENSE
 NeedsCompilation: yes
 SystemRequirements: GNU make, C++17;

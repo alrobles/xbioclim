@@ -16,10 +16,15 @@ documentation pages that lacked them: `BioclimData-class`,
 `xbioclim-messages`, and `xbioclim-package`.
 
 The reviewer also asked for references describing the methods in the
-package. The computational method implemented here is new and has no
-published reference with a DOI yet, so the 'xbioclim' C++ library that
-implements it is cited in the Description field via URL:
-Robles Fernandez (2026) <https://github.com/alrobles/xbioclimcpp>.
+package. The Description field now cites: Nix (1986,
+ISBN:978-0-644-04887-3), who originally proposed the bioclimatic
+variable set for the BIOCLIM modelling system; Karger et al. (2017)
+<doi:10.1038/sdata.2017.122> for the CHELSA climatologies that also
+distribute the variable set; Muñoz-Sabater et al. (2021)
+<doi:10.5194/essd-13-4349-2021> for ERA5-Land; and the author's own
+'xbioclim' C++ library implementing the computational method
+(Robles Fernandez, 2026 <https://github.com/alrobles/xbioclimcpp>),
+which has no published DOI yet.
 
 ## Resubmission notes (1.0.2)
 
