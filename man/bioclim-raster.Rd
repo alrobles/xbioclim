@@ -3,6 +3,11 @@
 \name{bioclim-raster}
 \alias{bioclim-raster}
 \title{Block-Based Raster Processing for Bioclimatic Variables}
+\value{
+No return value; this is an overview page. \code{\link[=bioclim_raster]{bioclim_raster()}}
+returns a \link[terra]{SpatRaster} with 19 layers named \code{bio01} through
+\code{bio19}.
+}
 \description{
 Functions for computing bioclimatic variables from monthly climate rasters
 (SpatRaster objects) using terra's block-loop architecture for

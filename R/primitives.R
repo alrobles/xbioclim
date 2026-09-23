@@ -3,6 +3,9 @@
 #' Internal helper functions used by the bioclimatic variable functions.
 #' These mirror the primitives in the xbioclim C++ library.
 #'
+#' @return No return value; this page only groups the internal helper
+#'   functions. See the individual function pages for their return values.
+#'
 #' @name primitives
 #' @keywords internal
 NULL

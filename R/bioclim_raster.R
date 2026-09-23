@@ -5,6 +5,10 @@
 #' (SpatRaster objects) using terra's block-loop architecture for
 #' memory-efficient processing of large rasters.
 #'
+#' @return No return value; this is an overview page. [bioclim_raster()]
+#'   returns a \link[terra]{SpatRaster} with 19 layers named `bio01` through
+#'   `bio19`.
+#'
 #' @name bioclim-raster
 NULL
 

@@ -17,6 +17,10 @@
 #' @slot tasmin Numeric matrix (pixels × 12): monthly minimum temperature.
 #' @slot pr     Numeric matrix (pixels × 12): monthly precipitation.
 #'
+#' @return An S4 object of class `BioclimData` holding four numeric matrices
+#'   (`tas`, `tasmax`, `tasmin`, `pr`), each with 12 columns (one per calendar
+#'   month) and one row per pixel.
+#'
 #' @export
 setClass(
   "BioclimData",

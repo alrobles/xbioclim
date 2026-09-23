@@ -4,6 +4,11 @@
 \name{BioclimData-class}
 \alias{BioclimData-class}
 \title{S4 Class for Bioclimatic Input Data}
+\value{
+An S4 object of class \code{BioclimData} holding four numeric matrices
+(\code{tas}, \code{tasmax}, \code{tasmin}, \code{pr}), each with 12 columns (one per calendar
+month) and one row per pixel.
+}
 \description{
 Holds monthly climate data for one or more pixels (a raster block) and
 exposes S4 methods for computing each of the 19 standard bioclimatic

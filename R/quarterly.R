@@ -131,6 +131,13 @@ quarterly_variables.SpatRaster <- function(tas, tasmax, tasmin, pr, months, na.r
 #' @param type    Character: `"meteorological"` (DJF, MAM, JJA, SON) or
 #'   `"calendar"` (JFM, AMJ, JAS, OND).
 #' @inheritParams quarterly_variables
+#'
+#' @return Same structure as [quarterly_variables()]: a named numeric vector
+#'   of length 6 for vector input, a numeric matrix (pixels x 6) for matrix or
+#'   [BioclimData-class] input, or a 6-layer [SpatRaster-class] for
+#'   SpatRaster input, with variables `tmean_s`, `tmax_max`, `tmin_min`,
+#'   `trange`, `pr_tot`, `pr_cv`.
+#'
 #' @export
 quarterly_fixed <- function(tas, tasmax, tasmin, pr, quarter,
                             type = c("meteorological", "calendar"),
@@ -164,6 +171,13 @@ quarterly_fixed <- function(tas, tasmax, tasmin, pr, quarter,
 #'
 #' @param start Integer 1-12: starting month.
 #' @inheritParams quarterly_variables
+#'
+#' @return Same structure as [quarterly_variables()]: a named numeric vector
+#'   of length 6 for vector input, a numeric matrix (pixels x 6) for matrix or
+#'   [BioclimData-class] input, or a 6-layer [SpatRaster-class] for
+#'   SpatRaster input, with variables `tmean_s`, `tmax_max`, `tmin_min`,
+#'   `trange`, `pr_tot`, `pr_cv`.
+#'
 #' @export
 quarterly_rolling <- function(tas, tasmax, tasmin, pr, start, na.rm = FALSE, ...) {
   if (start < 1L || start > 12L) {

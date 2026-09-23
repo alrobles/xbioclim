@@ -3,6 +3,10 @@
 \name{primitives}
 \alias{primitives}
 \title{Primitive Helper Functions for Bioclimatic Variable Computation}
+\value{
+No return value; this page only groups the internal helper
+functions. See the individual function pages for their return values.
+}
 \description{
 Internal helper functions used by the bioclimatic variable functions.
 These mirror the primitives in the xbioclim C++ library.

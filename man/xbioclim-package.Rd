@@ -5,6 +5,9 @@
 \alias{xbioclim}
 \alias{xbioclim-package}
 \title{xbioclim: Bioclimatic Variables from Monthly Climate Data}
+\value{
+No return value; package-level documentation.
+}
 \description{
 Computes the 19 standard bioclimatic variables (BIO01-BIO19) from monthly
 climate data following the WorldClim specification. This is an R

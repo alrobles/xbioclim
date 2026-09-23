@@ -4,6 +4,11 @@
 \name{BioclimModel-class}
 \alias{BioclimModel-class}
 \title{BioclimModel S4 Class}
+\value{
+An S4 object of class \code{BioclimModel} wrapping a C++
+\code{BioclimModel} instance via an \code{externalptr} handle in slot
+\code{pntr}.
+}
 \description{
 An S4 class that wraps a C++ \code{BioclimModel} object via an opaque
 external pointer handle, following the terra package pattern for C++ object

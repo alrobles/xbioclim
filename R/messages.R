@@ -28,6 +28,11 @@
 #' * `push_warning()` – store a warning message.
 #' * `check_messages()` – raise stored messages as R conditions and clear them.
 #'
+#' @return No return value; this page documents the internal message store.
+#'   [bioclim_errors()] and [bioclim_warnings()] return character vectors,
+#'   [has_error()] and [has_warning()] return logicals, and
+#'   [clear_messages()] returns `NULL` invisibly.
+#'
 #' @name xbioclim-messages
 NULL
 

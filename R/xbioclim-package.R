@@ -24,6 +24,8 @@
 #' * [has_error()] / [has_warning()] – test whether messages exist.
 #' * [clear_messages()] – reset the store.
 #'
+#' @return No return value; package-level documentation.
+#'
 #' @docType package
 #' @name xbioclim-package
 #' @useDynLib xbioclim, .registration = TRUE

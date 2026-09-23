@@ -8,6 +8,10 @@
 #' @slot pntr An \code{externalptr} to the underlying C++ \code{BioclimModel}
 #'   object.
 #'
+#' @return An S4 object of class \code{BioclimModel} wrapping a C++
+#'   \code{BioclimModel} instance via an \code{externalptr} handle in slot
+#'   \code{pntr}.
+#'
 #' @name BioclimModel-class
 #' @exportClass BioclimModel
 setClass("BioclimModel", representation(pntr = "externalptr"))
@@ -90,6 +94,11 @@ setMethod("show", "BioclimModel", function(object) {
 #' @aliases bio09,BioclimModel,missing-method bio18,BioclimModel,missing-method
 #' @aliases bio19,BioclimModel,missing-method
 #' @aliases bioclim,BioclimModel,ANY,ANY,ANY-method
+#'
+#' @return For \code{bio01}–\code{bio19}: a single numeric value with the
+#'   corresponding bioclimatic variable computed from the monthly climate
+#'   data stored in the object. For \code{bioclim}: a named numeric vector of
+#'   length 19 (\code{bio01} through \code{bio19}).
 NULL
 
 # ── Single-argument BioclimModel methods ──────────────────────────────────────

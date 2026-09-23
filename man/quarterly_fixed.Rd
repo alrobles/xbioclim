@@ -36,6 +36,13 @@ missing months are skipped.}
 
 \item{...}{Not currently used.}
 }
+\value{
+Same structure as \code{\link[=quarterly_variables]{quarterly_variables()}}: a named numeric vector
+of length 6 for vector input, a numeric matrix (pixels x 6) for matrix or
+\link[=BioclimData-class]{BioclimData} input, or a 6-layer \link[terra:SpatRaster-class]{SpatRaster} for
+SpatRaster input, with variables \code{tmean_s}, \code{tmax_max}, \code{tmin_min},
+\code{trange}, \code{pr_tot}, \code{pr_cv}.
+}
 \description{
 Convenience wrapper around \code{\link[=quarterly_variables]{quarterly_variables()}} for the four standard
 fixed quarters.

@@ -41,6 +41,12 @@ utils::globalVariables("ClimateBlock")
 #'     named \code{bio01} through \code{bio19}.}
 #' }
 #'
+#' @return \code{new(ClimateBlock, tas, tasmax, tasmin, pr)} returns an Rcpp
+#'   module object of class \code{ClimateBlock}. Its \code{$n_pixels()} method
+#'   returns a single integer and its \code{$compute()} method returns an
+#'   \code{n_pixels x 19} numeric matrix with columns named \code{bio01}
+#'   through \code{bio19}.
+#'
 #' @name ClimateBlock
 #' @export ClimateBlock
 #' @examples

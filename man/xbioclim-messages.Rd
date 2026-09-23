@@ -3,6 +3,12 @@
 \name{xbioclim-messages}
 \alias{xbioclim-messages}
 \title{Error and Warning Message Store}
+\value{
+No return value; this page documents the internal message store.
+\code{\link[=bioclim_errors]{bioclim_errors()}} and \code{\link[=bioclim_warnings]{bioclim_warnings()}} return character vectors,
+\code{\link[=has_error]{has_error()}} and \code{\link[=has_warning]{has_warning()}} return logicals, and
+\code{\link[=clear_messages]{clear_messages()}} returns \code{NULL} invisibly.
+}
 \description{
 xbioclim mirrors the \code{SpatMessages} pattern from the terra package to
 provide a clean mechanism for propagating error and warning messages across

@@ -23,6 +23,12 @@
 \alias{bio19,BioclimModel,missing-method}
 \alias{bioclim,BioclimModel,ANY,ANY,ANY-method}
 \title{S4 Methods for BioclimModel Objects}
+\value{
+For \code{bio01}–\code{bio19}: a single numeric value with the
+corresponding bioclimatic variable computed from the monthly climate
+data stored in the object. For \code{bioclim}: a named numeric vector of
+length 19 (\code{bio01} through \code{bio19}).
+}
 \description{
 S4 method implementations for all 19 bioclimatic variable functions and
 \code{bioclim} that dispatch to the underlying C++ object via Rcpp when
