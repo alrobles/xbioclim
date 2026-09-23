@@ -9,7 +9,9 @@ Description: Computes the 19 standard bioclimatic variables (BIO01-BIO19) from
     monthly climate data following the WorldClim specification. Provides both
     individual variable functions and a unified interface to compute all 19
     variables at once. Designed as an R implementation of the 'xbioclim' C++
-    library. Supports single-pixel vectors and block-based raster processing
+    library (Robles Fernandez, 2026
+    <https://github.com/alrobles/xbioclimcpp>). Supports single-pixel vectors
+    and block-based raster processing
     via 'terra' for memory-efficient handling of large spatial datasets.
 License: MIT + file LICENSE
 NeedsCompilation: yes

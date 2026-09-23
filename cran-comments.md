@@ -15,6 +15,12 @@ documentation pages that lacked them: `BioclimData-class`,
 `bioclim-raster`, `primitives`, `quarterly_fixed`, `quarterly_rolling`,
 `xbioclim-messages`, and `xbioclim-package`.
 
+The reviewer also asked for references describing the methods in the
+package. The computational method implemented here is new and has no
+published reference with a DOI yet, so the 'xbioclim' C++ library that
+implements it is cited in the Description field via URL:
+Robles Fernandez (2026) <https://github.com/alrobles/xbioclimcpp>.
+
 ## Resubmission notes (1.0.2)
 
 Version 1.0.1 was stopped at prescreen with two additional NOTEs:
