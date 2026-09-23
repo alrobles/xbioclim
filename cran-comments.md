@@ -8,18 +8,12 @@ The note is:
 
 ## Resubmission notes (1.0.3)
 
-Version 1.0.2 received reviewer feedback with two requests:
-
-* **Add references describing the methods to the DESCRIPTION description
-  field** — added Fick and Hijmans (2017) <doi:10.1002/joc.5086> for the
-  WorldClim specification, Booth et al. (2014) <doi:10.1111/ddi.12144> for
-  the original BIOCLIM formulation, and Muñoz-Sabater et al. (2021)
-  <doi:10.5194/essd-13-4349-2021> for ERA5-Land.
-* **Add `\value` tags to .Rd files for exported methods** — `\value`
-  sections were added to all documentation pages that lacked them:
-  `BioclimData-class`, `BioclimModel-class`, `BioclimModel-methods`,
-  `ClimateBlock`, `bioclim-raster`, `primitives`, `quarterly_fixed`,
-  `quarterly_rolling`, `xbioclim-messages`, and `xbioclim-package`.
+Version 1.0.2 received reviewer feedback requesting `\value` tags in .Rd
+files for exported methods. `\value` sections were added to all
+documentation pages that lacked them: `BioclimData-class`,
+`BioclimModel-class`, `BioclimModel-methods`, `ClimateBlock`,
+`bioclim-raster`, `primitives`, `quarterly_fixed`, `quarterly_rolling`,
+`xbioclim-messages`, and `xbioclim-package`.
 
 ## Resubmission notes (1.0.2)
 

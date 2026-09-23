@@ -6,16 +6,11 @@ Authors@R: person("Angel Luis", "Robles Fernandez",
                    email = "a.l.robles.fernandez@gmail.com",
                    role = c("aut", "cre"))
 Description: Computes the 19 standard bioclimatic variables (BIO01-BIO19) from
-    monthly climate data following the WorldClim specification (Fick and
-    Hijmans, 2017 <doi:10.1002/joc.5086>) and the original BIOCLIM
-    formulation (Booth et al., 2014 <doi:10.1111/ddi.12144>). Provides both
+    monthly climate data following the WorldClim specification. Provides both
     individual variable functions and a unified interface to compute all 19
     variables at once. Designed as an R implementation of the 'xbioclim' C++
     library. Supports single-pixel vectors and block-based raster processing
     via 'terra' for memory-efficient handling of large spatial datasets.
-    Helpers for aggregating ERA5-Land hourly data (Muñoz-Sabater et al.,
-    2021 <doi:10.5194/essd-13-4349-2021>) into monthly inputs are also
-    provided.
 License: MIT + file LICENSE
 NeedsCompilation: yes
 SystemRequirements: GNU make, C++17;
